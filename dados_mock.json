@@ -1,0 +1,28 @@
+{
+  "contas": [
+    {
+      "id": "conta_001",
+      "banco": "Millennium BCP",
+      "iban": "PT50003300004098765432184",
+      "moeda": "EUR",
+      "saldo": 12450.30
+    },
+    {
+      "id": "conta_002", 
+      "banco": "Caixa Geral de Depósitos",
+      "iban": "PT50003500000012345678901",
+      "moeda": "EUR",
+      "saldo": 3820.00
+    }
+  ],
+  "movimentos": [
+    {"id": "m001", "conta_id": "conta_001", "data": "2026-06-01", "descricao": "SALARIO JUNHO EMPRESA XYZ", "valor": 2800.00},
+    {"id": "m002", "conta_id": "conta_001", "data": "2026-06-02", "descricao": "EDP COMERCIAL 987654321", "valor": -142.30},
+    {"id": "m003", "conta_id": "conta_001", "data": "2026-06-03", "descricao": "CONTINENTE 0234 BRAGA", "valor": -87.65},
+    {"id": "m004", "conta_id": "conta_001", "data": "2026-06-05", "descricao": "NOS COMUNICACOES SA", "valor": -45.00},
+    {"id": "m005", "conta_id": "conta_001", "data": "2026-06-07", "descricao": "FORNECEDOR GRAFICA SILVA LDA", "valor": -320.00},
+    {"id": "m006", "conta_id": "conta_002", "data": "2026-06-01", "descricao": "TRANSFERENCIA DE CONTA_001", "valor": 500.00},
+    {"id": "m007", "conta_id": "conta_002", "data": "2026-06-10", "descricao": "AT PAGAMENTO IVA 2T2026", "valor": -890.00},
+    {"id": "m008", "conta_id": "conta_002", "data": "2026-06-12", "descricao": "MB WAY 919123456", "valor": -25.00}
+  ]
+}

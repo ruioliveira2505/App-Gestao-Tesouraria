@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tesouraria</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
+    #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .auth-card { background: white; border-radius: 12px; border: 1px solid #e5e5e5; padding: 2rem; width: 100%; max-width: 380px; }
+    .auth-card h1 { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
+    .auth-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
+    .auth-tab { padding: 0.5rem 1rem; font-size: 0.875rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; color: #888; }
+    .auth-tab.active { border-bottom-color: #1a1a1a; color: #1a1a1a; font-weight: 500; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+    .field input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; outline: none; }
+    .field input:focus { border-color: #1a1a1a; }
+    .btn-primary { width: 100%; padding: 0.65rem; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+    .btn-primary:hover { background: #333; }
+    .auth-error { font-size: 0.8rem; color: #c0392b; margin-top: 0.75rem; text-align: center; }
+    #app-screen { display: none; }
+    nav { background: white; border-bottom: 1px solid #e5e5e5; padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 52px; }
+    .nav-brand { font-size: 0.95rem; font-weight: 500; }
+    .nav-links { display: flex; gap: 0; flex: 1; }
+    .nav-link { padding: 0 1rem; height: 52px; display: flex; align-items: center; font-size: 0.875rem; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
+    .nav-link.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+    .nav-user { font-size: 0.8rem; color: #888; margin-left: auto; }
+    .btn-logout { font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; padding: 0; }
+    .btn-logout:hover { color: #1a1a1a; }
+    main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
+    .card .label { font-size: 0.75rem; color: #888; margin-bottom: 0.4rem; }
+    .card .valor { font-size: 1.6rem; font-weight: 500; }
+    .card .sub { font-size: 0.8rem; color: #888; margin-top: 0.25rem; }
+    .positivo { color: #1a7a4a; }
+    .negativo { color: #c0392b; }
+    .section-title { font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 0.75rem; letter-spacing: 0.04em; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; border: 1px solid #e5e5e5; overflow: hidden; margin-bottom: 2rem; }
+    th { text-align: left; font-size: 0.75rem; font-weight: 500; color: #888; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
+    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #f5f5f5; }
+    tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: #f0f0f0; color: #555; }
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .chart-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
+    .chart-card h3 { font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 1rem; }
+    .chart-full { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; margin-bottom: 2rem; }
+    .chart-full h3 { font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 1rem; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 420px; }
+    .modal h2 { font-size: 1rem; font-weight: 500; margin-bottom: 1.25rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
+    .btn-secondary { padding: 0.5rem 1rem; background: none; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+    .btn-secondary:hover { background: #f5f5f5; }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid #e5e5e5; border-radius: 6px; cursor: pointer; }
+    .btn-sm:hover { background: #f5f5f5; }
+    select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; }
+    @media (max-width: 640px) { .charts-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="auth-card">
+    <h1>Tesouraria</h1>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="trocarTab('login')">Entrar</div>
+      <div class="auth-tab" onclick="trocarTab('registo')">Criar conta</div>
+    </div>
+    <div id="tab-login">
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="email@exemplo.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password"></div>
+      <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
+    </div>
+    <div id="tab-registo" style="display:none">
+      <div class="field"><label>Nome</label><input type="text" id="reg-nome" placeholder="O teu nome"></div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="email@exemplo.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="reg-password"></div>
+      <button class="btn-primary" onclick="fazerRegisto()">Criar conta</button>
+    </div>
+    <div class="auth-error" id="auth-erro"></div>
+  </div>
+</div>
+
+<div id="app-screen">
+  <nav>
+    <span class="nav-brand">Tesouraria</span>
+    <div class="nav-links">
+      <div class="nav-link active" onclick="irPara('dashboard')">Dashboard</div>
+      <div class="nav-link" onclick="irPara('movimentos')">Movimentos</div>
+      <div class="nav-link" onclick="irPara('analises')">Análises</div>
+    </div>
+    <span class="nav-user" id="nav-nome"></span>
+    <button class="btn-logout" onclick="logout()">Sair</button>
+  </nav>
+  <main>
+    <div class="page active" id="page-dashboard">
+      <div class="cards-grid" id="cards-contas"></div>
+      <div class="section-title">RESUMO POR CATEGORIA</div>
+      <table>
+        <thead><tr><th>Categoria</th><th>Movimentos</th><th>Entradas</th><th>Saídas</th><th>Líquido</th></tr></thead>
+        <tbody id="tabela-resumo"></tbody>
+      </table>
+    </div>
+    <div class="page" id="page-movimentos">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div class="section-title" style="margin:0">MOVIMENTOS</div>
+        <button class="btn-sm" onclick="abrirModalMovimento()">+ Adicionar</button>
+      </div>
+      <table>
+        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
+        <tbody id="tabela-movimentos"></tbody>
+      </table>
+    </div>
+    <div class="page" id="page-analises">
+      <div class="charts-grid">
+        <div class="chart-card"><h3>DESPESAS POR CATEGORIA</h3><canvas id="grafico-categorias"></canvas></div>
+        <div class="chart-card"><h3>ENTRADAS VS SAÍDAS</h3><canvas id="grafico-mensal-bar"></canvas></div>
+      </div>
+      <div class="chart-full"><h3>EVOLUÇÃO DO SALDO</h3><canvas id="grafico-saldo"></canvas></div>
+      <div class="section-title">MOVIMENTOS RECORRENTES</div>
+      <table>
+        <thead><tr><th>Descrição</th><th>Categoria</th><th>Ocorrências</th><th>Valor médio</th><th>Última vez</th></tr></thead>
+        <tbody id="tabela-recorrentes"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modal-movimento">
+  <div class="modal">
+    <h2>Adicionar movimento</h2>
+    <div class="field"><label>Conta</label><select id="mov-conta"></select></div>
+    <div class="field"><label>Data</label><input type="date" id="mov-data"></div>
+    <div class="field"><label>Descrição</label><input type="text" id="mov-descricao" placeholder="Ex: EDP COMERCIAL"></div>
+    <div class="field"><label>Valor (negativo = saída)</label><input type="number" id="mov-valor" step="0.01" placeholder="-42.50"></div>
+    <div class="field"><label>Categoria</label>
+      <select id="mov-categoria">
+        <option value="por categorizar">por categorizar</option>
+        <option value="salários">salários</option>
+        <option value="utilities">utilities</option>
+        <option value="supermercado">supermercado</option>
+        <option value="transferências">transferências</option>
+        <option value="impostos">impostos</option>
+        <option value="fornecedores">fornecedores</option>
+        <option value="outros">outros</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:0.5rem 1.25rem" onclick="guardarMovimento()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-categoria">
+  <div class="modal">
+    <h2>Editar categoria</h2>
+    <input type="hidden" id="edit-id">
+    <div class="field"><label>Descrição</label><input type="text" id="edit-descricao" disabled style="background:#f5f5f5;color:#888"></div>
+    <div class="field"><label>Categoria</label>
+      <select id="edit-categoria">
+        <option value="salários">salários</option>
+        <option value="utilities">utilities</option>
+        <option value="supermercado">supermercado</option>
+        <option value="transferências">transferências</option>
+        <option value="impostos">impostos</option>
+        <option value="fornecedores">fornecedores</option>
+        <option value="outros">outros</option>
+        <option value="por categorizar">por categorizar</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:0.5rem 1.25rem" onclick="guardarCategoria()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:8000"
+let TOKEN = localStorage.getItem("token")
+let NOME  = localStorage.getItem("nome")
+
+function fmt(v) { return parseFloat(v).toLocaleString("pt-PT", {style:"currency", currency:"EUR"}) }
+
+function trocarTab(tab) {
+  document.querySelectorAll(".auth-tab").forEach((t,i) => t.classList.toggle("active", (i===0)===(tab==="login")))
+  document.getElementById("tab-login").style.display   = tab === "login"   ? "" : "none"
+  document.getElementById("tab-registo").style.display = tab === "registo" ? "" : "none"
+  document.getElementById("auth-erro").textContent = ""
+}
+
+async function fazerLogin() {
+  const email    = document.getElementById("login-email").value
+  const password = document.getElementById("login-password").value
+  const r = await fetch(`${API}/login`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({email, password})})
+  const d = await r.json()
+  if (!r.ok) { document.getElementById("auth-erro").textContent = d.detail; return }
+  guardarSessao(d.token, d.nome)
+}
+
+async function fazerRegisto() {
+  const nome     = document.getElementById("reg-nome").value
+  const email    = document.getElementById("reg-email").value
+  const password = document.getElementById("reg-password").value
+  const r = await fetch(`${API}/registro`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({nome, email, password})})
+  const d = await r.json()
+  if (!r.ok) { document.getElementById("auth-erro").textContent = d.detail; return }
+  guardarSessao(d.token, d.nome)
+}
+
+function guardarSessao(token, nome) {
+  TOKEN = token; NOME = nome
+  localStorage.setItem("token", token)
+  localStorage.setItem("nome", nome)
+  iniciarApp()
+}
+
+function logout() {
+  localStorage.clear(); TOKEN = null; NOME = null
+  document.getElementById("app-screen").style.display  = "none"
+  document.getElementById("auth-screen").style.display = "block"
+}
+
+function iniciarApp() {
+  document.getElementById("auth-screen").style.display = "none"
+  document.getElementById("app-screen").style.display  = "block"
+  document.getElementById("nav-nome").textContent = NOME
+  carregarDashboard()
+  carregarContas()
+}
+
+function irPara(pagina) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
+  document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
+  document.getElementById("page-" + pagina).classList.add("active")
+  event.target.classList.add("active")
+  if (pagina === "dashboard")  carregarDashboard()
+  if (pagina === "movimentos") carregarMovimentos()
+  if (pagina === "analises")   carregarAnalises()
+}
+
+function api(path) {
+  return fetch(API + path, {headers:{"Authorization": "Bearer " + TOKEN}}).then(r => r.json())
+}
+
+function apiPost(path, body) {
+  return fetch(API + path, {method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer " + TOKEN}, body: JSON.stringify(body)})
+}
+
+function apiPatch(path, body) {
+  return fetch(API + path, {method:"PATCH", headers:{"Content-Type":"application/json","Authorization":"Bearer " + TOKEN}, body: JSON.stringify(body)})
+}
+
+async function carregarDashboard() {
+  const [contas, resumo] = await Promise.all([api("/contas"), api("/resumo")])
+  const el = document.getElementById("cards-contas")
+  let total = 0
+  el.innerHTML = ""
+  contas.forEach(c => {
+    total += c.saldo
+    el.innerHTML += "<div class='card'><div class='label'>" + c.banco + "</div><div class='valor'>" + fmt(c.saldo) + "</div><div class='sub'>" + c.iban.slice(-8) + "</div></div>"
+  })
+  el.innerHTML += "<div class='card' style='border-color:#1a7a4a'><div class='label'>Total consolidado</div><div class='valor positivo'>" + fmt(total) + "</div><div class='sub'>todas as contas</div></div>"
+  const tb = document.getElementById("tabela-resumo")
+  tb.innerHTML = ""
+  resumo.forEach(r => {
+    const liq = r.entradas + r.saidas
+    tb.innerHTML += "<tr><td><span class='badge'>" + r.categoria + "</span></td><td>" + r.n + "</td><td class='positivo'>" + fmt(r.entradas) + "</td><td class='negativo'>" + fmt(r.saidas) + "</td><td class='" + (liq>=0?"positivo":"negativo") + "'>" + fmt(liq) + "</td></tr>"
+  })
+}
+
+let contasCache = []
+
+async function carregarContas() {
+  contasCache = await api("/contas")
+}
+
+async function carregarMovimentos() {
+  const movimentos = await api("/movimentos")
+  const tb = document.getElementById("tabela-movimentos")
+  tb.innerHTML = ""
+  movimentos.forEach(m => {
+    tb.innerHTML += "<tr><td>" + m.data + "</td><td>" + m.descricao + "</td><td><span class='badge'>" + m.categoria + "</span></td><td class='" + (m.valor>=0?"positivo":"negativo") + "'>" + fmt(m.valor) + "</td><td><button class='btn-sm' onclick=\"abrirEditarCategoria('" + m.id + "','" + m.descricao + "','" + m.categoria + "')\">editar</button></td></tr>"
+  })
+}
+
+let graficos = {}
+
+async function carregarAnalises() {
+  const [categorias, mensal, saldo, recorrentes] = await Promise.all([
+    api("/stats/categorias"),
+    api("/stats/mensal"),
+    api("/stats/saldo-historico"),
+    api("/stats/recorrentes")
+  ])
+  if (graficos.cat)  graficos.cat.destroy()
+  if (graficos.bar)  graficos.bar.destroy()
+  if (graficos.line) graficos.line.destroy()
+  const cores = ["#1D9E75","#7F77DD","#D85A30","#378ADD","#BA7517","#D4537E","#639922","#E24B4A"]
+  graficos.cat = new Chart(document.getElementById("grafico-categorias"), {
+    type: "doughnut",
+    data: { labels: categorias.map(c => c.categoria), datasets: [{ data: categorias.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
+    options: { plugins: { legend: { position: "bottom", labels: { font: { size: 11 } } } } }
+  })
+  graficos.bar = new Chart(document.getElementById("grafico-mensal-bar"), {
+    type: "bar",
+    data: { labels: mensal.map(m => m.mes), datasets: [
+      { label: "Entradas", data: mensal.map(m => m.entradas), backgroundColor: "#1D9E75" },
+      { label: "Saidas",   data: mensal.map(m => Math.abs(m.saidas)), backgroundColor: "#D85A30" }
+    ]},
+    options: { plugins: { legend: { labels: { font: { size: 11 } } } }, scales: { x: { grid: { display: false } } } }
+  })
+  graficos.line = new Chart(document.getElementById("grafico-saldo"), {
+    type: "line",
+    data: { labels: saldo.map(s => s.data), datasets: [{ label: "Saldo", data: saldo.map(s => s.saldo), borderColor: "#378ADD", backgroundColor: "rgba(55,138,221,0.08)", fill: true, tension: 0.3, pointRadius: 3 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
+  })
+  const tb = document.getElementById("tabela-recorrentes")
+  tb.innerHTML = ""
+  recorrentes.forEach(r => {
+    tb.innerHTML += "<tr><td>" + r.descricao + "</td><td><span class='badge'>" + r.categoria + "</span></td><td>" + r.ocorrencias + "</td><td class='" + (r.valor_medio>=0?"positivo":"negativo") + "'>" + fmt(r.valor_medio) + "</td><td>" + r.ultima_vez + "</td></tr>"
+  })
+}
+
+function abrirModalMovimento() {
+  const sel = document.getElementById("mov-conta")
+  sel.innerHTML = contasCache.map(c => "<option value='" + c.id + "'>" + c.banco + "</option>").join("")
+  document.getElementById("mov-data").value = new Date().toISOString().slice(0,10)
+  document.getElementById("modal-movimento").classList.add("open")
+}
+
+async function guardarMovimento() {
+  const body = {
+    conta_id:  document.getElementById("mov-conta").value,
+    data:      document.getElementById("mov-data").value,
+    descricao: document.getElementById("mov-descricao").value,
+    valor:     parseFloat(document.getElementById("mov-valor").value),
+    categoria: document.getElementById("mov-categoria").value,
+  }
+  await apiPost("/movimentos", body)
+  fecharModal()
+  carregarMovimentos()
+  carregarDashboard()
+}
+
+function abrirEditarCategoria(id, descricao, categoria) {
+  document.getElementById("edit-id").value        = id
+  document.getElementById("edit-descricao").value = descricao
+  document.getElementById("edit-categoria").value = categoria
+  document.getElementById("modal-categoria").classList.add("open")
+}
+
+async function guardarCategoria() {
+  const id        = document.getElementById("edit-id").value
+  const categoria = document.getElementById("edit-categoria").value
+  await apiPatch("/movimentos/" + id + "/categoria", { categoria })
+  fecharModal()
+  carregarMovimentos()
+  carregarDashboard()
+}
+
+function fecharModal() {
+  document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
+}
+
+if (TOKEN) { iniciarApp() }
+</script>
+</body>
+</html>

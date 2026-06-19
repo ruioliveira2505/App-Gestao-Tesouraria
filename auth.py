@@ -17,9 +17,9 @@ def encriptar_password(password: str) -> str:
 def verificar_password(password: str, hash: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), hash.encode("utf-8"))
 
-def criar_token(dados: dict) -> str:
+def criar_token(dados: dict, validade: timedelta = None) -> str:
     payload = dados.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(days=TOKEN_DIAS)
+    payload["exp"] = datetime.utcnow() + (validade or timedelta(days=TOKEN_DIAS))
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITMO)
 
 def verificar_token(token: str) -> dict | None:

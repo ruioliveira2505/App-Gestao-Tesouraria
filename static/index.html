@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tesouraria</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/plugins/ranges.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
 
-    /* AUTH */
+    /* ── AUTH ───────────────────────────────────────────── */
     #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    #reset-screen.visible { display: block; }
     .auth-card { background: white; border-radius: 12px; border: 1px solid #e5e5e5; padding: 2rem; width: 100%; max-width: 380px; }
     .auth-card h1 { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
     .auth-tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
@@ -18,7 +22,7 @@
     .auth-tab.active { border-bottom-color: #1a1a1a; color: #1a1a1a; font-weight: 500; }
     .auth-error { font-size: 0.8rem; color: #c0392b; margin-top: 0.75rem; text-align: center; }
 
-    /* NAV */
+    /* ── NAV ────────────────────────────────────────────── */
     #app-screen { display: none; }
     nav { background: white; border-bottom: 1px solid #e5e5e5; padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 52px; position: sticky; top: 0; z-index: 50; }
     .nav-brand { font-size: 0.95rem; font-weight: 600; }
@@ -30,18 +34,18 @@
     .btn-logout { font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; }
     .btn-logout:hover { color: #1a1a1a; }
 
-    /* LAYOUT */
+    /* ── LAYOUT ─────────────────────────────────────────── */
     main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
     .page { display: none; }
     .page.active { display: block; }
 
-    /* FIELDS */
+    /* ── CAMPOS DE FORMULÁRIO ──────────────────────────── */
     .field { margin-bottom: 1rem; }
     .field label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
     .field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; outline: none; background: white; }
     .field input:focus, .field select:focus { border-color: #1a1a1a; }
 
-    /* BUTTONS */
+    /* ── BOTÕES ─────────────────────────────────────────── */
     .btn-primary { padding: 0.6rem 1.25rem; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
     .btn-primary:hover { background: #333; }
     .btn-primary.full { width: 100%; }
@@ -52,7 +56,7 @@
     .btn-danger { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid #fca5a5; border-radius: 6px; cursor: pointer; color: #c0392b; }
     .btn-danger:hover { background: #fef2f2; }
 
-    /* CARDS */
+    /* ── CARDS ──────────────────────────────────────────── */
     .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
     .card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
     .card .label { font-size: 0.75rem; color: #888; margin-bottom: 0.4rem; }
@@ -60,17 +64,15 @@
     .card .sub { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
     .card.destaque { border-color: #1a7a4a; }
 
-    /* SUMMARY CARDS */
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .summary-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1rem 1.25rem; }
     .summary-card .label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
     .summary-card .valor { font-size: 1.3rem; font-weight: 500; }
 
-    /* SECTION */
+    /* ── SECÇÕES E TABELAS ──────────────────────────────── */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
     .section-title { font-size: 0.75rem; font-weight: 600; color: #888; letter-spacing: 0.05em; text-transform: uppercase; }
 
-    /* TABLE */
     .table-wrap { background: white; border-radius: 10px; border: 1px solid #e5e5e5; overflow: hidden; margin-bottom: 1.5rem; }
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; font-size: 0.7rem; font-weight: 600; color: #888; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e5e5; background: #fafafa; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -78,60 +80,62 @@
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #fafafa; }
 
-    /* BADGE */
     .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: #f0f0f0; color: #555; }
-    .badge-in  { background: #dcfce7; color: #166534; }
-    .badge-out { background: #fee2e2; color: #991b1b; }
 
-    /* COLORS */
     .positivo { color: #1a7a4a; }
     .negativo { color: #c0392b; }
 
-    /* CHARTS */
+    /* ── GRÁFICOS ───────────────────────────────────────── */
     .charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-    .charts-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
     .chart-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
     .chart-card h3 { font-size: 0.7rem; font-weight: 600; color: #888; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
     .chart-full { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; margin-bottom: 1.5rem; }
     .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: #888; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
 
-    /* FILTROS */
+    /* ── FILTROS ────────────────────────────────────────── */
     .filtros { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: flex-end; }
     .filtros .field { margin-bottom: 0; min-width: 140px; }
     .filtros select, .filtros input { padding: 0.5rem 0.75rem; }
 
-    /* MES SELECTOR */
-    .mes-selector { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
-    .mes-selector button { padding: 0.4rem 0.75rem; background: white; border: 1px solid #e5e5e5; border-radius: 6px; cursor: pointer; font-size: 0.875rem; }
-    .mes-selector button:hover { background: #f5f5f5; }
-    .mes-selector span { font-size: 0.95rem; font-weight: 500; min-width: 100px; text-align: center; }
+    /* ── TOGGLE ENTRADAS/SAÍDAS ─────────────────────────── */
+    .toggle-tipo { display: inline-flex; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; }
+    .toggle-tipo button { padding: 0.4rem 1rem; border: none; background: white; font-size: 0.8rem; cursor: pointer; color: #888; }
+    .toggle-tipo button.active.out { background: #fef2f2; color: #c0392b; font-weight: 500; }
+    .toggle-tipo button.active.in  { background: #f0fdf4; color: #166534; font-weight: 500; }
 
-    /* GRUPOS EXPANSIVEIS */
-    .grupo-row { cursor: pointer; }
-    .grupo-row td { font-weight: 500; background: #fafafa; }
-    .grupo-row:hover td { background: #f0f0f0; }
-    .grupo-row td:first-child::before { content: '▶ '; font-size: 0.65rem; color: #888; }
-    .grupo-row.open td:first-child::before { content: '▼ '; }
-    .sub-row td { padding-left: 2rem; font-size: 0.825rem; color: #555; }
-    .sub-row { display: none; }
-    .sub-row.visible { display: table-row; }
+    /* ── GRUPOS COM BARRA DE PERCENTAGEM ────────────────── */
+    .grupo-bar-row { padding: 0.85rem 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+    .grupo-bar-row:last-child { border-bottom: none; }
+    .linha-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .linha-topo .nome { font-size: 0.9rem; font-weight: 500; }
+    .linha-topo .valores { font-size: 0.85rem; }
+    .linha-topo .valores .pct { color: #888; margin-right: 0.5rem; font-size: 0.75rem; }
+    .barra-fundo { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+    .barra-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+    .sub-grupo { display: none; padding: 0.6rem 0 0.2rem 1.25rem; }
+    .sub-grupo.visible { display: block; }
+    .sub-grupo .sub-item { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.8rem; color: #555; }
+    .sub-grupo .sub-item .pct { color: #aaa; margin-right: 0.5rem; font-size: 0.7rem; }
 
-    /* MODAL */
+    /* ── MODAL ──────────────────────────────────────────── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 100; }
     .modal-overlay.open { display: flex; }
     .modal { background: white; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 440px; }
     .modal h2 { font-size: 1rem; font-weight: 500; margin-bottom: 1.25rem; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
 
-    /* MOVIMENTOS RECENTES */
-    .mov-recente { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #f5f5f5; }
-    .mov-recente:last-child { border-bottom: none; }
-    .mov-recente .desc { font-size: 0.875rem; }
-    .mov-recente .meta { font-size: 0.75rem; color: #888; margin-top: 2px; }
-    .mov-recente .val { font-size: 0.875rem; font-weight: 500; }
+    /* ── PERFIL E GESTÃO DE CATEGORIAS ──────────────────── */
+    .grupo-gestao { border-bottom: 1px solid #f0f0f0; padding: 0.75rem 0; }
+    .grupo-gestao:last-child { border-bottom: none; }
+    .grupo-gestao-header { display: flex; justify-content: space-between; align-items: center; }
+    .grupo-gestao-header .nome { font-weight: 500; font-size: 0.9rem; }
+    .acoes { display: flex; gap: 4px; }
+    .categorias-gestao-lista { margin-top: 0.5rem; padding-left: 1.25rem; }
+    .categoria-gestao-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; font-size: 0.85rem; color: #555; }
+    .danger-zone-text { font-size: 0.875rem; color: #555; margin-bottom: 0.75rem; }
 
     @media (max-width: 768px) {
-      .charts-grid-2, .charts-grid-3, .summary-grid { grid-template-columns: 1fr; }
+      .charts-grid-2, .summary-grid { grid-template-columns: 1fr; }
       nav { padding: 0 1rem; }
       main { padding: 1rem; }
     }
@@ -139,7 +143,7 @@
 </head>
 <body>
 
-<!-- AUTH -->
+<!-- ═══════════════════ AUTH ═══════════════════ -->
 <div id="auth-screen">
   <div class="auth-card">
     <h1>Tesouraria</h1>
@@ -151,6 +155,16 @@
       <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="email@exemplo.com"></div>
       <div class="field"><label>Password</label><input type="password" id="login-password"></div>
       <button class="btn-primary full" onclick="fazerLogin()">Entrar</button>
+      <div style="text-align:center;margin-top:0.75rem">
+        <a href="#" onclick="abrirEsqueciPassword(); return false" style="font-size:0.8rem;color:#888">Esqueci a password</a>
+      </div>
+    </div>
+    <div id="tab-esqueci" style="display:none">
+      <div class="field"><label>Email</label><input type="email" id="esqueci-email"></div>
+      <button class="btn-primary full" onclick="enviarEsqueciPassword()">Enviar instruções</button>
+      <div style="text-align:center;margin-top:0.75rem">
+        <a href="#" onclick="trocarTab('login'); return false" style="font-size:0.8rem;color:#888">Voltar a entrar</a>
+      </div>
     </div>
     <div id="tab-registo" style="display:none">
       <div class="field"><label>Nome</label><input type="text" id="reg-nome"></div>
@@ -159,77 +173,104 @@
       <button class="btn-primary full" onclick="fazerRegisto()">Criar conta</button>
     </div>
     <div class="auth-error" id="auth-erro"></div>
+    <div id="reset-screen" style="display:none">
+      <div class="field"><label>Nova password</label><input type="password" id="reset-password-nova"></div>
+      <button class="btn-primary full" onclick="submeterRedefinicao()">Guardar nova password</button>
+      <div class="auth-error" id="reset-erro"></div>
+    </div>
   </div>
 </div>
 
-<!-- APP -->
+<!-- ═══════════════════ APP ═══════════════════ -->
 <div id="app-screen">
   <nav>
     <span class="nav-brand">Tesouraria</span>
     <div class="nav-links">
-      <div class="nav-link active" onclick="irPara('dashboard', this)">Dashboard</div>
+      <div class="nav-link active" onclick="irPara('contas', this)">Contas</div>
       <div class="nav-link" onclick="irPara('analise', this)">Análise</div>
       <div class="nav-link" onclick="irPara('movimentos', this)">Movimentos</div>
     </div>
     <div class="nav-right">
-      <span class="nav-user" id="nav-nome"></span>
+      <span class="nav-user" id="nav-nome" onclick="irParaPerfil()" style="cursor:pointer;text-decoration:underline"></span>
       <button class="btn-logout" onclick="logout()">Sair</button>
     </div>
   </nav>
 
   <main>
 
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
-      <div class="cards-grid" id="cards-contas"></div>
-      <div class="summary-grid" id="summary-mes"></div>
-      <div class="charts-grid-2">
-        <div class="chart-full" style="margin:0">
-          <h3>Evolução do Saldo</h3>
-          <canvas id="grafico-saldo"></canvas>
+    <!-- ── CONTAS ───────────────────────────────────── -->
+    <div class="page active" id="page-contas">
+      <div class="filtros">
+        <div class="field"><label>Conta</label>
+          <select id="ct-filtro-conta" onchange="carregarContas()">
+            <option value="">Todas</option>
+          </select>
         </div>
-        <div class="chart-full" style="margin:0">
-          <h3>Últimos 6 Meses</h3>
-          <canvas id="grafico-mensal"></canvas>
-        </div>
+        <div class="field"><label>Período</label><input type="text" id="ct-periodo" placeholder="Selecionar datas"></div>
+        <button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>
       </div>
-      <div style="margin-top:1.5rem">
-        <div class="section-header">
-          <div class="section-title">Movimentos Recentes</div>
-        </div>
-        <div class="card" id="movimentos-recentes"></div>
-      </div>
-    </div>
 
-    <!-- ANÁLISE -->
-    <div class="page" id="page-analise">
-      <div class="mes-selector">
-        <button onclick="mudarMes(-1)">&#8592;</button>
-        <span id="mes-label"></span>
-        <button onclick="mudarMes(1)">&#8594;</button>
+      <div class="cards-grid" id="ct-card-total"></div>
+
+      <div class="chart-full">
+        <h3>Evolução do Saldo por Mês</h3>
+        <canvas id="grafico-saldo-mensal"></canvas>
       </div>
-      <div class="charts-grid-2">
-        <div class="chart-card">
-          <h3>Cash-Out por Categoria</h3>
-          <canvas id="grafico-out"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Cash-In por Categoria</h3>
-          <canvas id="grafico-in"></canvas>
-        </div>
-      </div>
-      <div class="section-header" style="margin-bottom:0.75rem">
-        <div class="section-title">Detalhe por Grupo</div>
-      </div>
+
       <div class="table-wrap">
-        <table id="tabela-grupos">
-          <thead><tr><th>Grupo</th><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead>
-          <tbody id="tbody-grupos"></tbody>
+        <table>
+          <thead><tr><th>Banco</th><th>Tipo</th><th>IBAN</th><th style="text-align:right">Saldo</th><th></th></tr></thead>
+          <tbody id="tabela-contas"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- MOVIMENTOS -->
+    <!-- ── ANÁLISE ──────────────────────────────────── -->
+    <div class="page" id="page-analise">
+      <div class="filtros">
+        <div class="field"><label>Conta</label>
+          <select id="an-filtro-conta" onchange="carregarAnalise()">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="field"><label>Período</label><input type="text" id="an-periodo" placeholder="Selecionar datas"></div>
+      </div>
+
+      <div class="summary-grid" id="summary-mes"></div>
+
+      <div class="chart-full">
+        <h3>Cash-In vs Cash-Out por Mês</h3>
+        <canvas id="grafico-mensal"></canvas>
+      </div>
+
+      <div class="charts-grid-2">
+        <div class="chart-card">
+          <h3>Cash-In por Categoria</h3>
+          <canvas id="grafico-in"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Cash-Out por Categoria</h3>
+          <canvas id="grafico-out"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-full">
+        <div class="section-header">
+          <h3 style="margin:0">Detalhe por Grupo</h3>
+          <div class="toggle-tipo">
+            <button id="btn-tipo-in" class="active in" onclick="trocarTipo('in')">Entradas</button>
+            <button id="btn-tipo-out" class="out" onclick="trocarTipo('out')">Saídas</button>
+          </div>
+        </div>
+        <div id="lista-grupos"></div>
+        <div style="display:flex;justify-content:space-between;padding-top:0.75rem;border-top:1px solid #e5e5e5;margin-top:0.5rem;font-size:0.85rem;color:#888">
+          <span id="label-tipo">Entradas</span>
+          <strong id="total-tipo" style="color:#1a1a1a"></strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MOVIMENTOS ───────────────────────────────── -->
     <div class="page" id="page-movimentos">
       <div class="filtros">
         <div class="field"><label>Conta</label>
@@ -249,8 +290,7 @@
             <option value="">Todas</option>
           </select>
         </div>
-        <div class="field"><label>De</label><input type="date" id="filtro-data-de" onchange="carregarMovimentos()"></div>
-        <div class="field"><label>Até</label><input type="date" id="filtro-data-ate" onchange="carregarMovimentos()"></div>
+        <div class="field"><label>Período</label><input type="text" id="mov-periodo" placeholder="Todas as datas"></div>
         <button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>
       </div>
       <div class="table-wrap">
@@ -260,8 +300,46 @@
         </table>
       </div>
     </div>
+  
+    <!-- ── PERFIL ───────────────────────────────────── -->
+    <div class="page" id="page-perfil">
+      <div class="section-header"><div class="section-title">Perfil</div></div>
+      <div class="table-wrap" style="padding:1.25rem">
+        <div class="field"><label>Nome</label><input type="text" id="perfil-nome"></div>
+        <div class="field"><label>Email</label><input type="email" id="perfil-email"></div>
+        <button class="btn-primary" onclick="guardarPerfil()">Guardar</button>
+      </div>
 
-<!-- MODAL ADICIONAR MOVIMENTO -->
+      <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Alterar Password</div></div>
+      <div class="table-wrap" style="padding:1.25rem">
+        <div class="field"><label>Password Atual</label><input type="password" id="perfil-pw-atual"></div>
+        <div class="field"><label>Nova Password</label><input type="password" id="perfil-pw-nova"></div>
+        <button class="btn-primary" onclick="guardarPassword()">Atualizar Password</button>
+      </div>
+
+      <div class="section-header" style="margin-top:1.5rem">
+        <div class="section-title">Gestão de Categorias</div>
+        <div class="toggle-tipo">
+          <button id="cat-tipo-in" class="active in" onclick="trocarTipoCategorias('in')">Entradas</button>
+          <button id="cat-tipo-out" class="out" onclick="trocarTipoCategorias('out')">Saídas</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="padding:1.25rem">
+        <div id="lista-categorias-gestao"></div>
+        <button class="btn-sm" style="margin-top:0.75rem" onclick="abrirModalGrupo()">+ Adicionar Grupo</button>
+      </div>
+
+      <div class="section-header" style="margin-top:1.5rem"><div class="section-title" style="color:#c0392b">Zona de Perigo</div></div>
+      <div class="table-wrap" style="padding:1.25rem">
+        <p class="danger-zone-text">Eliminar a conta remove permanentemente todos os teus dados — contas, movimentos e categorias. Não há forma de recuperar isto depois.</p>
+        <button class="btn-danger" onclick="eliminarContaUtilizador()">Eliminar a minha conta</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════ MODAIS ═══════════════════ -->
 <div class="modal-overlay" id="modal-movimento">
   <div class="modal">
     <h2>Adicionar movimento</h2>
@@ -277,7 +355,6 @@
   </div>
 </div>
 
-<!-- MODAL EDITAR CATEGORIA -->
 <div class="modal-overlay" id="modal-categoria">
   <div class="modal">
     <h2>Editar categoria</h2>
@@ -291,16 +368,98 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-conta">
+  <div class="modal">
+    <h2 id="modal-conta-titulo">Adicionar conta</h2>
+    <input type="hidden" id="conta-id">
+    <div class="field"><label>Banco / Nome</label><input type="text" id="conta-banco"></div>
+    <div class="field"><label>Tipo</label>
+      <select id="conta-tipo">
+        <option value="corrente">Conta Corrente</option>
+        <option value="poupanca">Conta Poupança</option>
+        <option value="prazo">Conta a Prazo</option>
+        <option value="numerario">Numerário</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="field"><label>IBAN</label><input type="text" id="conta-iban"></div>
+    <div class="field"><label>Moeda</label><input type="text" id="conta-moeda" value="EUR"></div>
+    <div class="field"><label>Saldo</label><input type="number" id="conta-saldo" step="0.01"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarConta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-grupo">
+  <div class="modal">
+    <h2 id="modal-grupo-titulo">Adicionar grupo</h2>
+    <input type="hidden" id="grupo-id">
+    <div class="field"><label>Nome</label><input type="text" id="grupo-nome"></div>
+    <div class="field" id="grupo-tipo-campo"><label>Tipo</label>
+      <select id="grupo-tipo">
+        <option value="in">Entrada (Recebimento)</option>
+        <option value="out">Saída (Pagamento)</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarGrupo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-categoria-gestao">
+  <div class="modal">
+    <h2 id="modal-categoria-gestao-titulo">Adicionar categoria</h2>
+    <input type="hidden" id="categoria-gestao-id">
+    <div class="field"><label>Nome</label><input type="text" id="categoria-gestao-nome"></div>
+    <div class="field"><label>Grupo</label><select id="categoria-gestao-grupo"></select></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarCategoriaGestao()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-eliminar-categoria">
+  <div class="modal">
+    <h2 id="elim-titulo">Eliminar categoria</h2>
+    <p id="elim-aviso" style="font-size:0.875rem;color:#555;margin-bottom:1rem"></p>
+    <div class="field"><label>Mover para:</label><select id="elim-migrar-para"></select></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-danger" onclick="confirmarEliminacaoForcada()">Eliminar sem migrar</button>
+      <button class="btn-primary" onclick="confirmarEliminacaoComMigracao()">Migrar e eliminar</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ═══════════════════════════════════════════════════════════
+// CONFIGURAÇÃO E ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════════
 const API = "http://localhost:8000"
 let TOKEN = localStorage.getItem("token")
 let NOME  = localStorage.getItem("nome")
-let contasCache = []
-let categoriasCache = []
-let mesAtual = new Date().toISOString().slice(0, 7)
-let graficos = {}
 
-// ── UTILS ────────────────────────────────────────────────────
+let contasCache     = []
+let categoriasCache = []
+let gruposCache     = []
+let tipoAtual        = "in"
+let graficos = {}
+let arvoreCategoriasCache = []
+let tipoGestaoCategorias = "in"
+
+let anDataDe, anDataAte
+let movDataDe = null, movDataAte = null
+let ctDataDe  = null, ctDataAte  = null
+
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
 function fmt(v) {
   return parseFloat(v).toLocaleString("pt-PT", { style: "currency", currency: "EUR" })
 }
@@ -309,11 +468,16 @@ function fmtMes(ym) {
   const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
   return nomes[parseInt(m)-1] + " " + y
 }
+function isoDateStr(d) { return d.toISOString().slice(0, 10) }
+
 function api(path) {
   return fetch(API + path, { headers: { "Authorization": "Bearer " + TOKEN } }).then(r => r.json())
 }
 function apiPost(path, body) {
   return fetch(API + path, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN }, body: JSON.stringify(body) })
+}
+function apiPut(path, body) {
+  return fetch(API + path, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN }, body: JSON.stringify(body) })
 }
 function apiPatch(path, body) {
   return fetch(API + path, { method: "PATCH", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN }, body: JSON.stringify(body) })
@@ -325,11 +489,92 @@ function destruirGrafico(nome) {
   if (graficos[nome]) { graficos[nome].destroy(); delete graficos[nome] }
 }
 
-// ── AUTH ─────────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════
+// CALENDÁRIOS (LITEPICKER)
+// ═══════════════════════════════════════════════════════════
+function primeiroDiaMes() { const h = new Date(); return new Date(h.getFullYear(), h.getMonth(), 1) }
+function primeiroDiaAno() { const h = new Date(); return new Date(h.getFullYear(), 0, 1) }
+function menosDias(n)     { const h = new Date(); h.setDate(h.getDate() - n); return h }
+function menosMeses(n)    { const h = new Date(); h.setMonth(h.getMonth() - n); return h }
+
+function rangesPadrao() {
+  return {
+    position: 'bottom',
+    customRanges: {
+      'Este mês': [primeiroDiaMes(), new Date()],
+      '30 dias':  [menosDias(30), new Date()],
+      '3 meses':  [menosMeses(3), new Date()],
+      'Este ano': [primeiroDiaAno(), new Date()],
+    }
+  }
+}
+
+function iniciarPickerContas() {
+  new Litepicker({
+    element: document.getElementById('ct-periodo'),
+    singleMode: false,
+    format: 'YYYY-MM-DD',
+    maxDays: 365,
+    plugins: ['ranges'],
+    ranges: rangesPadrao(),
+    setup: (picker) => {
+      picker.on('selected', (date1, date2) => {
+        ctDataDe  = date1.format('YYYY-MM-DD')
+        ctDataAte = date2.format('YYYY-MM-DD')
+        carregarContas()
+      })
+    }
+  })
+}
+
+function iniciarPickerAnalise() {
+  new Litepicker({
+    element: document.getElementById('an-periodo'),
+    singleMode: false,
+    format: 'YYYY-MM-DD',
+    maxDays: 365,
+    plugins: ['ranges'],
+    startDate: primeiroDiaMes(),
+    endDate: new Date(),
+    ranges: rangesPadrao(),
+    setup: (picker) => {
+      picker.on('selected', (date1, date2) => {
+        anDataDe  = date1.format('YYYY-MM-DD')
+        anDataAte = date2.format('YYYY-MM-DD')
+        carregarAnalise()
+      })
+    }
+  })
+}
+
+function iniciarPickerMovimentos() {
+  new Litepicker({
+    element: document.getElementById('mov-periodo'),
+    singleMode: false,
+    format: 'YYYY-MM-DD',
+    maxDays: 365,
+    plugins: ['ranges'],
+    ranges: rangesPadrao(),
+    setup: (picker) => {
+      picker.on('selected', (date1, date2) => {
+        movDataDe  = date1.format('YYYY-MM-DD')
+        movDataAte = date2.format('YYYY-MM-DD')
+        carregarMovimentos()
+      })
+    }
+  })
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// AUTENTICAÇÃO
+// ═══════════════════════════════════════════════════════════
 function trocarTab(tab) {
   document.querySelectorAll(".auth-tab").forEach((t, i) => t.classList.toggle("active", (i===0)===(tab==="login")))
   document.getElementById("tab-login").style.display   = tab === "login"   ? "" : "none"
   document.getElementById("tab-registo").style.display = tab === "registo" ? "" : "none"
+  document.getElementById("tab-esqueci").style.display  = "none"
   document.getElementById("auth-erro").textContent = ""
 }
 async function fazerLogin() {
@@ -362,21 +607,72 @@ function logout() {
   document.getElementById("app-screen").style.display  = "none"
   document.getElementById("auth-screen").style.display = "flex"
 }
+function abrirEsqueciPassword() {
+  document.getElementById("tab-login").style.display   = "none"
+  document.getElementById("tab-registo").style.display = "none"
+  document.getElementById("tab-esqueci").style.display  = ""
+  document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"))
+}
 
-// ── APP INIT ─────────────────────────────────────────────────
+async function enviarEsqueciPassword() {
+  const email = document.getElementById("esqueci-email").value
+  const r = await apiPost("/esqueci-password", { email })
+  const d = await r.json()
+  alert(d.mensagem)
+  trocarTab("login")
+}
+
+function verificarTokenReset() {
+  const params = new URLSearchParams(window.location.search)
+  const token = params.get("token")
+  if (!token) return false
+  window.RESET_TOKEN = token
+  document.querySelectorAll(".auth-card > *:not(#reset-screen)").forEach(el => el.style.display = "none")
+  document.getElementById("reset-screen").style.display = "block"
+  return true
+}
+
+async function submeterRedefinicao() {
+  const password_nova = document.getElementById("reset-password-nova").value
+  const r = await apiPost("/redefinir-password", { token: window.RESET_TOKEN, password_nova })
+  if (!r.ok) {
+    const d = await r.json()
+    document.getElementById("reset-erro").textContent = d.detail
+    return
+  }
+  alert("Password redefinida com sucesso. Já podes entrar.")
+  window.location.href = "/static/index.html"
+}
+
+// ═══════════════════════════════════════════════════════════
+// INICIALIZAÇÃO DA APP
+// ═══════════════════════════════════════════════════════════
 async function iniciarApp() {
   document.getElementById("auth-screen").style.display = "none"
   document.getElementById("app-screen").style.display  = "block"
   document.getElementById("nav-nome").textContent = NOME
-  document.getElementById("mes-label").textContent = fmtMes(mesAtual)
+
   contasCache     = await api("/contas")
   categoriasCache = await api("/categorias")
-  const selConta = document.getElementById("filtro-conta")
+
+  const selConta   = document.getElementById("filtro-conta")
+  const selContaAn = document.getElementById("an-filtro-conta")
+  const selContaCt = document.getElementById("ct-filtro-conta")
   contasCache.forEach(c => {
-    selConta.innerHTML += `<option value="${c.id}">${c.banco}</option>`
+    selConta.innerHTML   += `<option value="${c.id}">${c.banco}</option>`
+    selContaAn.innerHTML += `<option value="${c.id}">${c.banco}</option>`
+    selContaCt.innerHTML += `<option value="${c.id}">${c.banco}</option>`
   })
   document.getElementById("filtro-categoria").innerHTML = '<option value="">Todas</option>' + construirOptionsCategorias()
-  carregarDashboard()
+
+  anDataDe  = isoDateStr(primeiroDiaMes())
+  anDataAte = isoDateStr(new Date())
+
+  iniciarPickerContas()
+  iniciarPickerAnalise()
+  iniciarPickerMovimentos()
+
+  carregarContas()
 }
 
 function irPara(pagina, el) {
@@ -384,64 +680,51 @@ function irPara(pagina, el) {
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
   document.getElementById("page-" + pagina).classList.add("active")
   el.classList.add("active")
-  if (pagina === "dashboard")  carregarDashboard()
+  if (pagina === "contas")     carregarContas()
   if (pagina === "analise")    carregarAnalise()
   if (pagina === "movimentos") carregarMovimentos()
 }
 
-// ── DASHBOARD ────────────────────────────────────────────────
-async function carregarDashboard() {
-  const [contas, mensal, saldo, movimentos] = await Promise.all([
-    api("/contas"),
-    api("/stats/mensal"),
-    api("/stats/saldo-historico"),
-    api("/movimentos")
-  ])
+function irParaPerfil() {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
+  document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
+  document.getElementById("page-perfil").classList.add("active")
+  carregarPerfil()
+}
 
-  // cards contas
-  let total = 0
-  const elContas = document.getElementById("cards-contas")
-  elContas.innerHTML = ""
-  contas.forEach(c => {
-    total += c.saldo
-    elContas.innerHTML += `
-      <div class="card">
-        <div class="label">${c.banco}</div>
-        <div class="valor ${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo)}</div>
-        <div class="sub">${c.iban.slice(-8)}</div>
-      </div>`
-  })
-  elContas.innerHTML += `
+// ═══════════════════════════════════════════════════════════
+// PÁGINA: CONTAS
+// ═══════════════════════════════════════════════════════════
+async function carregarContas() {
+  const contaSel = document.getElementById("ct-filtro-conta").value
+
+  contasCache = await api("/contas")
+
+  const params = new URLSearchParams()
+  if (contaSel) params.set("conta_id", contaSel)
+  if (ctDataDe)  params.set("data_de", ctDataDe)
+  if (ctDataAte) params.set("data_ate", ctDataAte)
+  const qs = params.toString() ? "?" + params.toString() : ""
+
+  const saldoMensal = await api("/stats/saldo-mensal" + qs)
+
+  const contasFiltradas = contaSel ? contasCache.filter(c => c.id === contaSel) : contasCache
+  const totalConsolidado = contasFiltradas.reduce((s, c) => s + c.saldo, 0)
+
+  document.getElementById("ct-card-total").innerHTML = `
     <div class="card destaque">
-      <div class="label">Total consolidado</div>
-      <div class="valor positivo">${fmt(total)}</div>
-      <div class="sub">todas as contas</div>
+      <div class="label">Saldo Total Consolidado</div>
+      <div class="valor positivo">${fmt(totalConsolidado)}</div>
+      <div class="sub">${contaSel ? "1 conta selecionada" : contasFiltradas.length + " contas"}</div>
     </div>`
 
-  // summary mês atual
-  const mesData = mensal.find(m => m.mes === mesAtual) || { entradas: 0, saidas: 0, liquido: 0 }
-  document.getElementById("summary-mes").innerHTML = `
-    <div class="summary-card">
-      <div class="label">Cash-In ${fmtMes(mesAtual)}</div>
-      <div class="valor positivo">${fmt(mesData.entradas)}</div>
-    </div>
-    <div class="summary-card">
-      <div class="label">Cash-Out ${fmtMes(mesAtual)}</div>
-      <div class="valor negativo">${fmt(mesData.saidas)}</div>
-    </div>
-    <div class="summary-card">
-      <div class="label">Líquido ${fmtMes(mesAtual)}</div>
-      <div class="valor ${mesData.liquido >= 0 ? 'positivo' : 'negativo'}">${fmt(mesData.liquido)}</div>
-    </div>`
-
-  // gráfico saldo histórico
-  destruirGrafico("saldo")
-  graficos.saldo = new Chart(document.getElementById("grafico-saldo"), {
+  destruirGrafico("saldoMensal")
+  graficos.saldoMensal = new Chart(document.getElementById("grafico-saldo-mensal"), {
     type: "line",
     data: {
-      labels: saldo.map(s => s.data),
+      labels: saldoMensal.map(s => fmtMes(s.mes)),
       datasets: [{
-        label: "Saldo", data: saldo.map(s => s.saldo),
+        label: "Saldo", data: saldoMensal.map(s => s.saldo),
         borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)",
         fill: true, tension: 0.3, pointRadius: 3
       }]
@@ -449,151 +732,209 @@ async function carregarDashboard() {
     options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
   })
 
-  // gráfico barras mensais
+  const tipos = { corrente: "Conta Corrente", poupanca: "Conta Poupança", prazo: "Conta a Prazo", numerario: "Numerário", outro: "Outro" }
+  const tb = document.getElementById("tabela-contas")
+  tb.innerHTML = ""
+  contasCache.forEach(c => {
+    tb.innerHTML += `
+      <tr>
+        <td>${c.banco}</td>
+        <td><span class="badge">${tipos[c.tipo] || c.tipo}</span></td>
+        <td>${c.iban}</td>
+        <td style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm" onclick="abrirEditarConta('${c.id}')">editar</button>
+          <button class="btn-danger" onclick="eliminarConta('${c.id}')">✕</button>
+        </td>
+      </tr>`
+  })
+}
+
+function abrirModalConta() {
+  document.getElementById("modal-conta-titulo").textContent = "Adicionar conta"
+  document.getElementById("conta-id").value = ""
+  document.getElementById("conta-banco").value = ""
+  document.getElementById("conta-tipo").value = "corrente"
+  document.getElementById("conta-iban").value = ""
+  document.getElementById("conta-moeda").value = "EUR"
+  document.getElementById("conta-saldo").value = ""
+  document.getElementById("modal-conta").classList.add("open")
+}
+
+function abrirEditarConta(id) {
+  const c = contasCache.find(x => x.id === id)
+  document.getElementById("modal-conta-titulo").textContent = "Editar conta"
+  document.getElementById("conta-id").value = c.id
+  document.getElementById("conta-banco").value = c.banco
+  document.getElementById("conta-tipo").value = c.tipo
+  document.getElementById("conta-iban").value = c.iban
+  document.getElementById("conta-moeda").value = c.moeda
+  document.getElementById("conta-saldo").value = c.saldo
+  document.getElementById("modal-conta").classList.add("open")
+}
+
+async function guardarConta() {
+  const id = document.getElementById("conta-id").value
+  const body = {
+    banco: document.getElementById("conta-banco").value,
+    tipo:  document.getElementById("conta-tipo").value,
+    iban:  document.getElementById("conta-iban").value,
+    moeda: document.getElementById("conta-moeda").value,
+    saldo: parseFloat(document.getElementById("conta-saldo").value),
+  }
+  if (id) {
+    await apiPut("/contas/" + id, body)
+  } else {
+    await apiPost("/contas", body)
+  }
+  fecharModal()
+  carregarContas()
+}
+
+async function eliminarConta(id) {
+  if (!confirm("Eliminar esta conta?")) return
+  const r = await apiDelete("/contas/" + id)
+  if (!r.ok) {
+    const d = await r.json()
+    alert(d.detail)
+    return
+  }
+  carregarContas()
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// PÁGINA: ANÁLISE
+// ═══════════════════════════════════════════════════════════
+async function carregarAnalise() {
+  const conta   = document.getElementById("an-filtro-conta").value
+  const dataDe  = anDataDe
+  const dataAte = anDataAte
+
+  const params = new URLSearchParams()
+  if (conta)   params.set("conta_id", conta)
+  if (dataDe)  params.set("data_de", dataDe)
+  if (dataAte) params.set("data_ate", dataAte)
+  const qs = params.toString() ? "?" + params.toString() : ""
+
+  const [mensal, categorias, grupos] = await Promise.all([
+    api("/stats/mensal" + qs),
+    api("/stats/categorias" + qs),
+    api("/stats/grupos" + qs)
+  ])
+
+  const totalIn  = mensal.reduce((s, m) => s + m.entradas, 0)
+  const totalOut = mensal.reduce((s, m) => s + m.saidas, 0)
+  document.getElementById("summary-mes").innerHTML = `
+    <div class="summary-card">
+      <div class="label">Cash-In</div>
+      <div class="valor positivo">${fmt(totalIn)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Cash-Out</div>
+      <div class="valor negativo">${fmt(totalOut)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Líquido</div>
+      <div class="valor ${totalIn - totalOut >= 0 ? 'positivo' : 'negativo'}">${fmt(totalIn - totalOut)}</div>
+    </div>`
+
   destruirGrafico("mensal")
-  const ultimos6 = mensal.slice(-6)
   graficos.mensal = new Chart(document.getElementById("grafico-mensal"), {
     type: "bar",
     data: {
-      labels: ultimos6.map(m => fmtMes(m.mes)),
+      labels: mensal.map(m => fmtMes(m.mes)),
       datasets: [
-        { label: "Cash-In",  data: ultimos6.map(m => m.entradas), backgroundColor: "#1a7a4a" },
-        { label: "Cash-Out", data: ultimos6.map(m => m.saidas),   backgroundColor: "#c0392b" }
+        { label: "Cash-In",  data: mensal.map(m => m.entradas), backgroundColor: "#1a7a4a" },
+        { label: "Cash-Out", data: mensal.map(m => m.saidas),   backgroundColor: "#c0392b" }
       ]
     },
     options: { plugins: { legend: { labels: { font: { size: 11 } } } }, scales: { x: { grid: { display: false } } } }
   })
 
-  // últimos 5 movimentos
-  const el = document.getElementById("movimentos-recentes")
-  el.innerHTML = ""
-  movimentos.slice(0, 5).forEach(m => {
-    el.innerHTML += `
-      <div class="mov-recente">
-        <div>
-          <div class="desc">${m.descricao}</div>
-          <div class="meta">${m.data} · <span class="badge">${m.grupo}</span> ${m.categoria}</div>
-        </div>
-        <div class="val ${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor)}</div>
-      </div>`
-  })
-}
-
-// ── ANÁLISE ──────────────────────────────────────────────────
-function mudarMes(delta) {
-  const [y, m] = mesAtual.split("-").map(Number)
-  const d = new Date(y, m - 1 + delta, 1)
-  mesAtual = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")
-  document.getElementById("mes-label").textContent = fmtMes(mesAtual)
-  carregarAnalise()
-}
-
-async function carregarAnalise() {
-  const [categorias, grupos] = await Promise.all([
-    api(`/stats/categorias?mes=${mesAtual}`),
-    api(`/stats/grupos?mes=${mesAtual}`)
-  ])
-
   const cores = ["#1a7a4a","#2563eb","#c0392b","#d97706","#7c3aed","#0891b2","#be185d","#4d7c0f","#b45309","#6b7280","#dc2626","#059669"]
 
-  // gráfico cash-out
   const out = categorias.filter(c => !c.eh_recebimento)
   destruirGrafico("out")
   graficos.out = new Chart(document.getElementById("grafico-out"), {
     type: "doughnut",
-    data: {
-      labels: out.map(c => c.categoria),
-      datasets: [{ data: out.map(c => c.total), backgroundColor: cores, borderWidth: 0 }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${fmt(ctx.raw)}  (${out[ctx.dataIndex].percentagem}%)`
-          }
-        }
-      }
-    }
+    data: { labels: out.map(c => c.categoria), datasets: [{ data: out.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}  (${out[ctx.dataIndex].percentagem}%)` } } } }
   })
 
-  // gráfico cash-in
   const inp = categorias.filter(c => c.eh_recebimento)
   destruirGrafico("in")
   graficos.in = new Chart(document.getElementById("grafico-in"), {
     type: "doughnut",
-    data: {
-      labels: inp.map(c => c.grupo + " > " + c.categoria),
-      datasets: [{ data: inp.map(c => c.total), backgroundColor: cores, borderWidth: 0 }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${fmt(ctx.raw)}  (${inp[ctx.dataIndex].percentagem}%)`
-          }
-        }
-      }
-    }
+    data: { labels: inp.map(c => c.categoria), datasets: [{ data: inp.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}  (${inp[ctx.dataIndex].percentagem}%)` } } } }
   })
 
-  // tabela grupos expansível
-  const tbody = document.getElementById("tbody-grupos")
-  tbody.innerHTML = ""
-  const totalGeral = grupos.reduce((s, g) => s + g.total, 0)
-  grupos.forEach((g, gi) => {
-    const pct = totalGeral > 0 ? (g.total / totalGeral * 100).toFixed(1) : "0.0"
-    tbody.innerHTML += `
-      <tr class="grupo-row" onclick="toggleGrupo(${gi})">
-        <td colspan="2">${g.grupo} <span class="badge ${g.eh_recebimento ? 'badge-in' : 'badge-out'}">${g.eh_recebimento ? 'in' : 'out'}</span></td>
-        <td style="text-align:right">${fmt(g.total)}</td>
-        <td style="text-align:right">${pct}%</td>
-      </tr>`
-    g.subcategorias.forEach(s => {
-      const sPct = g.total > 0 ? (s.total / g.total * 100).toFixed(1) : "0.0"
-      tbody.innerHTML += `
-        <tr class="sub-row" data-grupo="${gi}">
-          <td></td>
-          <td>${s.categoria}</td>
-          <td style="text-align:right">${fmt(s.total)}</td>
-          <td style="text-align:right">${sPct}%</td>
-        </tr>`
-    })
+  gruposCache = grupos
+  renderizarGrupos()
+}
+
+function trocarTipo(tipo) {
+  tipoAtual = tipo
+  document.getElementById("btn-tipo-out").classList.toggle("active", tipo === "out")
+  document.getElementById("btn-tipo-in").classList.toggle("active", tipo === "in")
+  renderizarGrupos()
+}
+
+function renderizarGrupos() {
+  const filtrados = gruposCache.filter(g => tipoAtual === "in" ? g.eh_recebimento : !g.eh_recebimento)
+  const totalTipo = filtrados.reduce((s, g) => s + g.total, 0)
+  const cor = tipoAtual === "in" ? "#1a7a4a" : "#c0392b"
+
+  const el = document.getElementById("lista-grupos")
+  el.innerHTML = ""
+
+  filtrados.forEach((g, gi) => {
+    const pct = totalTipo > 0 ? (g.total / totalTipo * 100) : 0
+    el.innerHTML += `
+      <div class="grupo-bar-row" onclick="toggleGrupo(${gi})">
+        <div class="linha-topo">
+          <span class="nome">${g.grupo}</span>
+          <span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total)}</strong></span>
+        </div>
+        <div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${cor}"></div></div>
+        <div class="sub-grupo" id="sub-grupo-${gi}">
+          ${g.subcategorias.map(s => {
+            const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
+            return `<div class="sub-item"><span>${s.categoria}</span><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total)}</span></div>`
+          }).join("")}
+        </div>
+      </div>`
   })
+
+  document.getElementById("total-tipo").textContent = fmt(totalTipo)
+  document.getElementById("label-tipo").textContent = tipoAtual === "in" ? "Entradas" : "Saídas"
 }
 
 function toggleGrupo(gi) {
-  const rows  = document.querySelectorAll(`.sub-row[data-grupo="${gi}"]`)
-  const header = document.querySelectorAll(".grupo-row")[gi]
-  const aberto = header.classList.toggle("open")
-  rows.forEach(r => r.classList.toggle("visible", aberto))
+  document.getElementById("sub-grupo-" + gi).classList.toggle("visible")
 }
 
-// ── MOVIMENTOS ───────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════
+// PÁGINA: MOVIMENTOS
+// ═══════════════════════════════════════════════════════════
 async function carregarMovimentos() {
   const conta     = document.getElementById("filtro-conta").value
   const direcao   = document.getElementById("filtro-direcao").value
   const categoria = document.getElementById("filtro-categoria").value
-  const dataDe    = document.getElementById("filtro-data-de").value
-  const dataAte   = document.getElementById("filtro-data-ate").value
+  const dataDe    = movDataDe
+  const dataAte   = movDataAte
 
-  if (dataDe && dataAte) {
-    const dias = (new Date(dataAte) - new Date(dataDe)) / (1000 * 60 * 60 * 24)
-    if (dias > 365) {
-      alert("O intervalo de datas não pode ser superior a 1 ano.")
-      return
-    }
-  }
+  const params = new URLSearchParams()
+  if (conta)     params.set("conta_id", conta)
+  if (direcao)   params.set("direcao", direcao)
+  if (categoria) params.set("categoria_id", categoria)
+  if (dataDe)    params.set("data_de", dataDe)
+  if (dataAte)   params.set("data_ate", dataAte)
+  const qs = params.toString() ? "?" + params.toString() : ""
 
-  let todos = await api("/movimentos")
-
-  if (conta)     todos = todos.filter(m => m.conta_id === conta)
-  if (direcao === "in")  todos = todos.filter(m => m.valor > 0)
-  if (direcao === "out") todos = todos.filter(m => m.valor < 0)
-  if (categoria) todos = todos.filter(m => m.categoria_id === parseInt(categoria))
-  if (dataDe)    todos = todos.filter(m => m.data >= dataDe)
-  if (dataAte)   todos = todos.filter(m => m.data <= dataAte)
+  const todos = await api("/movimentos" + qs)
 
   const tb = document.getElementById("tabela-movimentos")
   tb.innerHTML = ""
@@ -618,10 +959,12 @@ async function eliminarMovimento(id) {
   if (!confirm("Eliminar este movimento?")) return
   await apiDelete("/movimentos/" + id)
   carregarMovimentos()
-  carregarDashboard()
 }
 
-// ── MODAIS ───────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════
+// MODAIS: MOVIMENTO E CATEGORIA
+// ═══════════════════════════════════════════════════════════
 function construirOptionsCategorias(selecionado) {
   let html = ""
   let grupoAtual = null
@@ -656,7 +999,6 @@ async function guardarMovimento() {
   })
   fecharModal()
   carregarMovimentos()
-  carregarDashboard()
 }
 
 function abrirEditarCategoria(id, descricao, categoriaId) {
@@ -673,15 +1015,234 @@ async function guardarCategoria() {
   })
   fecharModal()
   carregarMovimentos()
-  carregarDashboard()
 }
 
 function fecharModal() {
   document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
 }
 
-// ── INIT ─────────────────────────────────────────────────────
-if (TOKEN) { iniciarApp() }
+// ═══════════════════════════════════════════════════════════
+// PÁGINA: PERFIL
+// ═══════════════════════════════════════════════════════════
+async function carregarPerfil() {
+  const dados = await api("/me")
+  document.getElementById("perfil-nome").value  = NOME
+  document.getElementById("perfil-email").value = dados.email
+  await carregarArvoreCategorias()
+}
+
+async function guardarPerfil() {
+  const nome  = document.getElementById("perfil-nome").value
+  const email = document.getElementById("perfil-email").value
+  const r = await apiPut("/me", { nome, email })
+  const d = await r.json()
+  NOME = d.nome
+  localStorage.setItem("nome", NOME)
+  document.getElementById("nav-nome").textContent = NOME
+  alert("Perfil atualizado.")
+}
+
+async function guardarPassword() {
+  const password_atual = document.getElementById("perfil-pw-atual").value
+  const password_nova  = document.getElementById("perfil-pw-nova").value
+  const r = await apiPut("/me/password", { password_atual, password_nova })
+  if (!r.ok) {
+    const d = await r.json()
+    alert(d.detail)
+    return
+  }
+  document.getElementById("perfil-pw-atual").value = ""
+  document.getElementById("perfil-pw-nova").value = ""
+  alert("Password atualizada.")
+}
+
+async function eliminarContaUtilizador() {
+  if (!confirm("Isto elimina PERMANENTEMENTE a tua conta e todos os dados. Tens a certeza?")) return
+  if (!confirm("Última confirmação — não há forma de recuperar isto depois. Continuar?")) return
+  await apiDelete("/me")
+  logout()
+}
+
+
+// ── GESTÃO DE CATEGORIAS ────────────────────────────────────
+async function recarregarCategoriasGlobais() {
+  categoriasCache = await api("/categorias")
+  document.getElementById("filtro-categoria").innerHTML = '<option value="">Todas</option>' + construirOptionsCategorias()
+}
+
+async function aposMudarCategorias() {
+  await carregarArvoreCategorias()
+  await recarregarCategoriasGlobais()
+}
+
+async function carregarArvoreCategorias() {
+  arvoreCategoriasCache = await api("/categorias/arvore")
+  renderizarArvoreCategorias()
+}
+
+function trocarTipoCategorias(tipo) {
+  tipoGestaoCategorias = tipo
+  document.getElementById("cat-tipo-in").classList.toggle("active", tipo === "in")
+  document.getElementById("cat-tipo-out").classList.toggle("active", tipo === "out")
+  renderizarArvoreCategorias()
+}
+
+function renderizarArvoreCategorias() {
+  const grupos = arvoreCategoriasCache.filter(g => tipoGestaoCategorias === "in" ? g.eh_recebimento : !g.eh_recebimento)
+  const el = document.getElementById("lista-categorias-gestao")
+  el.innerHTML = ""
+
+  grupos.forEach(g => {
+    el.innerHTML += `
+      <div class="grupo-gestao">
+        <div class="grupo-gestao-header">
+          <span class="nome">${g.nome}</span>
+          <div class="acoes">
+            <button class="btn-sm" onclick="moverCategoria(${g.id},'up')">↑</button>
+            <button class="btn-sm" onclick="moverCategoria(${g.id},'down')">↓</button>
+            <button class="btn-sm" onclick="abrirModalCategoria(${g.id})">+ categoria</button>
+            <button class="btn-sm" onclick="abrirEditarGrupo(${g.id},'${g.nome.replace(/'/g,"\\'")}')">editar</button>
+            <button class="btn-danger" onclick="confirmarEliminarCategoria(${g.id}, true)">eliminar</button>
+          </div>
+        </div>
+        <div class="categorias-gestao-lista">
+          ${g.categorias.map(c => `
+            <div class="categoria-gestao-item">
+              <span>${c.nome}</span>
+              <div class="acoes">
+                <button class="btn-sm" onclick="moverCategoria(${c.id},'up')">↑</button>
+                <button class="btn-sm" onclick="moverCategoria(${c.id},'down')">↓</button>
+                <button class="btn-sm" onclick="abrirEditarCategoriaGestao(${c.id},'${c.nome.replace(/'/g,"\\'")}',${g.id})">editar</button>
+                <button class="btn-danger" onclick="confirmarEliminarCategoria(${c.id}, false)">eliminar</button>
+              </div>
+            </div>`).join("")}
+        </div>
+      </div>`
+  })
+}
+
+function abrirModalGrupo() {
+  document.getElementById("modal-grupo-titulo").textContent = "Adicionar grupo"
+  document.getElementById("grupo-id").value = ""
+  document.getElementById("grupo-nome").value = ""
+  document.getElementById("grupo-tipo").value = tipoGestaoCategorias
+  document.getElementById("grupo-tipo-campo").style.display = ""
+  document.getElementById("modal-grupo").classList.add("open")
+}
+
+function abrirEditarGrupo(id, nome) {
+  document.getElementById("modal-grupo-titulo").textContent = "Editar grupo"
+  document.getElementById("grupo-id").value = id
+  document.getElementById("grupo-nome").value = nome
+  document.getElementById("grupo-tipo-campo").style.display = "none"
+  document.getElementById("modal-grupo").classList.add("open")
+}
+
+async function guardarGrupo() {
+  const id   = document.getElementById("grupo-id").value
+  const nome = document.getElementById("grupo-nome").value
+  if (id) {
+    await apiPut("/categorias/" + id, { nome })
+  } else {
+    const tipo = document.getElementById("grupo-tipo").value
+    await apiPost("/categorias", { nome, eh_recebimento: tipo === "in" })
+  }
+  fecharModal()
+  aposMudarCategorias()
+}
+
+function preencherSelectGrupos(grupoSelecionadoId) {
+  const sel = document.getElementById("categoria-gestao-grupo")
+  sel.innerHTML = ""
+  arvoreCategoriasCache
+    .filter(g => tipoGestaoCategorias === "in" ? g.eh_recebimento : !g.eh_recebimento)
+    .forEach(g => {
+      sel.innerHTML += `<option value="${g.id}" ${g.id === grupoSelecionadoId ? "selected" : ""}>${g.nome}</option>`
+    })
+}
+
+function abrirModalCategoria(grupoId) {
+  document.getElementById("modal-categoria-gestao-titulo").textContent = "Adicionar categoria"
+  document.getElementById("categoria-gestao-id").value = ""
+  document.getElementById("categoria-gestao-nome").value = ""
+  preencherSelectGrupos(grupoId)
+  document.getElementById("modal-categoria-gestao").classList.add("open")
+}
+
+function abrirEditarCategoriaGestao(id, nome, grupoId) {
+  document.getElementById("modal-categoria-gestao-titulo").textContent = "Editar categoria"
+  document.getElementById("categoria-gestao-id").value = id
+  document.getElementById("categoria-gestao-nome").value = nome
+  preencherSelectGrupos(grupoId)
+  document.getElementById("modal-categoria-gestao").classList.add("open")
+}
+
+async function guardarCategoriaGestao() {
+  const id      = document.getElementById("categoria-gestao-id").value
+  const nome    = document.getElementById("categoria-gestao-nome").value
+  const grupoId = parseInt(document.getElementById("categoria-gestao-grupo").value)
+  if (id) {
+    await apiPut("/categorias/" + id, { nome, parent_id: grupoId })
+  } else {
+    await apiPost("/categorias", { nome, parent_id: grupoId })
+  }
+  fecharModal()
+  aposMudarCategorias()
+}
+
+async function moverCategoria(id, direcao) {
+  await apiPost("/categorias/" + id + "/mover?direcao=" + direcao, {})
+  carregarArvoreCategorias()
+}
+
+let elimAtual = { id: null, ehGrupo: false }
+
+async function confirmarEliminarCategoria(id, ehGrupo) {
+  elimAtual = { id, ehGrupo }
+  const r = await apiDelete("/categorias/" + id)
+  if (r.ok) {
+    aposMudarCategorias()
+    return
+  }
+  const d = await r.json()
+  document.getElementById("elim-titulo").textContent = ehGrupo ? "Eliminar grupo" : "Eliminar categoria"
+  document.getElementById("elim-aviso").textContent  = d.detail
+
+  const selectMigrar = document.getElementById("elim-migrar-para")
+  selectMigrar.innerHTML = ""
+  if (ehGrupo) {
+    const grupo = arvoreCategoriasCache.find(g => g.id === id)
+    arvoreCategoriasCache
+      .filter(g => g.id !== id && g.eh_recebimento === grupo.eh_recebimento)
+      .forEach(g => selectMigrar.innerHTML += `<option value="${g.id}">${g.nome}</option>`)
+  } else {
+    const grupoPai = arvoreCategoriasCache.find(g => g.categorias.some(c => c.id === id))
+    grupoPai.categorias
+      .filter(c => c.id !== id)
+      .forEach(c => selectMigrar.innerHTML += `<option value="${c.id}">${c.nome}</option>`)
+  }
+
+  document.getElementById("modal-eliminar-categoria").classList.add("open")
+}
+
+async function confirmarEliminacaoForcada() {
+  if (!confirm("Isto vai eliminar também os movimentos associados, de forma permanente. Continuar?")) return
+  await apiDelete("/categorias/" + elimAtual.id + "?forcar=true")
+  fecharModal()
+  aposMudarCategorias()
+}
+
+async function confirmarEliminacaoComMigracao() {
+  const destino = document.getElementById("elim-migrar-para").value
+  await apiDelete("/categorias/" + elimAtual.id + "?migrar_para_id=" + destino)
+  fecharModal()
+  aposMudarCategorias()
+}
+
+// ═══════════════════════════════════════════════════════════
+// INÍCIO
+// ═══════════════════════════════════════════════════════════
+if (!verificarTokenReset() && TOKEN) { iniciarApp() }
 </script>
 </body>
 </html>

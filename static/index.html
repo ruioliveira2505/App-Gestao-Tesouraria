@@ -8,64 +8,138 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
+
+    /* AUTH */
     #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     .auth-card { background: white; border-radius: 12px; border: 1px solid #e5e5e5; padding: 2rem; width: 100%; max-width: 380px; }
     .auth-card h1 { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
-    .auth-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
+    .auth-tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
     .auth-tab { padding: 0.5rem 1rem; font-size: 0.875rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; color: #888; }
     .auth-tab.active { border-bottom-color: #1a1a1a; color: #1a1a1a; font-weight: 500; }
-    .field { margin-bottom: 1rem; }
-    .field label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
-    .field input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; outline: none; }
-    .field input:focus { border-color: #1a1a1a; }
-    .btn-primary { width: 100%; padding: 0.65rem; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
-    .btn-primary:hover { background: #333; }
     .auth-error { font-size: 0.8rem; color: #c0392b; margin-top: 0.75rem; text-align: center; }
+
+    /* NAV */
     #app-screen { display: none; }
-    nav { background: white; border-bottom: 1px solid #e5e5e5; padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 52px; }
-    .nav-brand { font-size: 0.95rem; font-weight: 500; }
-    .nav-links { display: flex; gap: 0; flex: 1; }
+    nav { background: white; border-bottom: 1px solid #e5e5e5; padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 52px; position: sticky; top: 0; z-index: 50; }
+    .nav-brand { font-size: 0.95rem; font-weight: 600; }
+    .nav-links { display: flex; flex: 1; }
     .nav-link { padding: 0 1rem; height: 52px; display: flex; align-items: center; font-size: 0.875rem; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
-    .nav-link.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
-    .nav-user { font-size: 0.8rem; color: #888; margin-left: auto; }
-    .btn-logout { font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; padding: 0; }
+    .nav-link.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+    .nav-right { display: flex; align-items: center; gap: 1rem; margin-left: auto; }
+    .nav-user { font-size: 0.8rem; color: #888; }
+    .btn-logout { font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; }
     .btn-logout:hover { color: #1a1a1a; }
-    main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+
+    /* LAYOUT */
+    main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
     .page { display: none; }
     .page.active { display: block; }
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
-    .card .label { font-size: 0.75rem; color: #888; margin-bottom: 0.4rem; }
-    .card .valor { font-size: 1.6rem; font-weight: 500; }
-    .card .sub { font-size: 0.8rem; color: #888; margin-top: 0.25rem; }
-    .positivo { color: #1a7a4a; }
-    .negativo { color: #c0392b; }
-    .section-title { font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 0.75rem; letter-spacing: 0.04em; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; border: 1px solid #e5e5e5; overflow: hidden; margin-bottom: 2rem; }
-    th { text-align: left; font-size: 0.75rem; font-weight: 500; color: #888; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
-    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #f5f5f5; }
-    tr:last-child td { border-bottom: none; }
-    .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: #f0f0f0; color: #555; }
-    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
-    .chart-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
-    .chart-card h3 { font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 1rem; }
-    .chart-full { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; margin-bottom: 2rem; }
-    .chart-full h3 { font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 1rem; }
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 100; }
-    .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 420px; }
-    .modal h2 { font-size: 1rem; font-weight: 500; margin-bottom: 1.25rem; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
+
+    /* FIELDS */
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+    .field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; outline: none; background: white; }
+    .field input:focus, .field select:focus { border-color: #1a1a1a; }
+
+    /* BUTTONS */
+    .btn-primary { padding: 0.6rem 1.25rem; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+    .btn-primary:hover { background: #333; }
+    .btn-primary.full { width: 100%; }
     .btn-secondary { padding: 0.5rem 1rem; background: none; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
     .btn-secondary:hover { background: #f5f5f5; }
     .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid #e5e5e5; border-radius: 6px; cursor: pointer; }
     .btn-sm:hover { background: #f5f5f5; }
-    select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; }
-    @media (max-width: 640px) { .charts-grid { grid-template-columns: 1fr; } }
+    .btn-danger { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid #fca5a5; border-radius: 6px; cursor: pointer; color: #c0392b; }
+    .btn-danger:hover { background: #fef2f2; }
+
+    /* CARDS */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
+    .card .label { font-size: 0.75rem; color: #888; margin-bottom: 0.4rem; }
+    .card .valor { font-size: 1.5rem; font-weight: 500; }
+    .card .sub { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
+    .card.destaque { border-color: #1a7a4a; }
+
+    /* SUMMARY CARDS */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .summary-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1rem 1.25rem; }
+    .summary-card .label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .summary-card .valor { font-size: 1.3rem; font-weight: 500; }
+
+    /* SECTION */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .section-title { font-size: 0.75rem; font-weight: 600; color: #888; letter-spacing: 0.05em; text-transform: uppercase; }
+
+    /* TABLE */
+    .table-wrap { background: white; border-radius: 10px; border: 1px solid #e5e5e5; overflow: hidden; margin-bottom: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 0.7rem; font-weight: 600; color: #888; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e5e5; background: #fafafa; text-transform: uppercase; letter-spacing: 0.04em; }
+    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #f5f5f5; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    /* BADGE */
+    .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: #f0f0f0; color: #555; }
+    .badge-in  { background: #dcfce7; color: #166534; }
+    .badge-out { background: #fee2e2; color: #991b1b; }
+
+    /* COLORS */
+    .positivo { color: #1a7a4a; }
+    .negativo { color: #c0392b; }
+
+    /* CHARTS */
+    .charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .charts-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .chart-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
+    .chart-card h3 { font-size: 0.7rem; font-weight: 600; color: #888; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .chart-full { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: #888; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* FILTROS */
+    .filtros { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: flex-end; }
+    .filtros .field { margin-bottom: 0; min-width: 140px; }
+    .filtros select, .filtros input { padding: 0.5rem 0.75rem; }
+
+    /* MES SELECTOR */
+    .mes-selector { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .mes-selector button { padding: 0.4rem 0.75rem; background: white; border: 1px solid #e5e5e5; border-radius: 6px; cursor: pointer; font-size: 0.875rem; }
+    .mes-selector button:hover { background: #f5f5f5; }
+    .mes-selector span { font-size: 0.95rem; font-weight: 500; min-width: 100px; text-align: center; }
+
+    /* GRUPOS EXPANSIVEIS */
+    .grupo-row { cursor: pointer; }
+    .grupo-row td { font-weight: 500; background: #fafafa; }
+    .grupo-row:hover td { background: #f0f0f0; }
+    .grupo-row td:first-child::before { content: '▶ '; font-size: 0.65rem; color: #888; }
+    .grupo-row.open td:first-child::before { content: '▼ '; }
+    .sub-row td { padding-left: 2rem; font-size: 0.825rem; color: #555; }
+    .sub-row { display: none; }
+    .sub-row.visible { display: table-row; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 440px; }
+    .modal h2 { font-size: 1rem; font-weight: 500; margin-bottom: 1.25rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
+
+    /* MOVIMENTOS RECENTES */
+    .mov-recente { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #f5f5f5; }
+    .mov-recente:last-child { border-bottom: none; }
+    .mov-recente .desc { font-size: 0.875rem; }
+    .mov-recente .meta { font-size: 0.75rem; color: #888; margin-top: 2px; }
+    .mov-recente .val { font-size: 0.875rem; font-weight: 500; }
+
+    @media (max-width: 768px) {
+      .charts-grid-2, .charts-grid-3, .summary-grid { grid-template-columns: 1fr; }
+      nav { padding: 0 1rem; }
+      main { padding: 1rem; }
+    }
   </style>
 </head>
 <body>
 
+<!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-card">
     <h1>Tesouraria</h1>
@@ -76,109 +150,143 @@
     <div id="tab-login">
       <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="email@exemplo.com"></div>
       <div class="field"><label>Password</label><input type="password" id="login-password"></div>
-      <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
+      <button class="btn-primary full" onclick="fazerLogin()">Entrar</button>
     </div>
     <div id="tab-registo" style="display:none">
-      <div class="field"><label>Nome</label><input type="text" id="reg-nome" placeholder="O teu nome"></div>
-      <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="email@exemplo.com"></div>
+      <div class="field"><label>Nome</label><input type="text" id="reg-nome"></div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email"></div>
       <div class="field"><label>Password</label><input type="password" id="reg-password"></div>
-      <button class="btn-primary" onclick="fazerRegisto()">Criar conta</button>
+      <button class="btn-primary full" onclick="fazerRegisto()">Criar conta</button>
     </div>
     <div class="auth-error" id="auth-erro"></div>
   </div>
 </div>
 
+<!-- APP -->
 <div id="app-screen">
   <nav>
     <span class="nav-brand">Tesouraria</span>
     <div class="nav-links">
-      <div class="nav-link active" onclick="irPara('dashboard')">Dashboard</div>
-      <div class="nav-link" onclick="irPara('movimentos')">Movimentos</div>
-      <div class="nav-link" onclick="irPara('analises')">Análises</div>
+      <div class="nav-link active" onclick="irPara('dashboard', this)">Dashboard</div>
+      <div class="nav-link" onclick="irPara('analise', this)">Análise</div>
+      <div class="nav-link" onclick="irPara('movimentos', this)">Movimentos</div>
     </div>
-    <span class="nav-user" id="nav-nome"></span>
-    <button class="btn-logout" onclick="logout()">Sair</button>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-nome"></span>
+      <button class="btn-logout" onclick="logout()">Sair</button>
+    </div>
   </nav>
+
   <main>
+
+    <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="cards-grid" id="cards-contas"></div>
-      <div class="section-title">RESUMO POR CATEGORIA</div>
-      <table>
-        <thead><tr><th>Categoria</th><th>Movimentos</th><th>Entradas</th><th>Saídas</th><th>Líquido</th></tr></thead>
-        <tbody id="tabela-resumo"></tbody>
-      </table>
-    </div>
-    <div class="page" id="page-movimentos">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <div class="section-title" style="margin:0">MOVIMENTOS</div>
-        <button class="btn-sm" onclick="abrirModalMovimento()">+ Adicionar</button>
+      <div class="summary-grid" id="summary-mes"></div>
+      <div class="charts-grid-2">
+        <div class="chart-full" style="margin:0">
+          <h3>Evolução do Saldo</h3>
+          <canvas id="grafico-saldo"></canvas>
+        </div>
+        <div class="chart-full" style="margin:0">
+          <h3>Últimos 6 Meses</h3>
+          <canvas id="grafico-mensal"></canvas>
+        </div>
       </div>
-      <table>
-        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
-        <tbody id="tabela-movimentos"></tbody>
-      </table>
-    </div>
-    <div class="page" id="page-analises">
-      <div class="charts-grid">
-        <div class="chart-card"><h3>DESPESAS POR CATEGORIA</h3><canvas id="grafico-categorias"></canvas></div>
-        <div class="chart-card"><h3>ENTRADAS VS SAÍDAS</h3><canvas id="grafico-mensal-bar"></canvas></div>
+      <div style="margin-top:1.5rem">
+        <div class="section-header">
+          <div class="section-title">Movimentos Recentes</div>
+        </div>
+        <div class="card" id="movimentos-recentes"></div>
       </div>
-      <div class="chart-full"><h3>EVOLUÇÃO DO SALDO</h3><canvas id="grafico-saldo"></canvas></div>
-      <div class="section-title">MOVIMENTOS RECORRENTES</div>
-      <table>
-        <thead><tr><th>Descrição</th><th>Categoria</th><th>Ocorrências</th><th>Valor médio</th><th>Última vez</th></tr></thead>
-        <tbody id="tabela-recorrentes"></tbody>
-      </table>
     </div>
-  </main>
-</div>
 
+    <!-- ANÁLISE -->
+    <div class="page" id="page-analise">
+      <div class="mes-selector">
+        <button onclick="mudarMes(-1)">&#8592;</button>
+        <span id="mes-label"></span>
+        <button onclick="mudarMes(1)">&#8594;</button>
+      </div>
+      <div class="charts-grid-2">
+        <div class="chart-card">
+          <h3>Cash-Out por Categoria</h3>
+          <canvas id="grafico-out"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Cash-In por Categoria</h3>
+          <canvas id="grafico-in"></canvas>
+        </div>
+      </div>
+      <div class="section-header" style="margin-bottom:0.75rem">
+        <div class="section-title">Detalhe por Grupo</div>
+      </div>
+      <div class="table-wrap">
+        <table id="tabela-grupos">
+          <thead><tr><th>Grupo</th><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead>
+          <tbody id="tbody-grupos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MOVIMENTOS -->
+    <div class="page" id="page-movimentos">
+      <div class="filtros">
+        <div class="field"><label>Conta</label>
+          <select id="filtro-conta" onchange="carregarMovimentos()">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="field"><label>Direção</label>
+          <select id="filtro-direcao" onchange="carregarMovimentos()">
+            <option value="">Todas</option>
+            <option value="in">Cash-In</option>
+            <option value="out">Cash-Out</option>
+          </select>
+        </div>
+        <div class="field"><label>Categoria</label>
+          <select id="filtro-categoria" onchange="carregarMovimentos()">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="field"><label>De</label><input type="date" id="filtro-data-de" onchange="carregarMovimentos()"></div>
+        <div class="field"><label>Até</label><input type="date" id="filtro-data-ate" onchange="carregarMovimentos()"></div>
+        <button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Grupo</th><th>Categoria</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+          <tbody id="tabela-movimentos"></tbody>
+        </table>
+      </div>
+    </div>
+
+<!-- MODAL ADICIONAR MOVIMENTO -->
 <div class="modal-overlay" id="modal-movimento">
   <div class="modal">
     <h2>Adicionar movimento</h2>
     <div class="field"><label>Conta</label><select id="mov-conta"></select></div>
     <div class="field"><label>Data</label><input type="date" id="mov-data"></div>
-    <div class="field"><label>Descrição</label><input type="text" id="mov-descricao" placeholder="Ex: EDP COMERCIAL"></div>
-    <div class="field"><label>Valor (negativo = saída)</label><input type="number" id="mov-valor" step="0.01" placeholder="-42.50"></div>
-    <div class="field"><label>Categoria</label>
-      <select id="mov-categoria">
-        <option value="por categorizar">por categorizar</option>
-        <option value="salários">salários</option>
-        <option value="utilities">utilities</option>
-        <option value="supermercado">supermercado</option>
-        <option value="transferências">transferências</option>
-        <option value="impostos">impostos</option>
-        <option value="fornecedores">fornecedores</option>
-        <option value="outros">outros</option>
-      </select>
-    </div>
+    <div class="field"><label>Descrição</label><input type="text" id="mov-descricao"></div>
+    <div class="field"><label>Valor (negativo = pagamento)</label><input type="number" id="mov-valor" step="0.01"></div>
+    <div class="field"><label>Categoria</label><select id="mov-categoria"></select></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-primary" style="width:auto;padding:0.5rem 1.25rem" onclick="guardarMovimento()">Guardar</button>
+      <button class="btn-primary" onclick="guardarMovimento()">Guardar</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL EDITAR CATEGORIA -->
 <div class="modal-overlay" id="modal-categoria">
   <div class="modal">
     <h2>Editar categoria</h2>
     <input type="hidden" id="edit-id">
     <div class="field"><label>Descrição</label><input type="text" id="edit-descricao" disabled style="background:#f5f5f5;color:#888"></div>
-    <div class="field"><label>Categoria</label>
-      <select id="edit-categoria">
-        <option value="salários">salários</option>
-        <option value="utilities">utilities</option>
-        <option value="supermercado">supermercado</option>
-        <option value="transferências">transferências</option>
-        <option value="impostos">impostos</option>
-        <option value="fornecedores">fornecedores</option>
-        <option value="outros">outros</option>
-        <option value="por categorizar">por categorizar</option>
-      </select>
-    </div>
+    <div class="field"><label>Categoria</label><select id="edit-categoria"></select></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-primary" style="width:auto;padding:0.5rem 1.25rem" onclick="guardarCategoria()">Guardar</button>
+      <button class="btn-primary" onclick="guardarCategoria()">Guardar</button>
     </div>
   </div>
 </div>
@@ -187,181 +295,382 @@
 const API = "http://localhost:8000"
 let TOKEN = localStorage.getItem("token")
 let NOME  = localStorage.getItem("nome")
+let contasCache = []
+let categoriasCache = []
+let mesAtual = new Date().toISOString().slice(0, 7)
+let graficos = {}
 
-function fmt(v) { return parseFloat(v).toLocaleString("pt-PT", {style:"currency", currency:"EUR"}) }
+// ── UTILS ────────────────────────────────────────────────────
+function fmt(v) {
+  return parseFloat(v).toLocaleString("pt-PT", { style: "currency", currency: "EUR" })
+}
+function fmtMes(ym) {
+  const [y, m] = ym.split("-")
+  const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
+  return nomes[parseInt(m)-1] + " " + y
+}
+function api(path) {
+  return fetch(API + path, { headers: { "Authorization": "Bearer " + TOKEN } }).then(r => r.json())
+}
+function apiPost(path, body) {
+  return fetch(API + path, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN }, body: JSON.stringify(body) })
+}
+function apiPatch(path, body) {
+  return fetch(API + path, { method: "PATCH", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN }, body: JSON.stringify(body) })
+}
+function apiDelete(path) {
+  return fetch(API + path, { method: "DELETE", headers: { "Authorization": "Bearer " + TOKEN } })
+}
+function destruirGrafico(nome) {
+  if (graficos[nome]) { graficos[nome].destroy(); delete graficos[nome] }
+}
 
+// ── AUTH ─────────────────────────────────────────────────────
 function trocarTab(tab) {
-  document.querySelectorAll(".auth-tab").forEach((t,i) => t.classList.toggle("active", (i===0)===(tab==="login")))
+  document.querySelectorAll(".auth-tab").forEach((t, i) => t.classList.toggle("active", (i===0)===(tab==="login")))
   document.getElementById("tab-login").style.display   = tab === "login"   ? "" : "none"
   document.getElementById("tab-registo").style.display = tab === "registo" ? "" : "none"
   document.getElementById("auth-erro").textContent = ""
 }
-
 async function fazerLogin() {
-  const email    = document.getElementById("login-email").value
-  const password = document.getElementById("login-password").value
-  const r = await fetch(`${API}/login`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({email, password})})
+  const r = await apiPost("/login", {
+    email:    document.getElementById("login-email").value,
+    password: document.getElementById("login-password").value
+  })
   const d = await r.json()
   if (!r.ok) { document.getElementById("auth-erro").textContent = d.detail; return }
   guardarSessao(d.token, d.nome)
 }
-
 async function fazerRegisto() {
-  const nome     = document.getElementById("reg-nome").value
-  const email    = document.getElementById("reg-email").value
-  const password = document.getElementById("reg-password").value
-  const r = await fetch(`${API}/registro`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({nome, email, password})})
+  const r = await apiPost("/registro", {
+    nome:     document.getElementById("reg-nome").value,
+    email:    document.getElementById("reg-email").value,
+    password: document.getElementById("reg-password").value
+  })
   const d = await r.json()
   if (!r.ok) { document.getElementById("auth-erro").textContent = d.detail; return }
   guardarSessao(d.token, d.nome)
 }
-
 function guardarSessao(token, nome) {
   TOKEN = token; NOME = nome
   localStorage.setItem("token", token)
   localStorage.setItem("nome", nome)
   iniciarApp()
 }
-
 function logout() {
   localStorage.clear(); TOKEN = null; NOME = null
   document.getElementById("app-screen").style.display  = "none"
-  document.getElementById("auth-screen").style.display = "block"
+  document.getElementById("auth-screen").style.display = "flex"
 }
 
-function iniciarApp() {
+// ── APP INIT ─────────────────────────────────────────────────
+async function iniciarApp() {
   document.getElementById("auth-screen").style.display = "none"
   document.getElementById("app-screen").style.display  = "block"
   document.getElementById("nav-nome").textContent = NOME
+  document.getElementById("mes-label").textContent = fmtMes(mesAtual)
+  contasCache     = await api("/contas")
+  categoriasCache = await api("/categorias")
+  const selConta = document.getElementById("filtro-conta")
+  contasCache.forEach(c => {
+    selConta.innerHTML += `<option value="${c.id}">${c.banco}</option>`
+  })
+  document.getElementById("filtro-categoria").innerHTML = '<option value="">Todas</option>' + construirOptionsCategorias()
   carregarDashboard()
-  carregarContas()
 }
 
-function irPara(pagina) {
+function irPara(pagina, el) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
   document.getElementById("page-" + pagina).classList.add("active")
-  event.target.classList.add("active")
+  el.classList.add("active")
   if (pagina === "dashboard")  carregarDashboard()
+  if (pagina === "analise")    carregarAnalise()
   if (pagina === "movimentos") carregarMovimentos()
-  if (pagina === "analises")   carregarAnalises()
 }
 
-function api(path) {
-  return fetch(API + path, {headers:{"Authorization": "Bearer " + TOKEN}}).then(r => r.json())
-}
-
-function apiPost(path, body) {
-  return fetch(API + path, {method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer " + TOKEN}, body: JSON.stringify(body)})
-}
-
-function apiPatch(path, body) {
-  return fetch(API + path, {method:"PATCH", headers:{"Content-Type":"application/json","Authorization":"Bearer " + TOKEN}, body: JSON.stringify(body)})
-}
-
+// ── DASHBOARD ────────────────────────────────────────────────
 async function carregarDashboard() {
-  const [contas, resumo] = await Promise.all([api("/contas"), api("/resumo")])
-  const el = document.getElementById("cards-contas")
-  let total = 0
-  el.innerHTML = ""
-  contas.forEach(c => {
-    total += c.saldo
-    el.innerHTML += "<div class='card'><div class='label'>" + c.banco + "</div><div class='valor'>" + fmt(c.saldo) + "</div><div class='sub'>" + c.iban.slice(-8) + "</div></div>"
-  })
-  el.innerHTML += "<div class='card' style='border-color:#1a7a4a'><div class='label'>Total consolidado</div><div class='valor positivo'>" + fmt(total) + "</div><div class='sub'>todas as contas</div></div>"
-  const tb = document.getElementById("tabela-resumo")
-  tb.innerHTML = ""
-  resumo.forEach(r => {
-    const liq = r.entradas + r.saidas
-    tb.innerHTML += "<tr><td><span class='badge'>" + r.categoria + "</span></td><td>" + r.n + "</td><td class='positivo'>" + fmt(r.entradas) + "</td><td class='negativo'>" + fmt(r.saidas) + "</td><td class='" + (liq>=0?"positivo":"negativo") + "'>" + fmt(liq) + "</td></tr>"
-  })
-}
-
-let contasCache = []
-
-async function carregarContas() {
-  contasCache = await api("/contas")
-}
-
-async function carregarMovimentos() {
-  const movimentos = await api("/movimentos")
-  const tb = document.getElementById("tabela-movimentos")
-  tb.innerHTML = ""
-  movimentos.forEach(m => {
-    tb.innerHTML += "<tr><td>" + m.data + "</td><td>" + m.descricao + "</td><td><span class='badge'>" + m.categoria + "</span></td><td class='" + (m.valor>=0?"positivo":"negativo") + "'>" + fmt(m.valor) + "</td><td><button class='btn-sm' onclick=\"abrirEditarCategoria('" + m.id + "','" + m.descricao + "','" + m.categoria + "')\">editar</button></td></tr>"
-  })
-}
-
-let graficos = {}
-
-async function carregarAnalises() {
-  const [categorias, mensal, saldo, recorrentes] = await Promise.all([
-    api("/stats/categorias"),
+  const [contas, mensal, saldo, movimentos] = await Promise.all([
+    api("/contas"),
     api("/stats/mensal"),
     api("/stats/saldo-historico"),
-    api("/stats/recorrentes")
+    api("/movimentos")
   ])
-  if (graficos.cat)  graficos.cat.destroy()
-  if (graficos.bar)  graficos.bar.destroy()
-  if (graficos.line) graficos.line.destroy()
-  const cores = ["#1D9E75","#7F77DD","#D85A30","#378ADD","#BA7517","#D4537E","#639922","#E24B4A"]
-  graficos.cat = new Chart(document.getElementById("grafico-categorias"), {
-    type: "doughnut",
-    data: { labels: categorias.map(c => c.categoria), datasets: [{ data: categorias.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
-    options: { plugins: { legend: { position: "bottom", labels: { font: { size: 11 } } } } }
+
+  // cards contas
+  let total = 0
+  const elContas = document.getElementById("cards-contas")
+  elContas.innerHTML = ""
+  contas.forEach(c => {
+    total += c.saldo
+    elContas.innerHTML += `
+      <div class="card">
+        <div class="label">${c.banco}</div>
+        <div class="valor ${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo)}</div>
+        <div class="sub">${c.iban.slice(-8)}</div>
+      </div>`
   })
-  graficos.bar = new Chart(document.getElementById("grafico-mensal-bar"), {
-    type: "bar",
-    data: { labels: mensal.map(m => m.mes), datasets: [
-      { label: "Entradas", data: mensal.map(m => m.entradas), backgroundColor: "#1D9E75" },
-      { label: "Saidas",   data: mensal.map(m => Math.abs(m.saidas)), backgroundColor: "#D85A30" }
-    ]},
-    options: { plugins: { legend: { labels: { font: { size: 11 } } } }, scales: { x: { grid: { display: false } } } }
-  })
-  graficos.line = new Chart(document.getElementById("grafico-saldo"), {
+  elContas.innerHTML += `
+    <div class="card destaque">
+      <div class="label">Total consolidado</div>
+      <div class="valor positivo">${fmt(total)}</div>
+      <div class="sub">todas as contas</div>
+    </div>`
+
+  // summary mês atual
+  const mesData = mensal.find(m => m.mes === mesAtual) || { entradas: 0, saidas: 0, liquido: 0 }
+  document.getElementById("summary-mes").innerHTML = `
+    <div class="summary-card">
+      <div class="label">Cash-In ${fmtMes(mesAtual)}</div>
+      <div class="valor positivo">${fmt(mesData.entradas)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Cash-Out ${fmtMes(mesAtual)}</div>
+      <div class="valor negativo">${fmt(mesData.saidas)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Líquido ${fmtMes(mesAtual)}</div>
+      <div class="valor ${mesData.liquido >= 0 ? 'positivo' : 'negativo'}">${fmt(mesData.liquido)}</div>
+    </div>`
+
+  // gráfico saldo histórico
+  destruirGrafico("saldo")
+  graficos.saldo = new Chart(document.getElementById("grafico-saldo"), {
     type: "line",
-    data: { labels: saldo.map(s => s.data), datasets: [{ label: "Saldo", data: saldo.map(s => s.saldo), borderColor: "#378ADD", backgroundColor: "rgba(55,138,221,0.08)", fill: true, tension: 0.3, pointRadius: 3 }] },
+    data: {
+      labels: saldo.map(s => s.data),
+      datasets: [{
+        label: "Saldo", data: saldo.map(s => s.saldo),
+        borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)",
+        fill: true, tension: 0.3, pointRadius: 3
+      }]
+    },
     options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
   })
-  const tb = document.getElementById("tabela-recorrentes")
-  tb.innerHTML = ""
-  recorrentes.forEach(r => {
-    tb.innerHTML += "<tr><td>" + r.descricao + "</td><td><span class='badge'>" + r.categoria + "</span></td><td>" + r.ocorrencias + "</td><td class='" + (r.valor_medio>=0?"positivo":"negativo") + "'>" + fmt(r.valor_medio) + "</td><td>" + r.ultima_vez + "</td></tr>"
+
+  // gráfico barras mensais
+  destruirGrafico("mensal")
+  const ultimos6 = mensal.slice(-6)
+  graficos.mensal = new Chart(document.getElementById("grafico-mensal"), {
+    type: "bar",
+    data: {
+      labels: ultimos6.map(m => fmtMes(m.mes)),
+      datasets: [
+        { label: "Cash-In",  data: ultimos6.map(m => m.entradas), backgroundColor: "#1a7a4a" },
+        { label: "Cash-Out", data: ultimos6.map(m => m.saidas),   backgroundColor: "#c0392b" }
+      ]
+    },
+    options: { plugins: { legend: { labels: { font: { size: 11 } } } }, scales: { x: { grid: { display: false } } } }
   })
+
+  // últimos 5 movimentos
+  const el = document.getElementById("movimentos-recentes")
+  el.innerHTML = ""
+  movimentos.slice(0, 5).forEach(m => {
+    el.innerHTML += `
+      <div class="mov-recente">
+        <div>
+          <div class="desc">${m.descricao}</div>
+          <div class="meta">${m.data} · <span class="badge">${m.grupo}</span> ${m.categoria}</div>
+        </div>
+        <div class="val ${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor)}</div>
+      </div>`
+  })
+}
+
+// ── ANÁLISE ──────────────────────────────────────────────────
+function mudarMes(delta) {
+  const [y, m] = mesAtual.split("-").map(Number)
+  const d = new Date(y, m - 1 + delta, 1)
+  mesAtual = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")
+  document.getElementById("mes-label").textContent = fmtMes(mesAtual)
+  carregarAnalise()
+}
+
+async function carregarAnalise() {
+  const [categorias, grupos] = await Promise.all([
+    api(`/stats/categorias?mes=${mesAtual}`),
+    api(`/stats/grupos?mes=${mesAtual}`)
+  ])
+
+  const cores = ["#1a7a4a","#2563eb","#c0392b","#d97706","#7c3aed","#0891b2","#be185d","#4d7c0f","#b45309","#6b7280","#dc2626","#059669"]
+
+  // gráfico cash-out
+  const out = categorias.filter(c => !c.eh_recebimento)
+  destruirGrafico("out")
+  graficos.out = new Chart(document.getElementById("grafico-out"), {
+    type: "doughnut",
+    data: {
+      labels: out.map(c => c.categoria),
+      datasets: [{ data: out.map(c => c.total), backgroundColor: cores, borderWidth: 0 }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${fmt(ctx.raw)}  (${out[ctx.dataIndex].percentagem}%)`
+          }
+        }
+      }
+    }
+  })
+
+  // gráfico cash-in
+  const inp = categorias.filter(c => c.eh_recebimento)
+  destruirGrafico("in")
+  graficos.in = new Chart(document.getElementById("grafico-in"), {
+    type: "doughnut",
+    data: {
+      labels: inp.map(c => c.grupo + " > " + c.categoria),
+      datasets: [{ data: inp.map(c => c.total), backgroundColor: cores, borderWidth: 0 }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${fmt(ctx.raw)}  (${inp[ctx.dataIndex].percentagem}%)`
+          }
+        }
+      }
+    }
+  })
+
+  // tabela grupos expansível
+  const tbody = document.getElementById("tbody-grupos")
+  tbody.innerHTML = ""
+  const totalGeral = grupos.reduce((s, g) => s + g.total, 0)
+  grupos.forEach((g, gi) => {
+    const pct = totalGeral > 0 ? (g.total / totalGeral * 100).toFixed(1) : "0.0"
+    tbody.innerHTML += `
+      <tr class="grupo-row" onclick="toggleGrupo(${gi})">
+        <td colspan="2">${g.grupo} <span class="badge ${g.eh_recebimento ? 'badge-in' : 'badge-out'}">${g.eh_recebimento ? 'in' : 'out'}</span></td>
+        <td style="text-align:right">${fmt(g.total)}</td>
+        <td style="text-align:right">${pct}%</td>
+      </tr>`
+    g.subcategorias.forEach(s => {
+      const sPct = g.total > 0 ? (s.total / g.total * 100).toFixed(1) : "0.0"
+      tbody.innerHTML += `
+        <tr class="sub-row" data-grupo="${gi}">
+          <td></td>
+          <td>${s.categoria}</td>
+          <td style="text-align:right">${fmt(s.total)}</td>
+          <td style="text-align:right">${sPct}%</td>
+        </tr>`
+    })
+  })
+}
+
+function toggleGrupo(gi) {
+  const rows  = document.querySelectorAll(`.sub-row[data-grupo="${gi}"]`)
+  const header = document.querySelectorAll(".grupo-row")[gi]
+  const aberto = header.classList.toggle("open")
+  rows.forEach(r => r.classList.toggle("visible", aberto))
+}
+
+// ── MOVIMENTOS ───────────────────────────────────────────────
+async function carregarMovimentos() {
+  const conta     = document.getElementById("filtro-conta").value
+  const direcao   = document.getElementById("filtro-direcao").value
+  const categoria = document.getElementById("filtro-categoria").value
+  const dataDe    = document.getElementById("filtro-data-de").value
+  const dataAte   = document.getElementById("filtro-data-ate").value
+
+  if (dataDe && dataAte) {
+    const dias = (new Date(dataAte) - new Date(dataDe)) / (1000 * 60 * 60 * 24)
+    if (dias > 365) {
+      alert("O intervalo de datas não pode ser superior a 1 ano.")
+      return
+    }
+  }
+
+  let todos = await api("/movimentos")
+
+  if (conta)     todos = todos.filter(m => m.conta_id === conta)
+  if (direcao === "in")  todos = todos.filter(m => m.valor > 0)
+  if (direcao === "out") todos = todos.filter(m => m.valor < 0)
+  if (categoria) todos = todos.filter(m => m.categoria_id === parseInt(categoria))
+  if (dataDe)    todos = todos.filter(m => m.data >= dataDe)
+  if (dataAte)   todos = todos.filter(m => m.data <= dataAte)
+
+  const tb = document.getElementById("tabela-movimentos")
+  tb.innerHTML = ""
+  todos.forEach(m => {
+    tb.innerHTML += `
+      <tr>
+        <td>${m.data}</td>
+        <td>${m.descricao}</td>
+        <td>${m.conta_id}</td>
+        <td><span class="badge">${m.grupo}</span></td>
+        <td>${m.categoria}</td>
+        <td style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm" onclick="abrirEditarCategoria('${m.id}','${m.descricao.replace(/'/g,"\\'")}',${m.categoria_id})">editar</button>
+          <button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button>
+        </td>
+      </tr>`
+  })
+}
+
+async function eliminarMovimento(id) {
+  if (!confirm("Eliminar este movimento?")) return
+  await apiDelete("/movimentos/" + id)
+  carregarMovimentos()
+  carregarDashboard()
+}
+
+// ── MODAIS ───────────────────────────────────────────────────
+function construirOptionsCategorias(selecionado) {
+  let html = ""
+  let grupoAtual = null
+  categoriasCache.forEach(c => {
+    if (c.grupo !== grupoAtual) {
+      if (grupoAtual !== null) html += "</optgroup>"
+      html += `<optgroup label="${c.grupo}">`
+      grupoAtual = c.grupo
+    }
+    html += `<option value="${c.id}" ${c.id === selecionado ? "selected" : ""}>${c.nome}</option>`
+  })
+  if (grupoAtual !== null) html += "</optgroup>"
+  return html
 }
 
 function abrirModalMovimento() {
-  const sel = document.getElementById("mov-conta")
-  sel.innerHTML = contasCache.map(c => "<option value='" + c.id + "'>" + c.banco + "</option>").join("")
-  document.getElementById("mov-data").value = new Date().toISOString().slice(0,10)
+  document.getElementById("mov-conta").innerHTML = contasCache.map(c => `<option value="${c.id}">${c.banco}</option>`).join("")
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias()
+  document.getElementById("mov-data").value = new Date().toISOString().slice(0, 10)
+  document.getElementById("mov-descricao").value = ""
+  document.getElementById("mov-valor").value = ""
   document.getElementById("modal-movimento").classList.add("open")
 }
 
 async function guardarMovimento() {
-  const body = {
-    conta_id:  document.getElementById("mov-conta").value,
-    data:      document.getElementById("mov-data").value,
-    descricao: document.getElementById("mov-descricao").value,
-    valor:     parseFloat(document.getElementById("mov-valor").value),
-    categoria: document.getElementById("mov-categoria").value,
-  }
-  await apiPost("/movimentos", body)
+  await apiPost("/movimentos", {
+    conta_id:     document.getElementById("mov-conta").value,
+    data:         document.getElementById("mov-data").value,
+    descricao:    document.getElementById("mov-descricao").value,
+    valor:        parseFloat(document.getElementById("mov-valor").value),
+    categoria_id: parseInt(document.getElementById("mov-categoria").value),
+  })
   fecharModal()
   carregarMovimentos()
   carregarDashboard()
 }
 
-function abrirEditarCategoria(id, descricao, categoria) {
+function abrirEditarCategoria(id, descricao, categoriaId) {
   document.getElementById("edit-id").value        = id
   document.getElementById("edit-descricao").value = descricao
-  document.getElementById("edit-categoria").value = categoria
+  document.getElementById("edit-categoria").innerHTML = construirOptionsCategorias(categoriaId)
   document.getElementById("modal-categoria").classList.add("open")
 }
 
 async function guardarCategoria() {
-  const id        = document.getElementById("edit-id").value
-  const categoria = document.getElementById("edit-categoria").value
-  await apiPatch("/movimentos/" + id + "/categoria", { categoria })
+  const id = document.getElementById("edit-id").value
+  await apiPatch("/movimentos/" + id + "/categoria", {
+    categoria_id: parseInt(document.getElementById("edit-categoria").value)
+  })
   fecharModal()
   carregarMovimentos()
   carregarDashboard()
@@ -371,6 +680,7 @@ function fecharModal() {
   document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
 }
 
+// ── INIT ─────────────────────────────────────────────────────
 if (TOKEN) { iniciarApp() }
 </script>
 </body>

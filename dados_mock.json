@@ -3,26 +3,51 @@
     {
       "id": "conta_001",
       "banco": "Millennium BCP",
-      "iban": "PT50003300004098765432184",
+      "iban": "PT50 0010 0000 1234 5678 9015 4",
       "moeda": "EUR",
-      "saldo": 12450.30
+      "saldo": 3240.50
     },
     {
-      "id": "conta_002", 
+      "id": "conta_002",
       "banco": "Caixa Geral de Depósitos",
-      "iban": "PT50003500000012345678901",
+      "iban": "PT50 0035 0000 9876 5432 1015 8",
       "moeda": "EUR",
-      "saldo": 3820.00
+      "saldo": 1180.00
     }
   ],
   "movimentos": [
-    {"id": "m001", "conta_id": "conta_001", "data": "2026-06-01", "descricao": "SALARIO JUNHO EMPRESA XYZ", "valor": 2800.00},
-    {"id": "m002", "conta_id": "conta_001", "data": "2026-06-02", "descricao": "EDP COMERCIAL 987654321", "valor": -142.30},
-    {"id": "m003", "conta_id": "conta_001", "data": "2026-06-03", "descricao": "CONTINENTE 0234 BRAGA", "valor": -87.65},
-    {"id": "m004", "conta_id": "conta_001", "data": "2026-06-05", "descricao": "NOS COMUNICACOES SA", "valor": -45.00},
-    {"id": "m005", "conta_id": "conta_001", "data": "2026-06-07", "descricao": "FORNECEDOR GRAFICA SILVA LDA", "valor": -320.00},
-    {"id": "m006", "conta_id": "conta_002", "data": "2026-06-01", "descricao": "TRANSFERENCIA DE CONTA_001", "valor": 500.00},
-    {"id": "m007", "conta_id": "conta_002", "data": "2026-06-10", "descricao": "AT PAGAMENTO IVA 2T2026", "valor": -890.00},
-    {"id": "m008", "conta_id": "conta_002", "data": "2026-06-12", "descricao": "MB WAY 919123456", "valor": -25.00}
+    {"id": "m001", "conta_id": "conta_001", "data": "2026-05-01", "descricao": "SALARIO MAIO EMPRESA XYZ",           "valor":  2800.00},
+    {"id": "m002", "conta_id": "conta_001", "data": "2026-05-02", "descricao": "EDP COMERCIAL 111111111",            "valor":  -142.30},
+    {"id": "m003", "conta_id": "conta_001", "data": "2026-05-03", "descricao": "CONTINENTE 0234 BRAGA",             "valor":   -87.65},
+    {"id": "m004", "conta_id": "conta_001", "data": "2026-05-05", "descricao": "NOS COMUNICACOES SA",               "valor":   -45.00},
+    {"id": "m005", "conta_id": "conta_001", "data": "2026-05-07", "descricao": "NETFLIX AMSTERDAM",                 "valor":   -17.99},
+    {"id": "m006", "conta_id": "conta_001", "data": "2026-05-08", "descricao": "SPOTIFY PORTUGAL",                  "valor":   -10.99},
+    {"id": "m007", "conta_id": "conta_001", "data": "2026-05-10", "descricao": "GALP BRAGA NORTE",                  "valor":   -65.00},
+    {"id": "m008", "conta_id": "conta_001", "data": "2026-05-10", "descricao": "VIA VERDE PORTAGENS ABRIL",         "valor":   -18.40},
+    {"id": "m009", "conta_id": "conta_001", "data": "2026-05-12", "descricao": "FARMACIA CENTRAL BRAGA",            "valor":   -23.50},
+    {"id": "m010", "conta_id": "conta_001", "data": "2026-05-14", "descricao": "PINGO DOCE BRAGA RETAIL",           "valor":   -54.20},
+    {"id": "m011", "conta_id": "conta_001", "data": "2026-05-15", "descricao": "FIDELIDADE SEGURO AUTOMOVEL",       "valor":   -38.00},
+    {"id": "m012", "conta_id": "conta_001", "data": "2026-05-18", "descricao": "RESTAURANTE O ESCONDIDINHO",        "valor":   -42.00},
+    {"id": "m013", "conta_id": "conta_001", "data": "2026-05-20", "descricao": "TRANSFERENCIA PARA CONTA_002",      "valor":  -300.00},
+    {"id": "m014", "conta_id": "conta_002", "data": "2026-05-20", "descricao": "TRANSFERENCIA DE CONTA_001",        "valor":   300.00},
+    {"id": "m015", "conta_id": "conta_001", "data": "2026-05-22", "descricao": "LIDL BRAGA",                        "valor":   -31.80},
+    {"id": "m016", "conta_id": "conta_001", "data": "2026-05-25", "descricao": "MULTICARE SAUDE MAIO",              "valor":   -28.00},
+    {"id": "m017", "conta_id": "conta_001", "data": "2026-05-28", "descricao": "MB WAY 919123456",                  "valor":   -25.00},
+    {"id": "m018", "conta_id": "conta_002", "data": "2026-05-30", "descricao": "RENDA APARTAMENTO MAIO",            "valor":  -650.00},
+    {"id": "m019", "conta_id": "conta_001", "data": "2026-06-01", "descricao": "SALARIO JUNHO EMPRESA XYZ",         "valor":  2800.00},
+    {"id": "m020", "conta_id": "conta_001", "data": "2026-06-02", "descricao": "EDP COMERCIAL 987654321",           "valor":  -142.30},
+    {"id": "m021", "conta_id": "conta_001", "data": "2026-06-03", "descricao": "CONTINENTE 0234 BRAGA",             "valor":   -92.10},
+    {"id": "m022", "conta_id": "conta_001", "data": "2026-06-05", "descricao": "NOS COMUNICACOES SA",               "valor":   -45.00},
+    {"id": "m023", "conta_id": "conta_001", "data": "2026-06-07", "descricao": "FORNECEDOR GRAFICA SILVA LDA",      "valor":  -320.00},
+    {"id": "m024", "conta_id": "conta_001", "data": "2026-06-08", "descricao": "NETFLIX AMSTERDAM",                 "valor":   -17.99},
+    {"id": "m025", "conta_id": "conta_001", "data": "2026-06-08", "descricao": "SPOTIFY PORTUGAL",                  "valor":   -10.99},
+    {"id": "m026", "conta_id": "conta_001", "data": "2026-06-10", "descricao": "AT PAGAMENTO IVA 2T2026",           "valor":  -890.00},
+    {"id": "m027", "conta_id": "conta_001", "data": "2026-06-10", "descricao": "GALP BRAGA NORTE",                  "valor":   -60.00},
+    {"id": "m028", "conta_id": "conta_001", "data": "2026-06-12", "descricao": "MB WAY 919123456",                  "valor":   -25.00},
+    {"id": "m029", "conta_id": "conta_001", "data": "2026-06-14", "descricao": "PINGO DOCE BRAGA RETAIL",           "valor":   -61.30},
+    {"id": "m030", "conta_id": "conta_001", "data": "2026-06-15", "descricao": "FIDELIDADE SEGURO AUTOMOVEL",       "valor":   -38.00},
+    {"id": "m031", "conta_id": "conta_001", "data": "2026-06-16", "descricao": "VIA VERDE PORTAGENS MAIO",          "valor":   -21.60},
+    {"id": "m032", "conta_id": "conta_001", "data": "2026-06-18", "descricao": "RESTAURANTE BRAC BRAGA",            "valor":   -55.00},
+    {"id": "m033", "conta_id": "conta_002", "data": "2026-06-30", "descricao": "RENDA APARTAMENTO JUNHO",           "valor":  -650.00}
   ]
 }

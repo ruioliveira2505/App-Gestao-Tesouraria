@@ -49,6 +49,7 @@ class LoginInput(BaseModel):
     password: str
 
 class ContaInput(BaseModel):
+    nome:  str
     banco: str
     tipo:  str
     iban:  str
@@ -280,16 +281,16 @@ def listar_contas(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, banco, iban, moeda, saldo, tipo
+        SELECT id, nome, banco, iban, moeda, saldo, tipo
         FROM contas
         WHERE utilizador_id = %s
-        ORDER BY banco
+        ORDER BY nome
     """, (utilizador["sub"],))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
     return [
-        {"id": r[0], "banco": r[1], "iban": r[2], "moeda": r[3], "saldo": float(r[4]), "tipo": r[5]}
+        {"id": r[0], "nome": r[1], "banco": r[2], "iban": r[3], "moeda": r[4], "saldo": float(r[5]), "tipo": r[6]}
         for r in rows
     ]
 
@@ -299,9 +300,9 @@ def criar_conta(dados: ContaInput, utilizador: dict = Depends(utilizador_atual))
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO contas (id, banco, iban, moeda, saldo, tipo, utilizador_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (str(uuid.uuid4()), dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, utilizador["sub"]))
+        INSERT INTO contas (id, nome, banco, iban, moeda, saldo, tipo, utilizador_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (str(uuid.uuid4()), dados.nome, dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, utilizador["sub"]))
     conn.commit()
     cursor.close()
     conn.close()
@@ -313,9 +314,9 @@ def editar_conta(conta_id: str, dados: ContaInput, utilizador: dict = Depends(ut
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        UPDATE contas SET banco=%s, iban=%s, moeda=%s, saldo=%s, tipo=%s
+        UPDATE contas SET nome=%s, banco=%s, iban=%s, moeda=%s, saldo=%s, tipo=%s
         WHERE id=%s AND utilizador_id=%s
-    """, (dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, conta_id, utilizador["sub"]))
+    """, (dados.nome, dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, conta_id, utilizador["sub"]))
     conn.commit()
     cursor.close()
     conn.close()
@@ -351,19 +352,19 @@ def listar_categorias(utilizador: dict = Depends(utilizador_atual)):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT c.id, c.nome, g.nome AS grupo
+        SELECT c.id, c.nome, g.nome AS grupo, g.eh_recebimento
         FROM categorias c
         JOIN categorias g ON c.parent_id = g.id
         WHERE c.utilizador_id = %s
           AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = c.id)
-        ORDER BY g.ordem, c.ordem
+        ORDER BY g.eh_recebimento DESC, g.ordem, c.ordem
     """, (utilizador["sub"],))
     rows = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
-    return [{"id": r[0], "nome": r[1], "grupo": r[2]} for r in rows]
+    return [{"id": r[0], "nome": r[1], "grupo": r[2], "eh_recebimento": r[3]} for r in rows]
 
 @app.get("/categorias/arvore")
 def arvore_categorias(utilizador: dict = Depends(utilizador_atual)):
@@ -512,12 +513,12 @@ def mover_categoria(categoria_id: int, direcao: str, utilizador: dict = Depends(
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
-    cursor.execute("SELECT parent_id, ordem FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+    cursor.execute("SELECT parent_id, ordem, eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
     row = cursor.fetchone()
     if not row:
         cursor.close(); conn.close()
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    parent_id, ordem = row
+    parent_id, ordem, eh_recebimento = row
 
     operador  = ">" if direcao == "down" else "<"
     ordenacao = "ASC" if direcao == "down" else "DESC"
@@ -525,9 +526,9 @@ def mover_categoria(categoria_id: int, direcao: str, utilizador: dict = Depends(
     if parent_id is None:
         cursor.execute(f"""
             SELECT id, ordem FROM categorias
-            WHERE utilizador_id=%s AND parent_id IS NULL AND ordem {operador} %s
+            WHERE utilizador_id=%s AND parent_id IS NULL AND eh_recebimento=%s AND ordem {operador} %s
             ORDER BY ordem {ordenacao} LIMIT 1
-        """, (uid, ordem))
+        """, (uid, eh_recebimento, ordem))
     else:
         cursor.execute(f"""
             SELECT id, ordem FROM categorias
@@ -611,6 +612,26 @@ def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador
     return {"ok": True}
 
 
+@app.put("/movimentos/{movimento_id}")
+def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual)):
+    conn   = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+
+    cursor.execute("""
+        UPDATE movimentos
+        SET conta_id=%s, data=%s, descricao=%s, valor=%s, categoria_id=%s, origem_cat='manual'
+        WHERE id=%s AND utilizador_id=%s
+    """, (dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, movimento_id, uid))
+    conn.commit()
+
+    guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid)
+
+    cursor.close()
+    conn.close()
+    return {"ok": True}
+
+
 @app.patch("/movimentos/{movimento_id}/categoria")
 def editar_categoria(movimento_id: str, dados: CategoriaInput, utilizador: dict = Depends(utilizador_atual)):
     conn   = get_connection()
@@ -680,24 +701,26 @@ def resumo(utilizador: dict = Depends(utilizador_atual)):
 
 
 @app.get("/stats/mensal")
-def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, data_de: str = None, data_ate: str = None):
+def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
     cursor.execute("""
         SELECT
-            TO_CHAR(DATE_TRUNC('month', data), 'YYYY-MM') AS mes,
-            SUM(CASE WHEN valor > 0 THEN valor ELSE 0 END) AS entradas,
-            SUM(CASE WHEN valor < 0 THEN ABS(valor) ELSE 0 END) AS saidas
-        FROM movimentos
-        WHERE utilizador_id = %s
-          AND (%s IS NULL OR conta_id = %s)
-          AND (%s IS NULL OR data >= %s)
-          AND (%s IS NULL OR data <= %s)
-        GROUP BY DATE_TRUNC('month', data)
-        ORDER BY DATE_TRUNC('month', data)
-    """, [uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate])
+            TO_CHAR(DATE_TRUNC('month', m.data), 'YYYY-MM') AS mes,
+            SUM(CASE WHEN m.valor > 0 THEN m.valor ELSE 0 END) AS entradas,
+            SUM(CASE WHEN m.valor < 0 THEN ABS(m.valor) ELSE 0 END) AS saidas
+        FROM movimentos m
+        JOIN contas ct ON m.conta_id = ct.id
+        WHERE m.utilizador_id = %s
+          AND (%s IS NULL OR m.conta_id = %s)
+          AND (%s IS NULL OR ct.tipo = %s)
+          AND (%s IS NULL OR m.data >= %s)
+          AND (%s IS NULL OR m.data <= %s)
+        GROUP BY DATE_TRUNC('month', m.data)
+        ORDER BY DATE_TRUNC('month', m.data)
+    """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -709,7 +732,7 @@ def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
 
 
 @app.get("/stats/categorias")
-def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, data_de: str = None, data_ate: str = None):
+def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
@@ -729,15 +752,17 @@ def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str
         SELECT a.grupo_raiz, a.caminho, a.eh_recebimento,
                COUNT(*) AS n, SUM(ABS(m.valor)) AS total
         FROM movimentos m
+        JOIN contas ct ON m.conta_id = ct.id
         JOIN arvore a ON m.categoria_id = a.id
         WHERE m.utilizador_id = %s
           AND (%s IS NULL OR m.conta_id = %s)
+          AND (%s IS NULL OR ct.tipo = %s)
           AND (%s IS NULL OR m.data >= %s)
           AND (%s IS NULL OR m.data <= %s)
           AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
         GROUP BY a.grupo_raiz, a.caminho, a.eh_recebimento
         ORDER BY a.eh_recebimento DESC, total DESC
-    """, [uid, uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate])
+    """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
 
     rows = cursor.fetchall()
     cursor.close()
@@ -757,7 +782,7 @@ def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str
 
 
 @app.get("/stats/grupos")
-def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, data_de: str = None, data_ate: str = None):
+def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
@@ -775,15 +800,17 @@ def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
         SELECT a.grupo_raiz, a.eh_recebimento, a.nome AS categoria,
                a.nivel, COUNT(*) AS n, SUM(ABS(m.valor)) AS total
         FROM movimentos m
+        JOIN contas ct ON m.conta_id = ct.id
         JOIN arvore a ON m.categoria_id = a.id
         WHERE m.utilizador_id = %s
           AND (%s IS NULL OR m.conta_id = %s)
+          AND (%s IS NULL OR ct.tipo = %s)
           AND (%s IS NULL OR m.data >= %s)
           AND (%s IS NULL OR m.data <= %s)
           AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
         GROUP BY a.grupo_raiz, a.eh_recebimento, a.nome, a.nivel
         ORDER BY a.eh_recebimento DESC, a.grupo_raiz, total DESC
-    """, [uid, uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate])
+    """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
 
     rows = cursor.fetchall()
     cursor.close()
@@ -867,24 +894,29 @@ def stats_saldo_historico(utilizador: dict = Depends(utilizador_atual)):
 
 
 @app.get("/stats/saldo-mensal")
-def stats_saldo_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, data_de: str = None, data_ate: str = None):
+def stats_saldo_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
     cursor.execute("""
-        SELECT SUM(saldo) FROM contas WHERE utilizador_id = %s AND (%s IS NULL OR id = %s)
-    """, [uid, conta_id, conta_id])
+        SELECT SUM(saldo) FROM contas
+        WHERE utilizador_id = %s
+          AND (%s IS NULL OR id = %s)
+          AND (%s IS NULL OR tipo = %s)
+    """, [uid, conta_id, conta_id, tipo, tipo])
     saldo_atual = float(cursor.fetchone()[0] or 0)
 
     cursor.execute("""
-        SELECT TO_CHAR(DATE_TRUNC('month', data), 'YYYY-MM') AS mes, SUM(valor) AS soma_mes
-        FROM movimentos
-        WHERE utilizador_id = %s
-          AND (%s IS NULL OR conta_id = %s)
-        GROUP BY DATE_TRUNC('month', data)
-        ORDER BY DATE_TRUNC('month', data)
-    """, [uid, conta_id, conta_id])
+        SELECT TO_CHAR(DATE_TRUNC('month', m.data), 'YYYY-MM') AS mes, SUM(m.valor) AS soma_mes
+        FROM movimentos m
+        JOIN contas ct ON m.conta_id = ct.id
+        WHERE m.utilizador_id = %s
+          AND (%s IS NULL OR m.conta_id = %s)
+          AND (%s IS NULL OR ct.tipo = %s)
+        GROUP BY DATE_TRUNC('month', m.data)
+        ORDER BY DATE_TRUNC('month', m.data)
+    """, [uid, conta_id, conta_id, tipo, tipo])
     rows = cursor.fetchall()
     cursor.close()
     conn.close()

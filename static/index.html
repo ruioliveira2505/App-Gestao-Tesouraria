@@ -68,12 +68,13 @@
     .summary-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1rem 1.25rem; }
     .summary-card .label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
     .summary-card .valor { font-size: 1.3rem; font-weight: 500; }
+    .summary-card .sub { font-size: 0.7rem; color: #888; margin-top: 0.3rem; }
 
     /* ── SECÇÕES E TABELAS ──────────────────────────────── */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
     .section-title { font-size: 0.75rem; font-weight: 600; color: #888; letter-spacing: 0.05em; text-transform: uppercase; }
 
-    .table-wrap { background: white; border-radius: 10px; border: 1px solid #e5e5e5; overflow: hidden; margin-bottom: 1.5rem; }
+    .table-wrap { background: white; border-radius: 10px; border: 1px solid #e5e5e5; overflow-x: auto; overflow-y: hidden; margin-bottom: 1.5rem; }
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; font-size: 0.7rem; font-weight: 600; color: #888; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e5e5; background: #fafafa; text-transform: uppercase; letter-spacing: 0.04em; }
     td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #f5f5f5; }
@@ -202,8 +203,18 @@
     <div class="page active" id="page-contas">
       <div class="filtros">
         <div class="field"><label>Conta</label>
-          <select id="ct-filtro-conta" onchange="carregarContas()">
+          <select id="ct-filtro-conta" onchange="atualizarFiltroTipoPorConta('ct'); carregarContas()">
             <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="field"><label>Tipo</label>
+          <select id="ct-filtro-tipo" onchange="atualizarFiltroContasPorTipo('ct'); carregarContas()">
+            <option value="">Todos</option>
+            <option value="corrente">Conta Corrente</option>
+            <option value="poupanca">Conta Poupança</option>
+            <option value="prazo">Conta a Prazo</option>
+            <option value="numerario">Numerário</option>
+            <option value="outro">Outro</option>
           </select>
         </div>
         <div class="field"><label>Período</label><input type="text" id="ct-periodo" placeholder="Selecionar datas"></div>
@@ -219,7 +230,7 @@
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Banco</th><th>Tipo</th><th>IBAN</th><th style="text-align:right">Saldo</th><th></th></tr></thead>
+          <thead><tr><th>Nome</th><th>Banco</th><th>Tipo</th><th>IBAN</th><th style="text-align:right">Saldo</th><th></th></tr></thead>
           <tbody id="tabela-contas"></tbody>
         </table>
       </div>
@@ -229,8 +240,18 @@
     <div class="page" id="page-analise">
       <div class="filtros">
         <div class="field"><label>Conta</label>
-          <select id="an-filtro-conta" onchange="carregarAnalise()">
+          <select id="an-filtro-conta" onchange="atualizarFiltroTipoPorConta('an'); carregarAnalise()">
             <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="field"><label>Tipo</label>
+          <select id="an-filtro-tipo" onchange="atualizarFiltroContasPorTipo('an'); carregarAnalise()">
+            <option value="">Todos</option>
+            <option value="corrente">Conta Corrente</option>
+            <option value="poupanca">Conta Poupança</option>
+            <option value="prazo">Conta a Prazo</option>
+            <option value="numerario">Numerário</option>
+            <option value="outro">Outro</option>
           </select>
         </div>
         <div class="field"><label>Período</label><input type="text" id="an-periodo" placeholder="Selecionar datas"></div>
@@ -279,10 +300,10 @@
           </select>
         </div>
         <div class="field"><label>Direção</label>
-          <select id="filtro-direcao" onchange="carregarMovimentos()">
+          <select id="filtro-direcao" onchange="atualizarFiltroCategoriasMovimentos()">
             <option value="">Todas</option>
-            <option value="in">Cash-In</option>
-            <option value="out">Cash-Out</option>
+            <option value="in" style="color:#166534">↑ Cash-In</option>
+            <option value="out" style="color:#991b1b">↓ Cash-Out</option>
           </select>
         </div>
         <div class="field"><label>Categoria</label>
@@ -295,7 +316,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Grupo</th><th>Categoria</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+          <thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Categoria</th><th style="text-align:right">Valor</th><th></th></tr></thead>
           <tbody id="tabela-movimentos"></tbody>
         </table>
       </div>
@@ -342,11 +363,12 @@
 <!-- ═══════════════════ MODAIS ═══════════════════ -->
 <div class="modal-overlay" id="modal-movimento">
   <div class="modal">
-    <h2>Adicionar movimento</h2>
+    <h2 id="modal-movimento-titulo">Adicionar movimento</h2>
+    <input type="hidden" id="mov-id">
     <div class="field"><label>Conta</label><select id="mov-conta"></select></div>
     <div class="field"><label>Data</label><input type="date" id="mov-data"></div>
     <div class="field"><label>Descrição</label><input type="text" id="mov-descricao"></div>
-    <div class="field"><label>Valor (negativo = pagamento)</label><input type="number" id="mov-valor" step="0.01"></div>
+    <div class="field"><label>Valor (negativo = pagamento)</label><input type="number" id="mov-valor" step="0.01" oninput="atualizarCategoriasPorValor()"></div>
     <div class="field"><label>Categoria</label><select id="mov-categoria"></select></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
@@ -372,7 +394,8 @@
   <div class="modal">
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
     <input type="hidden" id="conta-id">
-    <div class="field"><label>Banco / Nome</label><input type="text" id="conta-banco"></div>
+    <div class="field"><label>Nome da Conta</label><input type="text" id="conta-nome"></div>
+    <div class="field"><label>Banco</label><input type="text" id="conta-banco"></div>
     <div class="field"><label>Tipo</label>
       <select id="conta-tipo">
         <option value="corrente">Conta Corrente</option>
@@ -456,6 +479,8 @@ let anDataDe, anDataAte
 let movDataDe = null, movDataAte = null
 let ctDataDe  = null, ctDataAte  = null
 
+let totalEntradasGlobal = 0
+let movimentosCache = []
 
 // ═══════════════════════════════════════════════════════════
 // UTILS
@@ -604,6 +629,8 @@ function guardarSessao(token, nome) {
 }
 function logout() {
   localStorage.clear(); TOKEN = null; NOME = null
+  document.getElementById("login-email").value = ""
+  document.getElementById("login-password").value = ""
   document.getElementById("app-screen").style.display  = "none"
   document.getElementById("auth-screen").style.display = "flex"
 }
@@ -649,8 +676,11 @@ async function submeterRedefinicao() {
 // ═══════════════════════════════════════════════════════════
 async function iniciarApp() {
   document.getElementById("auth-screen").style.display = "none"
-  document.getElementById("app-screen").style.display  = "block"
   document.getElementById("nav-nome").textContent = NOME
+
+  const pagina = localStorage.getItem("paginaAtual") || "contas"
+  ativarPagina(pagina)
+  document.getElementById("app-screen").style.display = "block"
 
   contasCache     = await api("/contas")
   categoriasCache = await api("/categorias")
@@ -658,12 +688,11 @@ async function iniciarApp() {
   const selConta   = document.getElementById("filtro-conta")
   const selContaAn = document.getElementById("an-filtro-conta")
   const selContaCt = document.getElementById("ct-filtro-conta")
-  contasCache.forEach(c => {
-    selConta.innerHTML   += `<option value="${c.id}">${c.banco}</option>`
-    selContaAn.innerHTML += `<option value="${c.id}">${c.banco}</option>`
-    selContaCt.innerHTML += `<option value="${c.id}">${c.banco}</option>`
-  })
-  document.getElementById("filtro-categoria").innerHTML = '<option value="">Todas</option>' + construirOptionsCategorias()
+  const optionsContas = construirOptionsContas()
+  selConta.innerHTML   += optionsContas
+  selContaAn.innerHTML += optionsContas
+  selContaCt.innerHTML += optionsContas
+  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
 
   anDataDe  = isoDateStr(primeiroDiaMes())
   anDataAte = isoDateStr(new Date())
@@ -672,24 +701,37 @@ async function iniciarApp() {
   iniciarPickerAnalise()
   iniciarPickerMovimentos()
 
-  carregarContas()
+  carregarPagina(pagina)
 }
 
-function irPara(pagina, el) {
+function ativarPagina(pagina) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
-  document.getElementById("page-" + pagina).classList.add("active")
-  el.classList.add("active")
+  const elPagina = document.getElementById("page-" + pagina)
+  if (elPagina) elPagina.classList.add("active")
+  const navLinks = { contas: 0, analise: 1, movimentos: 2 }
+  if (pagina in navLinks) {
+    document.querySelectorAll(".nav-link")[navLinks[pagina]].classList.add("active")
+  }
+}
+
+function carregarPagina(pagina) {
   if (pagina === "contas")     carregarContas()
   if (pagina === "analise")    carregarAnalise()
   if (pagina === "movimentos") carregarMovimentos()
+  if (pagina === "perfil")     carregarPerfil()
+}
+
+function irPara(pagina, el) {
+  ativarPagina(pagina)
+  localStorage.setItem("paginaAtual", pagina)
+  carregarPagina(pagina)
 }
 
 function irParaPerfil() {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
-  document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
-  document.getElementById("page-perfil").classList.add("active")
-  carregarPerfil()
+  ativarPagina("perfil")
+  localStorage.setItem("paginaAtual", "perfil")
+  carregarPagina("perfil")
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -697,25 +739,30 @@ function irParaPerfil() {
 // ═══════════════════════════════════════════════════════════
 async function carregarContas() {
   const contaSel = document.getElementById("ct-filtro-conta").value
+  const tipoSel  = document.getElementById("ct-filtro-tipo").value
 
   contasCache = await api("/contas")
 
   const params = new URLSearchParams()
   if (contaSel) params.set("conta_id", contaSel)
+  if (tipoSel)  params.set("tipo", tipoSel)
   if (ctDataDe)  params.set("data_de", ctDataDe)
   if (ctDataAte) params.set("data_ate", ctDataAte)
   const qs = params.toString() ? "?" + params.toString() : ""
 
   const saldoMensal = await api("/stats/saldo-mensal" + qs)
 
-  const contasFiltradas = contaSel ? contasCache.filter(c => c.id === contaSel) : contasCache
+  let contasFiltradas = contasCache
+  if (contaSel) contasFiltradas = contasFiltradas.filter(c => c.id === contaSel)
+  if (tipoSel)  contasFiltradas = contasFiltradas.filter(c => c.tipo === tipoSel)
+
   const totalConsolidado = contasFiltradas.reduce((s, c) => s + c.saldo, 0)
 
   document.getElementById("ct-card-total").innerHTML = `
     <div class="card destaque">
       <div class="label">Saldo Total Consolidado</div>
       <div class="valor positivo">${fmt(totalConsolidado)}</div>
-      <div class="sub">${contaSel ? "1 conta selecionada" : contasFiltradas.length + " contas"}</div>
+      <div class="sub">${contasFiltradas.length} conta(s)</div>
     </div>`
 
   destruirGrafico("saldoMensal")
@@ -735,9 +782,10 @@ async function carregarContas() {
   const tipos = { corrente: "Conta Corrente", poupanca: "Conta Poupança", prazo: "Conta a Prazo", numerario: "Numerário", outro: "Outro" }
   const tb = document.getElementById("tabela-contas")
   tb.innerHTML = ""
-  contasCache.forEach(c => {
+  contasFiltradas.forEach(c => {
     tb.innerHTML += `
       <tr>
+        <td>${c.nome}</td>
         <td>${c.banco}</td>
         <td><span class="badge">${tipos[c.tipo] || c.tipo}</span></td>
         <td>${c.iban}</td>
@@ -753,6 +801,7 @@ async function carregarContas() {
 function abrirModalConta() {
   document.getElementById("modal-conta-titulo").textContent = "Adicionar conta"
   document.getElementById("conta-id").value = ""
+  document.getElementById("conta-nome").value = ""
   document.getElementById("conta-banco").value = ""
   document.getElementById("conta-tipo").value = "corrente"
   document.getElementById("conta-iban").value = ""
@@ -765,6 +814,7 @@ function abrirEditarConta(id) {
   const c = contasCache.find(x => x.id === id)
   document.getElementById("modal-conta-titulo").textContent = "Editar conta"
   document.getElementById("conta-id").value = c.id
+  document.getElementById("conta-nome").value = c.nome
   document.getElementById("conta-banco").value = c.banco
   document.getElementById("conta-tipo").value = c.tipo
   document.getElementById("conta-iban").value = c.iban
@@ -776,6 +826,7 @@ function abrirEditarConta(id) {
 async function guardarConta() {
   const id = document.getElementById("conta-id").value
   const body = {
+    nome:  document.getElementById("conta-nome").value,
     banco: document.getElementById("conta-banco").value,
     tipo:  document.getElementById("conta-tipo").value,
     iban:  document.getElementById("conta-iban").value,
@@ -808,11 +859,13 @@ async function eliminarConta(id) {
 // ═══════════════════════════════════════════════════════════
 async function carregarAnalise() {
   const conta   = document.getElementById("an-filtro-conta").value
+  const tipo    = document.getElementById("an-filtro-tipo").value
   const dataDe  = anDataDe
   const dataAte = anDataAte
 
   const params = new URLSearchParams()
   if (conta)   params.set("conta_id", conta)
+  if (tipo)    params.set("tipo", tipo)
   if (dataDe)  params.set("data_de", dataDe)
   if (dataAte) params.set("data_ate", dataAte)
   const qs = params.toString() ? "?" + params.toString() : ""
@@ -825,6 +878,8 @@ async function carregarAnalise() {
 
   const totalIn  = mensal.reduce((s, m) => s + m.entradas, 0)
   const totalOut = mensal.reduce((s, m) => s + m.saidas, 0)
+  totalEntradasGlobal = totalIn
+  const pctGasto = totalIn > 0 ? (totalOut / totalIn * 100) : 0
   document.getElementById("summary-mes").innerHTML = `
     <div class="summary-card">
       <div class="label">Cash-In</div>
@@ -833,6 +888,7 @@ async function carregarAnalise() {
     <div class="summary-card">
       <div class="label">Cash-Out</div>
       <div class="valor negativo">${fmt(totalOut)}</div>
+      <div class="sub">${totalIn > 0 ? pctGasto.toFixed(0) + '% do cash-in' : ''}</div>
     </div>
     <div class="summary-card">
       <div class="label">Líquido</div>
@@ -891,6 +947,10 @@ function renderizarGrupos() {
 
   filtrados.forEach((g, gi) => {
     const pct = totalTipo > 0 ? (g.total / totalTipo * 100) : 0
+    const pctRendimento = (tipoAtual === "out" && totalEntradasGlobal > 0)
+      ? (g.total / totalEntradasGlobal * 100)
+      : null
+
     el.innerHTML += `
       <div class="grupo-bar-row" onclick="toggleGrupo(${gi})">
         <div class="linha-topo">
@@ -899,6 +959,7 @@ function renderizarGrupos() {
         </div>
         <div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${cor}"></div></div>
         <div class="sub-grupo" id="sub-grupo-${gi}">
+          ${pctRendimento !== null ? `<div class="sub-item" style="font-style:italic;color:#aaa">${pctRendimento.toFixed(1)}% do cash-in</div>` : ''}
           ${g.subcategorias.map(s => {
             const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
             return `<div class="sub-item"><span>${s.categoria}</span><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total)}</span></div>`
@@ -935,24 +996,25 @@ async function carregarMovimentos() {
   const qs = params.toString() ? "?" + params.toString() : ""
 
   const todos = await api("/movimentos" + qs)
+  movimentosCache = todos
 
   const tb = document.getElementById("tabela-movimentos")
   tb.innerHTML = ""
   todos.forEach(m => {
-    tb.innerHTML += `
-      <tr>
-        <td>${m.data}</td>
-        <td>${m.descricao}</td>
-        <td>${m.conta_id}</td>
-        <td><span class="badge">${m.grupo}</span></td>
-        <td>${m.categoria}</td>
-        <td style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor)}</td>
-        <td style="white-space:nowrap">
-          <button class="btn-sm" onclick="abrirEditarCategoria('${m.id}','${m.descricao.replace(/'/g,"\\'")}',${m.categoria_id})">editar</button>
-          <button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button>
-        </td>
-      </tr>`
-  })
+  const conta = contasCache.find(c => c.id === m.conta_id)
+  tb.innerHTML += `
+    <tr>
+      <td>${m.data}</td>
+      <td>${m.descricao}</td>
+      <td>${conta ? `${conta.nome}<div style="font-size:0.7rem;color:#888;margin-top:2px">${conta.banco}</div>` : m.conta_id}</td>
+      <td>${m.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${m.grupo}</div></td>
+      <td style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button>
+        <button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button>
+      </td>
+    </tr>`
+})
 }
 
 async function eliminarMovimento(id) {
@@ -963,25 +1025,103 @@ async function eliminarMovimento(id) {
 
 
 // ═══════════════════════════════════════════════════════════
-// MODAIS: MOVIMENTO E CATEGORIA
+// MODAIS: CONTA, MOVIMENTO E CATEGORIA
 // ═══════════════════════════════════════════════════════════
-function construirOptionsCategorias(selecionado) {
+function atualizarFiltroContasPorTipo(prefixo) {
+  const tipo = document.getElementById(prefixo + "-filtro-tipo").value
+  const contaSelect = document.getElementById(prefixo + "-filtro-conta")
+  const contaAtual = contaSelect.value
+  contaSelect.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(contaAtual, tipo)
+}
+
+function atualizarFiltroTipoPorConta(prefixo) {
+  const contaId = document.getElementById(prefixo + "-filtro-conta").value
+  if (contaId) {
+    const conta = contasCache.find(c => c.id === contaId)
+    if (conta) document.getElementById(prefixo + "-filtro-tipo").value = conta.tipo
+  }
+}
+
+function construirOptionsContas(selecionado, tipoFiltro) {
+  let html = ""
+  let bancoAtual = null
+  const lista = tipoFiltro ? contasCache.filter(c => c.tipo === tipoFiltro) : contasCache
+  const ordenadas = [...lista].sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
+  ordenadas.forEach(c => {
+    if (c.banco !== bancoAtual) {
+      if (bancoAtual !== null) html += "</optgroup>"
+      html += `<optgroup label="${c.banco}">`
+      bancoAtual = c.banco
+    }
+    html += `<option value="${c.id}" ${c.id === selecionado ? "selected" : ""}>${c.nome}</option>`
+  })
+  if (bancoAtual !== null) html += "</optgroup>"
+  return html
+}
+
+function atualizarCategoriasPorValor() {
+  const valor = parseFloat(document.getElementById("mov-valor").value)
+  const categoriaAtual = document.getElementById("mov-categoria").value
+  let direcao = null
+  if (!isNaN(valor)) {
+    if (valor > 0) direcao = "in"
+    if (valor < 0) direcao = "out"
+  }
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(categoriaAtual, direcao)
+}
+
+function construirOptionsCategorias(selecionado, direcao) {
+  let lista = categoriasCache
+  if (direcao === "in")  lista = lista.filter(c => c.eh_recebimento)
+  if (direcao === "out") lista = lista.filter(c => !c.eh_recebimento)
+
   let html = ""
   let grupoAtual = null
-  categoriasCache.forEach(c => {
+  lista.forEach(c => {
     if (c.grupo !== grupoAtual) {
       if (grupoAtual !== null) html += "</optgroup>"
       html += `<optgroup label="${c.grupo}">`
       grupoAtual = c.grupo
     }
-    html += `<option value="${c.id}" ${c.id === selecionado ? "selected" : ""}>${c.nome}</option>`
+    const simbolo = c.eh_recebimento ? "↑" : "↓"
+    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
+    html += `<option value="${c.id}" style="color:${cor}" ${c.id === selecionado ? "selected" : ""}>${simbolo} ${c.nome}</option>`
   })
   if (grupoAtual !== null) html += "</optgroup>"
   return html
 }
 
+function construirOptionsCategoriasFiltro(direcao) {
+  let categoriasFiltradas = categoriasCache
+  if (direcao === "in")  categoriasFiltradas = categoriasCache.filter(c => c.eh_recebimento)
+  if (direcao === "out") categoriasFiltradas = categoriasCache.filter(c => !c.eh_recebimento)
+
+  let html = '<option value="">Todas</option>'
+  let grupoAtual = null
+  categoriasFiltradas.forEach(c => {
+    if (c.grupo !== grupoAtual) {
+      if (grupoAtual !== null) html += "</optgroup>"
+      html += `<optgroup label="${c.grupo}">`
+      grupoAtual = c.grupo
+    }
+    const simbolo = c.eh_recebimento ? "↑" : "↓"
+    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
+    html += `<option value="${c.id}" style="color:${cor}">${simbolo} ${c.nome}</option>`
+  })
+  if (grupoAtual !== null) html += "</optgroup>"
+  return html
+}
+
+function atualizarFiltroCategoriasMovimentos() {
+  const direcao = document.getElementById("filtro-direcao").value
+  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(direcao)
+  carregarMovimentos()
+}
+
 function abrirModalMovimento() {
-  document.getElementById("mov-conta").innerHTML = contasCache.map(c => `<option value="${c.id}">${c.banco}</option>`).join("")
+  document.getElementById("modal-movimento-titulo").textContent = "Adicionar movimento"
+  document.getElementById("mov-id").value = ""
+  document.getElementById("mov-conta").innerHTML = construirOptionsContas()
   document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias()
   document.getElementById("mov-data").value = new Date().toISOString().slice(0, 10)
   document.getElementById("mov-descricao").value = ""
@@ -989,14 +1129,33 @@ function abrirModalMovimento() {
   document.getElementById("modal-movimento").classList.add("open")
 }
 
+function abrirEditarMovimento(id) {
+  const m = movimentosCache.find(x => x.id === id)
+  if (!m) return
+  document.getElementById("modal-movimento-titulo").textContent = "Editar movimento"
+  document.getElementById("mov-id").value = m.id
+  document.getElementById("mov-conta").innerHTML = construirOptionsContas(m.conta_id)
+  document.getElementById("mov-data").value = m.data
+  document.getElementById("mov-descricao").value = m.descricao
+  document.getElementById("mov-valor").value = m.valor
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(m.categoria_id, m.valor > 0 ? "in" : "out")
+  document.getElementById("modal-movimento").classList.add("open")
+}
+
 async function guardarMovimento() {
-  await apiPost("/movimentos", {
+  const id = document.getElementById("mov-id").value
+  const body = {
     conta_id:     document.getElementById("mov-conta").value,
     data:         document.getElementById("mov-data").value,
     descricao:    document.getElementById("mov-descricao").value,
     valor:        parseFloat(document.getElementById("mov-valor").value),
     categoria_id: parseInt(document.getElementById("mov-categoria").value),
-  })
+  }
+  if (id) {
+    await apiPut("/movimentos/" + id, body)
+  } else {
+    await apiPost("/movimentos", body)
+  }
   fecharModal()
   carregarMovimentos()
 }
@@ -1067,7 +1226,8 @@ async function eliminarContaUtilizador() {
 // ── GESTÃO DE CATEGORIAS ────────────────────────────────────
 async function recarregarCategoriasGlobais() {
   categoriasCache = await api("/categorias")
-  document.getElementById("filtro-categoria").innerHTML = '<option value="">Todas</option>' + construirOptionsCategorias()
+  const direcaoAtual = document.getElementById("filtro-direcao").value
+  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(direcaoAtual)
 }
 
 async function aposMudarCategorias() {

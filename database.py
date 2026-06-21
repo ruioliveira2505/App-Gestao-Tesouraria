@@ -25,4 +25,5 @@ def testar_conexao():
     except Exception as e:
         print(f"Erro ao ligar: {e}")
 
-testar_conexao()
+if __name__ == "__main__":
+    testar_conexao()

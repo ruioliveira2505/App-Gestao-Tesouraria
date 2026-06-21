@@ -937,6 +937,60 @@ def stats_saldo_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: s
 
     return pontos
 
+
+@app.get("/stats/saldo-diario")
+def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
+    conn = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+
+    cursor.execute("""
+        SELECT SUM(saldo) FROM contas
+        WHERE utilizador_id = %s
+          AND (%s IS NULL OR id = %s)
+          AND (%s IS NULL OR tipo = %s)
+    """, [uid, conta_id, conta_id, tipo, tipo])
+    saldo_atual = float(cursor.fetchone()[0] or 0)
+
+    cursor.execute("""
+        WITH dias AS (
+            SELECT generate_series(
+                (SELECT MIN(data) FROM movimentos WHERE utilizador_id = %s),
+                CURRENT_DATE,
+                '1 day'::interval
+            )::date AS dia
+        ),
+        movs_por_dia AS (
+            SELECT m.data AS dia, SUM(m.valor) AS soma_dia
+            FROM movimentos m
+            JOIN contas ct ON m.conta_id = ct.id
+            WHERE m.utilizador_id = %s
+              AND (%s IS NULL OR m.conta_id = %s)
+              AND (%s IS NULL OR ct.tipo = %s)
+            GROUP BY m.data
+        )
+        SELECT d.dia, COALESCE(SUM(mp.soma_dia) OVER (ORDER BY d.dia ROWS UNBOUNDED PRECEDING), 0) AS acumulado
+        FROM dias d
+        LEFT JOIN movs_por_dia mp ON mp.dia = d.dia
+        ORDER BY d.dia
+    """, [uid, uid, conta_id, conta_id, tipo, tipo])
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    if not rows:
+        return []
+
+    offset = saldo_atual - float(rows[-1][1])
+    pontos = [{"data": str(r[0]), "saldo": round(float(r[1]) + offset, 2)} for r in rows]
+
+    if data_de:
+        pontos = [p for p in pontos if p["data"] >= data_de]
+    if data_ate:
+        pontos = [p for p in pontos if p["data"] <= data_ate]
+
+    return pontos
+
 # arrancar servidor
 # uvicorn main:app --reload
 # http://localhost:8000/static/index.html

@@ -224,7 +224,7 @@
       <div class="cards-grid" id="ct-card-total"></div>
 
       <div class="chart-full">
-        <h3>Evolução do Saldo por Mês</h3>
+        <h3>Evolução do Saldo</h3>
         <canvas id="grafico-saldo-mensal"></canvas>
       </div>
 
@@ -406,7 +406,15 @@
       </select>
     </div>
     <div class="field"><label>IBAN</label><input type="text" id="conta-iban"></div>
-    <div class="field"><label>Moeda</label><input type="text" id="conta-moeda" value="EUR"></div>
+    <div class="field"><label>Moeda</label>
+      <select id="conta-moeda">
+        <option value="EUR">EUR (€)</option>
+        <option value="USD">USD ($)</option>
+        <option value="GBP">GBP (£)</option>
+        <option value="CHF">CHF</option>
+        <option value="BRL">BRL (R$)</option>
+      </select>
+  </div>
     <div class="field"><label>Saldo</label><input type="number" id="conta-saldo" step="0.01"></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
@@ -481,12 +489,19 @@ let ctDataDe  = null, ctDataAte  = null
 
 let totalEntradasGlobal = 0
 let movimentosCache = []
+let moedaAnaliseGlobal = "EUR"
 
 // ═══════════════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════════════
-function fmt(v) {
-  return parseFloat(v).toLocaleString("pt-PT", { style: "currency", currency: "EUR" })
+function fmt(v, moeda) {
+  return parseFloat(v).toLocaleString("pt-PT", { style: "currency", currency: moeda || "EUR" })
+}
+function moedaPredominante(lista) {
+  if (!lista || lista.length === 0) return "EUR"
+  const contagem = {}
+  lista.forEach(c => { contagem[c.moeda] = (contagem[c.moeda] || 0) + 1 })
+  return Object.entries(contagem).sort((a, b) => b[1] - a[1])[0][0]
 }
 function fmtMes(ym) {
   const [y, m] = ym.split("-")
@@ -495,6 +510,11 @@ function fmtMes(ym) {
 }
 function isoDateStr(d) { return d.toISOString().slice(0, 10) }
 
+function fmtDiaCurto(iso) {
+  const [y, m, d] = iso.split("-")
+  const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
+  return `${d} ${nomes[parseInt(m)-1]}`
+}
 function api(path) {
   return fetch(API + path, { headers: { "Authorization": "Bearer " + TOKEN } }).then(r => r.json())
 }
@@ -742,6 +762,8 @@ async function carregarContas() {
   const tipoSel  = document.getElementById("ct-filtro-tipo").value
 
   contasCache = await api("/contas")
+  contasCache = await api("/contas")
+  atualizarFiltrosDeConta()
 
   const params = new URLSearchParams()
   if (contaSel) params.set("conta_id", contaSel)
@@ -750,33 +772,60 @@ async function carregarContas() {
   if (ctDataAte) params.set("data_ate", ctDataAte)
   const qs = params.toString() ? "?" + params.toString() : ""
 
-  const saldoMensal = await api("/stats/saldo-mensal" + qs)
+  const saldoDiario = await api("/stats/saldo-diario" + qs)
 
   let contasFiltradas = contasCache
   if (contaSel) contasFiltradas = contasFiltradas.filter(c => c.id === contaSel)
   if (tipoSel)  contasFiltradas = contasFiltradas.filter(c => c.tipo === tipoSel)
 
-  const totalConsolidado = contasFiltradas.reduce((s, c) => s + c.saldo, 0)
+  const moedaContas = moedaPredominante(contasFiltradas)
 
-  document.getElementById("ct-card-total").innerHTML = `
-    <div class="card destaque">
-      <div class="label">Saldo Total Consolidado</div>
-      <div class="valor positivo">${fmt(totalConsolidado)}</div>
-      <div class="sub">${contasFiltradas.length} conta(s)</div>
-    </div>`
+  const moedasPresentes = [...new Set(contasFiltradas.map(c => c.moeda))]
+  let totalHtml
+  if (moedasPresentes.length <= 1) {
+    const totalConsolidado = contasFiltradas.reduce((s, c) => s + c.saldo, 0)
+    const moeda = moedasPresentes[0] || "EUR"
+    totalHtml = `
+      <div class="card destaque">
+        <div class="label">Saldo Total Consolidado</div>
+        <div class="valor positivo">${fmt(totalConsolidado, moeda)}</div>
+        <div class="sub">${contasFiltradas.length} conta(s)</div>
+      </div>`
+  } else {
+    const subtotais = moedasPresentes.map(moeda => {
+      const total = contasFiltradas.filter(c => c.moeda === moeda).reduce((s, c) => s + c.saldo, 0)
+      return `<div class="valor positivo" style="font-size:1.1rem">${fmt(total, moeda)}</div>`
+    }).join("")
+    totalHtml = `
+      <div class="card destaque">
+        <div class="label">Saldo Total Consolidado (por moeda)</div>
+        ${subtotais}
+        <div class="sub">${contasFiltradas.length} conta(s) em ${moedasPresentes.length} moedas</div>
+      </div>`
+  }
+  document.getElementById("ct-card-total").innerHTML = totalHtml
 
   destruirGrafico("saldoMensal")
   graficos.saldoMensal = new Chart(document.getElementById("grafico-saldo-mensal"), {
     type: "line",
     data: {
-      labels: saldoMensal.map(s => fmtMes(s.mes)),
+      labels: saldoDiario.map(s => fmtDiaCurto(s.data)),
       datasets: [{
-        label: "Saldo", data: saldoMensal.map(s => s.saldo),
+        label: "Saldo", data: saldoDiario.map(s => s.saldo),
         borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)",
-        fill: true, tension: 0.3, pointRadius: 3
+        fill: true, tension: 0.35, pointRadius: 0, pointHoverRadius: 5
       }]
     },
-    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaContas)}` } }
+      },
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 } }
+      }
+    }
   })
 
   const tipos = { corrente: "Conta Corrente", poupanca: "Conta Poupança", prazo: "Conta a Prazo", numerario: "Numerário", outro: "Outro" }
@@ -789,7 +838,7 @@ async function carregarContas() {
         <td>${c.banco}</td>
         <td><span class="badge">${tipos[c.tipo] || c.tipo}</span></td>
         <td>${c.iban}</td>
-        <td style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo)}</td>
+        <td style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td>
         <td style="white-space:nowrap">
           <button class="btn-sm" onclick="abrirEditarConta('${c.id}')">editar</button>
           <button class="btn-danger" onclick="eliminarConta('${c.id}')">✕</button>
@@ -863,6 +912,11 @@ async function carregarAnalise() {
   const dataDe  = anDataDe
   const dataAte = anDataAte
 
+  let contasConsideradas = contasCache
+  if (conta) contasConsideradas = contasConsideradas.filter(c => c.id === conta)
+  if (tipo)  contasConsideradas = contasConsideradas.filter(c => c.tipo === tipo)
+  moedaAnaliseGlobal = moedaPredominante(contasConsideradas)
+
   const params = new URLSearchParams()
   if (conta)   params.set("conta_id", conta)
   if (tipo)    params.set("tipo", tipo)
@@ -883,16 +937,16 @@ async function carregarAnalise() {
   document.getElementById("summary-mes").innerHTML = `
     <div class="summary-card">
       <div class="label">Cash-In</div>
-      <div class="valor positivo">${fmt(totalIn)}</div>
+      <div class="valor positivo">${fmt(totalIn, moedaAnaliseGlobal)}</div>
     </div>
     <div class="summary-card">
       <div class="label">Cash-Out</div>
-      <div class="valor negativo">${fmt(totalOut)}</div>
+      <div class="valor negativo">${fmt(totalOut, moedaAnaliseGlobal)}</div>
       <div class="sub">${totalIn > 0 ? pctGasto.toFixed(0) + '% do cash-in' : ''}</div>
     </div>
     <div class="summary-card">
       <div class="label">Líquido</div>
-      <div class="valor ${totalIn - totalOut >= 0 ? 'positivo' : 'negativo'}">${fmt(totalIn - totalOut)}</div>
+      <div class="valor ${totalIn - totalOut >= 0 ? 'positivo' : 'negativo'}">${fmt(totalIn - totalOut, moedaAnaliseGlobal)}</div>
     </div>`
 
   destruirGrafico("mensal")
@@ -915,7 +969,7 @@ async function carregarAnalise() {
   graficos.out = new Chart(document.getElementById("grafico-out"), {
     type: "doughnut",
     data: { labels: out.map(c => c.categoria), datasets: [{ data: out.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
-    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}  (${out[ctx.dataIndex].percentagem}%)` } } } }
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${out[ctx.dataIndex].percentagem}%)` } } } }
   })
 
   const inp = categorias.filter(c => c.eh_recebimento)
@@ -923,7 +977,7 @@ async function carregarAnalise() {
   graficos.in = new Chart(document.getElementById("grafico-in"), {
     type: "doughnut",
     data: { labels: inp.map(c => c.categoria), datasets: [{ data: inp.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
-    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}  (${inp[ctx.dataIndex].percentagem}%)` } } } }
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${inp[ctx.dataIndex].percentagem}%)` } } } }
   })
 
   gruposCache = grupos
@@ -955,20 +1009,20 @@ function renderizarGrupos() {
       <div class="grupo-bar-row" onclick="toggleGrupo(${gi})">
         <div class="linha-topo">
           <span class="nome">${g.grupo}</span>
-          <span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total)}</strong></span>
+          <span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total, moedaAnaliseGlobal)}</strong></span>
         </div>
         <div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${cor}"></div></div>
         <div class="sub-grupo" id="sub-grupo-${gi}">
           ${pctRendimento !== null ? `<div class="sub-item" style="font-style:italic;color:#aaa">${pctRendimento.toFixed(1)}% do cash-in</div>` : ''}
           ${g.subcategorias.map(s => {
             const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
-            return `<div class="sub-item"><span>${s.categoria}</span><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total)}</span></div>`
+            return `<div class="sub-item"><span>${s.categoria}</span><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span></div>`
           }).join("")}
         </div>
       </div>`
   })
 
-  document.getElementById("total-tipo").textContent = fmt(totalTipo)
+  document.getElementById("total-tipo").textContent = fmt(totalTipo, moedaAnaliseGlobal)
   document.getElementById("label-tipo").textContent = tipoAtual === "in" ? "Entradas" : "Saídas"
 }
 
@@ -1008,7 +1062,7 @@ async function carregarMovimentos() {
       <td>${m.descricao}</td>
       <td>${conta ? `${conta.nome}<div style="font-size:0.7rem;color:#888;margin-top:2px">${conta.banco}</div>` : m.conta_id}</td>
       <td>${m.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${m.grupo}</div></td>
-      <td style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor)}</td>
+      <td style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta ? conta.moeda : null)}</td>
       <td style="white-space:nowrap">
         <button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button>
         <button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button>
@@ -1057,6 +1111,20 @@ function construirOptionsContas(selecionado, tipoFiltro) {
   })
   if (bancoAtual !== null) html += "</optgroup>"
   return html
+}
+
+function atualizarFiltrosDeConta() {
+  const selConta   = document.getElementById("filtro-conta")
+  const selContaAn = document.getElementById("an-filtro-conta")
+  const selContaCt = document.getElementById("ct-filtro-conta")
+
+  selConta.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selConta.value)
+
+  const tipoAn = document.getElementById("an-filtro-tipo").value
+  selContaAn.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaAn.value, tipoAn)
+
+  const tipoCt = document.getElementById("ct-filtro-tipo").value
+  selContaCt.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaCt.value, tipoCt)
 }
 
 function atualizarCategoriasPorValor() {
@@ -1406,3 +1474,4 @@ if (!verificarTokenReset() && TOKEN) { iniciarApp() }
 </script>
 </body>
 </html>
+

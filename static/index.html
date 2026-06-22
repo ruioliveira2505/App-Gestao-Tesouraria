@@ -192,6 +192,7 @@
       <div class="nav-link" onclick="irPara('movimentos', this)">Movimentos</div>
     </div>
     <div class="nav-right">
+      <button id="icone-olho" onclick="alternarOcultarValores()" title="Ocultar/mostrar valores" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;color:#888"></button>
       <span class="nav-user" id="nav-nome" onclick="irParaPerfil()" style="cursor:pointer;text-decoration:underline"></span>
       <button class="btn-logout" onclick="logout()">Sair</button>
     </div>
@@ -230,7 +231,14 @@
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nome</th><th>Banco</th><th>Tipo</th><th>IBAN</th><th style="text-align:right">Saldo</th><th></th></tr></thead>
+          <thead><tr>
+            <th onclick="ordenarContas('nome')" style="cursor:pointer">Nome ⇕</th>
+            <th onclick="ordenarContas('banco')" style="cursor:pointer">Banco ⇕</th>
+            <th onclick="ordenarContas('tipo')" style="cursor:pointer">Tipo ⇕</th>
+            <th onclick="ordenarContas('iban')" style="cursor:pointer">IBAN ⇕</th>
+            <th onclick="ordenarContas('saldo')" style="text-align:right;cursor:pointer">Saldo ⇕</th>
+            <th></th>
+          </tr></thead>
           <tbody id="tabela-contas"></tbody>
         </table>
       </div>
@@ -291,6 +299,7 @@
       </div>
     </div>
 
+
     <!-- ── MOVIMENTOS ───────────────────────────────── -->
     <div class="page" id="page-movimentos">
       <div class="filtros">
@@ -316,7 +325,14 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Categoria</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+          <thead><tr>
+            <th onclick="ordenarMovimentos('data')" style="cursor:pointer">Data ⇕</th>
+            <th onclick="ordenarMovimentos('descricao')" style="cursor:pointer">Descrição ⇕</th>
+            <th onclick="ordenarMovimentos('conta')" style="cursor:pointer">Conta ⇕</th>
+            <th onclick="ordenarMovimentos('categoria')" style="cursor:pointer">Categoria ⇕</th>
+            <th onclick="ordenarMovimentos('valor')" style="text-align:right;cursor:pointer">Valor ⇕</th>
+            <th></th>
+          </tr></thead>
           <tbody id="tabela-movimentos"></tbody>
         </table>
       </div>
@@ -366,9 +382,15 @@
     <h2 id="modal-movimento-titulo">Adicionar movimento</h2>
     <input type="hidden" id="mov-id">
     <div class="field"><label>Conta</label><select id="mov-conta"></select></div>
-    <div class="field"><label>Data</label><input type="date" id="mov-data"></div>
+    <div class="field"><label>Data</label><input type="text" id="mov-data" placeholder="Selecionar data"></div>
     <div class="field"><label>Descrição</label><input type="text" id="mov-descricao"></div>
-    <div class="field"><label>Valor (negativo = pagamento)</label><input type="number" id="mov-valor" step="0.01" oninput="atualizarCategoriasPorValor()"></div>
+    <div class="field"><label>Tipo</label>
+      <select id="mov-tipo" onchange="atualizarCategoriasPorTipo()">
+        <option value="in">↑ Cash-In</option>
+        <option value="out">↓ Cash-Out</option>
+      </select>
+    </div>
+    <div class="field"><label>Valor</label><input type="number" id="mov-valor" step="0.01" min="0"></div>
     <div class="field"><label>Categoria</label><select id="mov-categoria"></select></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
@@ -491,10 +513,29 @@ let totalEntradasGlobal = 0
 let movimentosCache = []
 let moedaAnaliseGlobal = "EUR"
 
+let ordenacaoContas = { campo: null, direcao: 1 }
+let contasTabelaCache = []
+let ordenacaoMovimentos = { campo: null, direcao: 1 }
+let movimentosTabelaCache = []
+
+let valoresOcultos = localStorage.getItem("valoresOcultos") === "true"
+
+const ICONE_OLHO_ABERTO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
+const ICONE_OLHO_FECHADO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
+
+let pickerMovData = null
 // ═══════════════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════════════
+function alternarOcultarValores() {
+  valoresOcultos = !valoresOcultos
+  localStorage.setItem("valoresOcultos", valoresOcultos)
+  document.getElementById("icone-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
+  carregarPagina(localStorage.getItem("paginaAtual") || "contas")
+}
+
 function fmt(v, moeda) {
+  if (valoresOcultos) return "••••••"
   return parseFloat(v).toLocaleString("pt-PT", { style: "currency", currency: moeda || "EUR" })
 }
 function moedaPredominante(lista) {
@@ -542,15 +583,33 @@ function primeiroDiaMes() { const h = new Date(); return new Date(h.getFullYear(
 function primeiroDiaAno() { const h = new Date(); return new Date(h.getFullYear(), 0, 1) }
 function menosDias(n)     { const h = new Date(); h.setDate(h.getDate() - n); return h }
 function menosMeses(n)    { const h = new Date(); h.setMonth(h.getMonth() - n); return h }
+function primeiroDiaMesAnterior() {
+  const h = new Date()
+  return new Date(h.getFullYear(), h.getMonth() - 1, 1)
+}
+function ultimoDiaMesAnterior() {
+  const h = new Date()
+  return new Date(h.getFullYear(), h.getMonth(), 0)
+}
+function primeiroDiaAnoAnterior() {
+  const h = new Date()
+  return new Date(h.getFullYear() - 1, 0, 1)
+}
+function ultimoDiaAnoAnterior() {
+  const h = new Date()
+  return new Date(h.getFullYear() - 1, 11, 31)
+}
 
 function rangesPadrao() {
   return {
-    position: 'bottom',
+    position: 'left',
     customRanges: {
-      'Este mês': [primeiroDiaMes(), new Date()],
-      '30 dias':  [menosDias(30), new Date()],
-      '3 meses':  [menosMeses(3), new Date()],
-      'Este ano': [primeiroDiaAno(), new Date()],
+      'Este mês':     [primeiroDiaMes(), new Date()],
+      'Mês passado': [primeiroDiaMesAnterior(), ultimoDiaMesAnterior()],
+      '30 dias':      [menosDias(30), new Date()],
+      'Este ano':     [primeiroDiaAno(), new Date()],
+      'Ano passado': [primeiroDiaAnoAnterior(), ultimoDiaAnoAnterior()],
+      '365 dias':     [menosDias(365), new Date()],
     }
   }
 }
@@ -561,6 +620,7 @@ function iniciarPickerContas() {
     singleMode: false,
     format: 'YYYY-MM-DD',
     maxDays: 365,
+    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'],
     ranges: rangesPadrao(),
     setup: (picker) => {
@@ -579,6 +639,7 @@ function iniciarPickerAnalise() {
     singleMode: false,
     format: 'YYYY-MM-DD',
     maxDays: 365,
+    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'],
     startDate: primeiroDiaMes(),
     endDate: new Date(),
@@ -599,6 +660,7 @@ function iniciarPickerMovimentos() {
     singleMode: false,
     format: 'YYYY-MM-DD',
     maxDays: 365,
+    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'],
     ranges: rangesPadrao(),
     setup: (picker) => {
@@ -611,6 +673,14 @@ function iniciarPickerMovimentos() {
   })
 }
 
+function iniciarPickerMovData() {
+  pickerMovData = new Litepicker({
+    element: document.getElementById('mov-data'),
+    singleMode: true,
+    format: 'YYYY-MM-DD',
+    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
+  })
+}
 
 // ═══════════════════════════════════════════════════════════
 // AUTENTICAÇÃO
@@ -713,6 +783,7 @@ async function iniciarApp() {
   selContaAn.innerHTML += optionsContas
   selContaCt.innerHTML += optionsContas
   document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
+  document.getElementById("icone-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
 
   anDataDe  = isoDateStr(primeiroDiaMes())
   anDataAte = isoDateStr(new Date())
@@ -720,7 +791,7 @@ async function iniciarApp() {
   iniciarPickerContas()
   iniciarPickerAnalise()
   iniciarPickerMovimentos()
-
+  iniciarPickerMovData()
   carregarPagina(pagina)
 }
 
@@ -828,10 +899,37 @@ async function carregarContas() {
     }
   })
 
+  contasTabelaCache = contasFiltradas
+  renderizarTabelaContas()
+}
+
+function ordenarContas(campo) {
+  if (ordenacaoContas.campo === campo) {
+    ordenacaoContas.direcao *= -1
+  } else {
+    ordenacaoContas.campo = campo
+    ordenacaoContas.direcao = 1
+  }
+  renderizarTabelaContas()
+}
+
+function renderizarTabelaContas() {
+  let lista = [...contasTabelaCache]
+  const { campo, direcao } = ordenacaoContas
+  if (campo) {
+    lista.sort((a, b) => {
+      let va = a[campo], vb = b[campo]
+      if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }
+      if (va < vb) return -1 * direcao
+      if (va > vb) return 1 * direcao
+      return 0
+    })
+  }
+
   const tipos = { corrente: "Conta Corrente", poupanca: "Conta Poupança", prazo: "Conta a Prazo", numerario: "Numerário", outro: "Outro" }
   const tb = document.getElementById("tabela-contas")
   tb.innerHTML = ""
-  contasFiltradas.forEach(c => {
+  lista.forEach(c => {
     tb.innerHTML += `
       <tr>
         <td>${c.nome}</td>
@@ -1001,10 +1099,6 @@ function renderizarGrupos() {
 
   filtrados.forEach((g, gi) => {
     const pct = totalTipo > 0 ? (g.total / totalTipo * 100) : 0
-    const pctRendimento = (tipoAtual === "out" && totalEntradasGlobal > 0)
-      ? (g.total / totalEntradasGlobal * 100)
-      : null
-
     el.innerHTML += `
       <div class="grupo-bar-row" onclick="toggleGrupo(${gi})">
         <div class="linha-topo">
@@ -1013,7 +1107,6 @@ function renderizarGrupos() {
         </div>
         <div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${cor}"></div></div>
         <div class="sub-grupo" id="sub-grupo-${gi}">
-          ${pctRendimento !== null ? `<div class="sub-item" style="font-style:italic;color:#aaa">${pctRendimento.toFixed(1)}% do cash-in</div>` : ''}
           ${g.subcategorias.map(s => {
             const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
             return `<div class="sub-item"><span>${s.categoria}</span><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span></div>`
@@ -1052,23 +1145,58 @@ async function carregarMovimentos() {
   const todos = await api("/movimentos" + qs)
   movimentosCache = todos
 
+  movimentosTabelaCache = todos
+  renderizarTabelaMovimentos()
+}
+
+function ordenarMovimentos(campo) {
+  if (ordenacaoMovimentos.campo === campo) {
+    ordenacaoMovimentos.direcao *= -1
+  } else {
+    ordenacaoMovimentos.campo = campo
+    ordenacaoMovimentos.direcao = 1
+  }
+  renderizarTabelaMovimentos()
+}
+
+function renderizarTabelaMovimentos() {
+  let lista = [...movimentosTabelaCache]
+  const { campo, direcao } = ordenacaoMovimentos
+  if (campo) {
+    lista.sort((a, b) => {
+      let va, vb
+      if (campo === "conta") {
+        const ca = contasCache.find(c => c.id === a.conta_id)
+        const cb = contasCache.find(c => c.id === b.conta_id)
+        va = ca ? ca.nome : a.conta_id
+        vb = cb ? cb.nome : b.conta_id
+      } else {
+        va = a[campo]; vb = b[campo]
+      }
+      if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }
+      if (va < vb) return -1 * direcao
+      if (va > vb) return 1 * direcao
+      return 0
+    })
+  }
+
   const tb = document.getElementById("tabela-movimentos")
   tb.innerHTML = ""
-  todos.forEach(m => {
-  const conta = contasCache.find(c => c.id === m.conta_id)
-  tb.innerHTML += `
-    <tr>
-      <td>${m.data}</td>
-      <td>${m.descricao}</td>
-      <td>${conta ? `${conta.nome}<div style="font-size:0.7rem;color:#888;margin-top:2px">${conta.banco}</div>` : m.conta_id}</td>
-      <td>${m.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${m.grupo}</div></td>
-      <td style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta ? conta.moeda : null)}</td>
-      <td style="white-space:nowrap">
-        <button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button>
-        <button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button>
-      </td>
-    </tr>`
-})
+  lista.forEach(m => {
+    const conta = contasCache.find(c => c.id === m.conta_id)
+    tb.innerHTML += `
+      <tr>
+        <td>${m.data}</td>
+        <td>${m.descricao}</td>
+        <td>${conta ? `${conta.nome}<div style="font-size:0.7rem;color:#888;margin-top:2px">${conta.banco}</div>` : m.conta_id}</td>
+        <td>${m.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${m.grupo}</div></td>
+        <td style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta ? conta.moeda : null)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button>
+          <button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button>
+        </td>
+      </tr>`
+  })
 }
 
 async function eliminarMovimento(id) {
@@ -1127,15 +1255,10 @@ function atualizarFiltrosDeConta() {
   selContaCt.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaCt.value, tipoCt)
 }
 
-function atualizarCategoriasPorValor() {
-  const valor = parseFloat(document.getElementById("mov-valor").value)
+function atualizarCategoriasPorTipo() {
+  const tipo = document.getElementById("mov-tipo").value
   const categoriaAtual = document.getElementById("mov-categoria").value
-  let direcao = null
-  if (!isNaN(valor)) {
-    if (valor > 0) direcao = "in"
-    if (valor < 0) direcao = "out"
-  }
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(categoriaAtual, direcao)
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(categoriaAtual, tipo)
 }
 
 function construirOptionsCategorias(selecionado, direcao) {
@@ -1190,8 +1313,9 @@ function abrirModalMovimento() {
   document.getElementById("modal-movimento-titulo").textContent = "Adicionar movimento"
   document.getElementById("mov-id").value = ""
   document.getElementById("mov-conta").innerHTML = construirOptionsContas()
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias()
-  document.getElementById("mov-data").value = new Date().toISOString().slice(0, 10)
+  document.getElementById("mov-tipo").value = "out"
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(null, "out")
+  pickerMovData.setDate(new Date())
   document.getElementById("mov-descricao").value = ""
   document.getElementById("mov-valor").value = ""
   document.getElementById("modal-movimento").classList.add("open")
@@ -1203,20 +1327,25 @@ function abrirEditarMovimento(id) {
   document.getElementById("modal-movimento-titulo").textContent = "Editar movimento"
   document.getElementById("mov-id").value = m.id
   document.getElementById("mov-conta").innerHTML = construirOptionsContas(m.conta_id)
-  document.getElementById("mov-data").value = m.data
+  pickerMovData.setDate(m.data)
   document.getElementById("mov-descricao").value = m.descricao
-  document.getElementById("mov-valor").value = m.valor
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(m.categoria_id, m.valor > 0 ? "in" : "out")
+  const tipo = m.valor > 0 ? "in" : "out"
+  document.getElementById("mov-tipo").value = tipo
+  document.getElementById("mov-valor").value = Math.abs(m.valor)
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(m.categoria_id, tipo)
   document.getElementById("modal-movimento").classList.add("open")
 }
 
 async function guardarMovimento() {
   const id = document.getElementById("mov-id").value
+  const tipo = document.getElementById("mov-tipo").value
+  const magnitude = Math.abs(parseFloat(document.getElementById("mov-valor").value))
+  const valor = tipo === "in" ? magnitude : -magnitude
   const body = {
     conta_id:     document.getElementById("mov-conta").value,
     data:         document.getElementById("mov-data").value,
     descricao:    document.getElementById("mov-descricao").value,
-    valor:        parseFloat(document.getElementById("mov-valor").value),
+    valor:        valor,
     categoria_id: parseInt(document.getElementById("mov-categoria").value),
   }
   if (id) {

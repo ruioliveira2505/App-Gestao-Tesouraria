@@ -1,24 +1,24 @@
 # ═══════════════════════════════════════════════════════════════
 # IMPORTS E CONFIGURAÇÃO
 # ═══════════════════════════════════════════════════════════════
+import uuid
+import psycopg2
+from datetime import date, timedelta
+
 from fastapi import FastAPI, HTTPException, Depends, Request
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from collections import defaultdict
-from datetime import timedelta
-from email_utils import enviar_email
-import uuid
-from datetime import date, timedelta
-import psycopg2
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from database import get_connection
 from auth import encriptar_password, verificar_password, criar_token, verificar_token
 from nordigen import guardar_em_cache
+from email_utils import enviar_email
 
 app = FastAPI()
 
@@ -50,6 +50,21 @@ class LoginInput(BaseModel):
     email:    str
     password: str
 
+class PerfilUpdateInput(BaseModel):
+    nome:  str
+    email: str
+
+class PasswordUpdateInput(BaseModel):
+    password_atual: str
+    password_nova:  str
+
+class EsqueciPasswordInput(BaseModel):
+    email: str
+
+class RedefinirPasswordInput(BaseModel):
+    token:         str
+    password_nova: str
+
 class ContaInput(BaseModel):
     nome:  str
     banco: str
@@ -66,11 +81,11 @@ class ContaEditInput(BaseModel):
     moeda: str
 
 class AjusteSaldoCriarInput(BaseModel):
-    data: str
+    data:       str
     saldo_real: float
 
 class AjusteSaldoEditarInput(BaseModel):
-    data: str
+    data:       str
     saldo_real: float
 
 class MovimentoInput(BaseModel):
@@ -80,28 +95,11 @@ class MovimentoInput(BaseModel):
     valor:        float
     categoria_id: int
 
-class CategoriaInput(BaseModel):
-    categoria_id: int
-
 class CategoriaGestaoInput(BaseModel):
     nome:           str
     parent_id:      int  | None = None
     eh_recebimento: bool | None = None
 
-class PerfilUpdateInput(BaseModel):
-    nome:  str
-    email: str
-
-class PasswordUpdateInput(BaseModel):
-    password_atual: str
-    password_nova:  str
-
-class EsqueciPasswordInput(BaseModel):
-    email: str
-
-class RedefinirPasswordInput(BaseModel):
-    token:         str
-    password_nova: str
 
 # ═══════════════════════════════════════════════════════════════
 # AUTENTICAÇÃO
@@ -208,35 +206,6 @@ def login(request: Request, dados: LoginInput):
     return {"token": token, "nome": row[1]}
 
 
-@app.get("/me")
-def perfil(utilizador: dict = Depends(utilizador_atual)):
-    return {"email": utilizador["email"], "id": utilizador["sub"]}
-
-
-@app.put("/me")
-def atualizar_perfil(dados: PerfilUpdateInput, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE utilizadores SET nome=%s, email=%s WHERE id=%s", (dados.nome, dados.email, utilizador["sub"]))
-    conn.commit()
-    cursor.close(); conn.close()
-    return {"ok": True, "nome": dados.nome}
-
-
-@app.put("/me/password")
-def atualizar_password(dados: PasswordUpdateInput, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT password FROM utilizadores WHERE id=%s", (utilizador["sub"],))
-    hash_atual = cursor.fetchone()[0]
-    if not verificar_password(dados.password_atual, hash_atual):
-        cursor.close(); conn.close()
-        raise HTTPException(status_code=401, detail="Password atual incorreta")
-    cursor.execute("UPDATE utilizadores SET password=%s WHERE id=%s", (encriptar_password(dados.password_nova), utilizador["sub"]))
-    conn.commit()
-    cursor.close(); conn.close()
-    return {"ok": True}
-
 @app.post("/esqueci-password")
 @limiter.limit("3/hour")
 def esqueci_password(request: Request, dados: EsqueciPasswordInput):
@@ -276,6 +245,40 @@ def redefinir_password(dados: RedefinirPasswordInput):
     conn.close()
     return {"ok": True}
 
+
+# ═══════════════════════════════════════════════════════════════
+# PERFIL
+# ═══════════════════════════════════════════════════════════════
+@app.get("/me")
+def perfil(utilizador: dict = Depends(utilizador_atual)):
+    return {"email": utilizador["email"], "id": utilizador["sub"]}
+
+
+@app.put("/me")
+def atualizar_perfil(dados: PerfilUpdateInput, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE utilizadores SET nome=%s, email=%s WHERE id=%s", (dados.nome, dados.email, utilizador["sub"]))
+    conn.commit()
+    cursor.close(); conn.close()
+    return {"ok": True, "nome": dados.nome}
+
+
+@app.put("/me/password")
+def atualizar_password(dados: PasswordUpdateInput, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT password FROM utilizadores WHERE id=%s", (utilizador["sub"],))
+    hash_atual = cursor.fetchone()[0]
+    if not verificar_password(dados.password_atual, hash_atual):
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=401, detail="Password atual incorreta")
+    cursor.execute("UPDATE utilizadores SET password=%s WHERE id=%s", (encriptar_password(dados.password_nova), utilizador["sub"]))
+    conn.commit()
+    cursor.close(); conn.close()
+    return {"ok": True}
+
+
 @app.delete("/me")
 def eliminar_conta_utilizador(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
@@ -290,6 +293,7 @@ def eliminar_conta_utilizador(utilizador: dict = Depends(utilizador_atual)):
     conn.commit()
     cursor.close(); conn.close()
     return {"ok": True}
+
 
 # ═══════════════════════════════════════════════════════════════
 # CONTAS
@@ -345,6 +349,27 @@ def editar_conta(conta_id: str, dados: ContaEditInput, utilizador: dict = Depend
     return {"ok": True}
 
 
+@app.delete("/contas/{conta_id}")
+def eliminar_conta(conta_id: str, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT COUNT(*) FROM movimentos WHERE conta_id = %s AND utilizador_id = %s
+    """, (conta_id, utilizador["sub"]))
+    n = cursor.fetchone()[0]
+    if n > 0:
+        cursor.close()
+        conn.close()
+        raise HTTPException(status_code=400, detail=f"Esta conta tem {n} movimento(s) associados. Elimina-os primeiro.")
+
+    cursor.execute("DELETE FROM contas WHERE id = %s AND utilizador_id = %s", (conta_id, utilizador["sub"]))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"ok": True}
+
+
+# ── RECONCILIAÇÕES DE SALDO ─────────────────────────────────────
 def atualizar_saldo_atual(cursor, conta_id):
     cursor.execute("""
         SELECT saldo_real FROM ajustes_saldo WHERE conta_id=%s ORDER BY data DESC LIMIT 1
@@ -462,26 +487,6 @@ def eliminar_ajuste_saldo(ajuste_id: int, utilizador: dict = Depends(utilizador_
     return {"ok": True}
 
 
-@app.delete("/contas/{conta_id}")
-def eliminar_conta(conta_id: str, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT COUNT(*) FROM movimentos WHERE conta_id = %s AND utilizador_id = %s
-    """, (conta_id, utilizador["sub"]))
-    n = cursor.fetchone()[0]
-    if n > 0:
-        cursor.close()
-        conn.close()
-        raise HTTPException(status_code=400, detail=f"Esta conta tem {n} movimento(s) associados. Elimina-os primeiro.")
-
-    cursor.execute("DELETE FROM contas WHERE id = %s AND utilizador_id = %s", (conta_id, utilizador["sub"]))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return {"ok": True}
-
-
 # ═══════════════════════════════════════════════════════════════
 # CATEGORIAS
 # ═══════════════════════════════════════════════════════════════
@@ -504,6 +509,7 @@ def listar_categorias(utilizador: dict = Depends(utilizador_atual)):
     conn.close()
 
     return [{"id": r[0], "nome": r[1], "grupo": r[2], "eh_recebimento": r[3]} for r in rows]
+
 
 @app.get("/categorias/arvore")
 def arvore_categorias(utilizador: dict = Depends(utilizador_atual)):
@@ -685,6 +691,7 @@ def mover_categoria(categoria_id: int, direcao: str, utilizador: dict = Depends(
     cursor.close(); conn.close()
     return {"ok": True}
 
+
 # ═══════════════════════════════════════════════════════════════
 # MOVIMENTOS
 # ═══════════════════════════════════════════════════════════════
@@ -771,30 +778,6 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
     return {"ok": True}
 
 
-@app.patch("/movimentos/{movimento_id}/categoria")
-def editar_categoria(movimento_id: str, dados: CategoriaInput, utilizador: dict = Depends(utilizador_atual)):
-    conn   = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT descricao FROM movimentos WHERE id = %s AND utilizador_id = %s
-    """, (movimento_id, utilizador["sub"]))
-    row = cursor.fetchone()
-
-    cursor.execute("""
-        UPDATE movimentos SET categoria_id = %s, origem_cat = 'manual'
-        WHERE id = %s AND utilizador_id = %s
-    """, (dados.categoria_id, movimento_id, utilizador["sub"]))
-    conn.commit()
-
-    if row:
-        guardar_em_cache(conn, row[0], dados.categoria_id, utilizador["sub"])
-
-    cursor.close()
-    conn.close()
-    return {"ok": True}
-
-
 @app.delete("/movimentos/{movimento_id}")
 def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):
     conn   = get_connection()
@@ -811,34 +794,6 @@ def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_
 # ═══════════════════════════════════════════════════════════════
 # ESTATÍSTICAS
 # ═══════════════════════════════════════════════════════════════
-@app.get("/resumo")
-def resumo(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT
-            c.nome AS categoria,
-            COUNT(*) AS n,
-            SUM(CASE WHEN m.valor > 0 THEN m.valor END) AS entradas,
-            SUM(CASE WHEN m.valor < 0 THEN m.valor END) AS saidas
-        FROM movimentos m
-        JOIN categorias c ON m.categoria_id = c.id
-        WHERE m.utilizador_id = %s
-        GROUP BY c.nome
-        ORDER BY c.nome
-    """, (utilizador["sub"],))
-    rows = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return [
-        {"categoria": r[0], "n": r[1], "entradas": float(r[2] or 0), "saidas": float(r[3] or 0)}
-        for r in rows
-    ]
-
-
 @app.get("/stats/mensal")
 def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
     conn = get_connection()
@@ -970,111 +925,6 @@ def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
         }
         for grupo, dados in sorted(grupos.items(), key=lambda x: (not x[1]["eh_recebimento"], -x[1]["total"]))
     ]
-
-
-@app.get("/stats/recorrentes")
-def stats_recorrentes(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT
-            m.descricao,
-            c.nome AS categoria,
-            COUNT(*) AS ocorrencias,
-            AVG(m.valor) AS valor_medio,
-            MAX(m.data) AS ultima_vez
-        FROM movimentos m
-        JOIN categorias c ON m.categoria_id = c.id
-        WHERE m.utilizador_id = %s
-        GROUP BY m.descricao, c.nome
-        HAVING COUNT(*) > 1
-        ORDER BY ocorrencias DESC, ABS(AVG(m.valor)) DESC
-    """, (utilizador["sub"],))
-    rows = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return [
-        {
-            "descricao":   r[0],
-            "categoria":   r[1],
-            "ocorrencias": r[2],
-            "valor_medio": round(float(r[3]), 2),
-            "ultima_vez":  str(r[4]),
-        }
-        for r in rows
-    ]
-
-
-@app.get("/stats/saldo-historico")
-def stats_saldo_historico(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT
-            data,
-            SUM(valor) OVER (ORDER BY data ROWS UNBOUNDED PRECEDING) AS saldo_acumulado
-        FROM movimentos
-        WHERE utilizador_id = %s
-        ORDER BY data
-    """, (utilizador["sub"],))
-    rows = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return [
-        {"data": str(r[0]), "saldo": round(float(r[1]), 2)}
-        for r in rows
-    ]
-
-
-@app.get("/stats/saldo-mensal")
-def stats_saldo_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-
-    cursor.execute("""
-        SELECT SUM(saldo) FROM contas
-        WHERE utilizador_id = %s
-          AND (%s IS NULL OR id = %s)
-          AND (%s IS NULL OR tipo = %s)
-    """, [uid, conta_id, conta_id, tipo, tipo])
-    saldo_atual = float(cursor.fetchone()[0] or 0)
-
-    cursor.execute("""
-        SELECT TO_CHAR(DATE_TRUNC('month', m.data), 'YYYY-MM') AS mes, SUM(m.valor) AS soma_mes
-        FROM movimentos m
-        JOIN contas ct ON m.conta_id = ct.id
-        WHERE m.utilizador_id = %s
-          AND (%s IS NULL OR m.conta_id = %s)
-          AND (%s IS NULL OR ct.tipo = %s)
-        GROUP BY DATE_TRUNC('month', m.data)
-        ORDER BY DATE_TRUNC('month', m.data)
-    """, [uid, conta_id, conta_id, tipo, tipo])
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    acumulado = 0.0
-    pontos = []
-    for mes, soma in rows:
-        acumulado += float(soma)
-        pontos.append({"mes": mes, "acumulado": acumulado})
-
-    offset = saldo_atual - (pontos[-1]["acumulado"] if pontos else 0)
-    pontos = [{"mes": p["mes"], "saldo": round(p["acumulado"] + offset, 2)} for p in pontos]
-
-    if data_de:
-        pontos = [p for p in pontos if p["mes"] >= data_de[:7]]
-    if data_ate:
-        pontos = [p for p in pontos if p["mes"] <= data_ate[:7]]
-
-    return pontos
 
 
 @app.get("/stats/saldo-diario")

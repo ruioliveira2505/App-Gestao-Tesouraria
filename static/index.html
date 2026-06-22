@@ -272,17 +272,6 @@
         <canvas id="grafico-mensal"></canvas>
       </div>
 
-      <div class="charts-grid-2">
-        <div class="chart-card">
-          <h3>Cash-In por Categoria</h3>
-          <canvas id="grafico-in"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Cash-Out por Categoria</h3>
-          <canvas id="grafico-out"></canvas>
-        </div>
-      </div>
-
       <div class="chart-full">
         <div class="section-header">
           <h3 style="margin:0">Detalhe por Grupo</h3>
@@ -297,8 +286,18 @@
           <strong id="total-tipo" style="color:#1a1a1a"></strong>
         </div>
       </div>
-    </div>
 
+      <div class="charts-grid-2">
+        <div class="chart-card">
+          <h3>Cash-In por Categoria</h3>
+          <canvas id="grafico-in"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Cash-Out por Categoria</h3>
+          <canvas id="grafico-out"></canvas>
+        </div>
+      </div>
+    </div>
 
     <!-- ── MOVIMENTOS ───────────────────────────────── -->
     <div class="page" id="page-movimentos">
@@ -337,7 +336,7 @@
         </table>
       </div>
     </div>
-  
+
     <!-- ── PERFIL ───────────────────────────────────── -->
     <div class="page" id="page-perfil">
       <div class="section-header"><div class="section-title">Perfil</div></div>
@@ -399,19 +398,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-categoria">
-  <div class="modal">
-    <h2>Editar categoria</h2>
-    <input type="hidden" id="edit-id">
-    <div class="field"><label>Descrição</label><input type="text" id="edit-descricao" disabled style="background:#f5f5f5;color:#888"></div>
-    <div class="field"><label>Categoria</label><select id="edit-categoria"></select></div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-primary" onclick="guardarCategoria()">Guardar</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modal-conta">
   <div class="modal">
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
@@ -436,7 +422,7 @@
         <option value="CHF">CHF</option>
         <option value="BRL">BRL (R$)</option>
       </select>
-  </div>
+    </div>
     <div class="field">
       <label id="conta-saldo-label">Saldo Inicial</label>
       <input type="number" id="conta-saldo" step="0.01">
@@ -447,6 +433,35 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
       <button class="btn-primary" onclick="guardarConta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-reconciliacoes">
+  <div class="modal">
+    <h2>Reconciliações de Saldo</h2>
+    <input type="hidden" id="reconc-conta-id">
+    <div class="table-wrap" style="margin-bottom:1rem;max-height:300px;overflow-y:auto">
+      <table>
+        <thead><tr><th>Data</th><th style="text-align:right">Saldo Reconciliado</th><th></th></tr></thead>
+        <tbody id="tabela-reconciliacoes"></tbody>
+      </table>
+    </div>
+
+    <div id="form-reconciliacao" style="display:none;border-top:1px solid #e5e5e5;padding-top:1rem;margin-bottom:1rem">
+      <input type="hidden" id="reconc-id">
+      <div class="field"><label>Data</label><input type="text" id="reconc-data" placeholder="Selecionar data"></div>
+      <div class="field"><label>Saldo Reconciliado</label><input type="number" id="reconc-valor" step="0.01"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="esconderFormReconciliacao()">Cancelar</button>
+        <button class="btn-primary" onclick="guardarReconciliacao()">Guardar</button>
+      </div>
+    </div>
+
+    <button class="btn-sm" id="btn-add-reconciliacao" onclick="mostrarFormReconciliacao()">+ Adicionar reconciliação</button>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalReconciliacoes()">Fechar</button>
     </div>
   </div>
 </div>
@@ -495,35 +510,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-reconciliacoes">
-  <div class="modal">
-    <h2>Reconciliações de Saldo</h2>
-    <input type="hidden" id="reconc-conta-id">
-    <div class="table-wrap" style="margin-bottom:1rem;max-height:300px;overflow-y:auto">
-      <table>
-        <thead><tr><th>Data</th><th style="text-align:right">Saldo Reconciliado</th><th></th></tr></thead>
-        <tbody id="tabela-reconciliacoes"></tbody>
-      </table>
-    </div>
-
-    <div id="form-reconciliacao" style="display:none;border-top:1px solid #e5e5e5;padding-top:1rem;margin-bottom:1rem">
-      <input type="hidden" id="reconc-id">
-      <div class="field"><label>Data</label><input type="text" id="reconc-data" placeholder="Selecionar data"></div>
-      <div class="field"><label>Saldo Reconciliado</label><input type="number" id="reconc-valor" step="0.01"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-secondary" onclick="esconderFormReconciliacao()">Cancelar</button>
-        <button class="btn-primary" onclick="guardarReconciliacao()">Guardar</button>
-      </div>
-    </div>
-
-    <button class="btn-sm" id="btn-add-reconciliacao" onclick="mostrarFormReconciliacao()">+ Adicionar reconciliação</button>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="fecharModalReconciliacoes()">Fechar</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ═══════════════════════════════════════════════════════════
 // CONFIGURAÇÃO E ESTADO GLOBAL
@@ -532,47 +518,41 @@ const API = "http://localhost:8000"
 let TOKEN = localStorage.getItem("token")
 let NOME  = localStorage.getItem("nome")
 
-let contasCache     = []
-let categoriasCache = []
-let gruposCache     = []
-let tipoAtual        = "in"
-let graficos = {}
+let contasCache           = []
+let categoriasCache       = []
+let gruposCache           = []
 let arvoreCategoriasCache = []
+let movimentosCache       = []
+let reconciliacoesCache   = []
+
+let tipoAtual            = "in"
 let tipoGestaoCategorias = "in"
+let moedaAnaliseGlobal   = "EUR"
+let valoresOcultos       = localStorage.getItem("valoresOcultos") === "true"
+
+let graficos = {}
 
 let anDataDe, anDataAte
 let movDataDe = null, movDataAte = null
 let ctDataDe  = null, ctDataAte  = null
 
-let totalEntradasGlobal = 0
-let movimentosCache = []
-let moedaAnaliseGlobal = "EUR"
-
-let ordenacaoContas = { campo: null, direcao: 1 }
-let contasTabelaCache = []
-let ordenacaoMovimentos = { campo: null, direcao: 1 }
+let ordenacaoContas      = { campo: null, direcao: 1 }
+let contasTabelaCache    = []
+let ordenacaoMovimentos  = { campo: null, direcao: 1 }
 let movimentosTabelaCache = []
 
-let valoresOcultos = localStorage.getItem("valoresOcultos") === "true"
-
-const ICONE_OLHO_ABERTO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
-const ICONE_OLHO_FECHADO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
+let elimAtual = { id: null, ehGrupo: false }
 
 let pickerMovData = null
-let pickerReconc = null
+let pickerReconc  = null
 
-let reconciliacoesCache = []
+const ICONE_OLHO_ABERTO  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
+const ICONE_OLHO_FECHADO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
+
 
 // ═══════════════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════════════
-function alternarOcultarValores() {
-  valoresOcultos = !valoresOcultos
-  localStorage.setItem("valoresOcultos", valoresOcultos)
-  document.getElementById("icone-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
-  carregarPagina(localStorage.getItem("paginaAtual") || "contas")
-}
-
 function fmt(v, moeda) {
   if (valoresOcultos) return "••••••"
   return parseFloat(v).toLocaleString("pt-PT", { style: "currency", currency: moeda || "EUR" })
@@ -588,13 +568,13 @@ function fmtMes(ym) {
   const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
   return nomes[parseInt(m)-1] + " " + y
 }
-function isoDateStr(d) { return d.toISOString().slice(0, 10) }
-
 function fmtDiaCurto(iso) {
   const [y, m, d] = iso.split("-")
   const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
   return `${d} ${nomes[parseInt(m)-1]}`
 }
+function isoDateStr(d) { return d.toISOString().slice(0, 10) }
+
 function api(path) {
   return fetch(API + path, { headers: { "Authorization": "Bearer " + TOKEN } }).then(r => r.json())
 }
@@ -604,51 +584,41 @@ function apiPost(path, body) {
 function apiPut(path, body) {
   return fetch(API + path, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN }, body: JSON.stringify(body) })
 }
-function apiPatch(path, body) {
-  return fetch(API + path, { method: "PATCH", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN }, body: JSON.stringify(body) })
-}
 function apiDelete(path) {
   return fetch(API + path, { method: "DELETE", headers: { "Authorization": "Bearer " + TOKEN } })
 }
 function destruirGrafico(nome) {
   if (graficos[nome]) { graficos[nome].destroy(); delete graficos[nome] }
 }
+function alternarOcultarValores() {
+  valoresOcultos = !valoresOcultos
+  localStorage.setItem("valoresOcultos", valoresOcultos)
+  document.getElementById("icone-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
+  carregarPagina(localStorage.getItem("paginaAtual") || "contas")
+}
 
 
 // ═══════════════════════════════════════════════════════════
 // CALENDÁRIOS (LITEPICKER)
 // ═══════════════════════════════════════════════════════════
-function primeiroDiaMes() { const h = new Date(); return new Date(h.getFullYear(), h.getMonth(), 1) }
-function primeiroDiaAno() { const h = new Date(); return new Date(h.getFullYear(), 0, 1) }
-function menosDias(n)     { const h = new Date(); h.setDate(h.getDate() - n); return h }
-function menosMeses(n)    { const h = new Date(); h.setMonth(h.getMonth() - n); return h }
-function primeiroDiaMesAnterior() {
-  const h = new Date()
-  return new Date(h.getFullYear(), h.getMonth() - 1, 1)
-}
-function ultimoDiaMesAnterior() {
-  const h = new Date()
-  return new Date(h.getFullYear(), h.getMonth(), 0)
-}
-function primeiroDiaAnoAnterior() {
-  const h = new Date()
-  return new Date(h.getFullYear() - 1, 0, 1)
-}
-function ultimoDiaAnoAnterior() {
-  const h = new Date()
-  return new Date(h.getFullYear() - 1, 11, 31)
-}
+function primeiroDiaMes()         { const h = new Date(); return new Date(h.getFullYear(), h.getMonth(), 1) }
+function primeiroDiaAno()         { const h = new Date(); return new Date(h.getFullYear(), 0, 1) }
+function menosDias(n)             { const h = new Date(); h.setDate(h.getDate() - n); return h }
+function primeiroDiaMesAnterior() { const h = new Date(); return new Date(h.getFullYear(), h.getMonth() - 1, 1) }
+function ultimoDiaMesAnterior()   { const h = new Date(); return new Date(h.getFullYear(), h.getMonth(), 0) }
+function primeiroDiaAnoAnterior() { const h = new Date(); return new Date(h.getFullYear() - 1, 0, 1) }
+function ultimoDiaAnoAnterior()   { const h = new Date(); return new Date(h.getFullYear() - 1, 11, 31) }
 
 function rangesPadrao() {
   return {
     position: 'left',
     customRanges: {
-      'Este mês':     [primeiroDiaMes(), new Date()],
+      'Este mês':    [primeiroDiaMes(), new Date()],
       'Mês passado': [primeiroDiaMesAnterior(), ultimoDiaMesAnterior()],
-      '30 dias':      [menosDias(30), new Date()],
-      'Este ano':     [primeiroDiaAno(), new Date()],
+      '30 dias':     [menosDias(30), new Date()],
+      'Este ano':    [primeiroDiaAno(), new Date()],
       'Ano passado': [primeiroDiaAnoAnterior(), ultimoDiaAnoAnterior()],
-      '365 dias':     [menosDias(365), new Date()],
+      '365 dias':    [menosDias(365), new Date()],
     }
   }
 }
@@ -669,16 +639,6 @@ function iniciarPickerContas() {
         carregarContas()
       })
     }
-  })
-}
-
-function iniciarPickerReconciliacao() {
-  pickerReconc = new Litepicker({
-    element: document.getElementById('reconc-data'),
-    singleMode: true,
-    format: 'YYYY-MM-DD',
-    maxDate: new Date(),
-    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
   })
 }
 
@@ -731,6 +691,17 @@ function iniciarPickerMovData() {
   })
 }
 
+function iniciarPickerReconciliacao() {
+  pickerReconc = new Litepicker({
+    element: document.getElementById('reconc-data'),
+    singleMode: true,
+    format: 'YYYY-MM-DD',
+    maxDate: new Date(),
+    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
+  })
+}
+
+
 // ═══════════════════════════════════════════════════════════
 // AUTENTICAÇÃO
 // ═══════════════════════════════════════════════════════════
@@ -779,7 +750,6 @@ function abrirEsqueciPassword() {
   document.getElementById("tab-esqueci").style.display  = ""
   document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"))
 }
-
 async function enviarEsqueciPassword() {
   const email = document.getElementById("esqueci-email").value
   const r = await apiPost("/esqueci-password", { email })
@@ -787,7 +757,6 @@ async function enviarEsqueciPassword() {
   alert(d.mensagem)
   trocarTab("login")
 }
-
 function verificarTokenReset() {
   const params = new URLSearchParams(window.location.search)
   const token = params.get("token")
@@ -797,7 +766,6 @@ function verificarTokenReset() {
   document.getElementById("reset-screen").style.display = "block"
   return true
 }
-
 async function submeterRedefinicao() {
   const password_nova = document.getElementById("reset-password-nova").value
   const r = await apiPost("/redefinir-password", { token: window.RESET_TOKEN, password_nova })
@@ -810,12 +778,14 @@ async function submeterRedefinicao() {
   window.location.href = "/static/index.html"
 }
 
+
 // ═══════════════════════════════════════════════════════════
-// INICIALIZAÇÃO DA APP
+// INICIALIZAÇÃO E NAVEGAÇÃO
 // ═══════════════════════════════════════════════════════════
 async function iniciarApp() {
   document.getElementById("auth-screen").style.display = "none"
   document.getElementById("nav-nome").textContent = NOME
+  document.getElementById("icone-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
 
   const pagina = localStorage.getItem("paginaAtual") || "contas"
   ativarPagina(pagina)
@@ -824,15 +794,11 @@ async function iniciarApp() {
   contasCache     = await api("/contas")
   categoriasCache = await api("/categorias")
 
-  const selConta   = document.getElementById("filtro-conta")
-  const selContaAn = document.getElementById("an-filtro-conta")
-  const selContaCt = document.getElementById("ct-filtro-conta")
   const optionsContas = construirOptionsContas()
-  selConta.innerHTML   += optionsContas
-  selContaAn.innerHTML += optionsContas
-  selContaCt.innerHTML += optionsContas
+  document.getElementById("filtro-conta").innerHTML    += optionsContas
+  document.getElementById("an-filtro-conta").innerHTML += optionsContas
+  document.getElementById("ct-filtro-conta").innerHTML += optionsContas
   document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
-  document.getElementById("icone-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
 
   anDataDe  = isoDateStr(primeiroDiaMes())
   anDataAte = isoDateStr(new Date())
@@ -842,6 +808,7 @@ async function iniciarApp() {
   iniciarPickerMovimentos()
   iniciarPickerMovData()
   iniciarPickerReconciliacao()
+
   carregarPagina(pagina)
 }
 
@@ -875,6 +842,115 @@ function irParaPerfil() {
   carregarPagina("perfil")
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS: OPÇÕES DE CONTA E CATEGORIA (dropdowns partilhados)
+// ═══════════════════════════════════════════════════════════
+function construirOptionsContas(selecionado, tipoFiltro) {
+  let html = ""
+  let bancoAtual = null
+  const lista = tipoFiltro ? contasCache.filter(c => c.tipo === tipoFiltro) : contasCache
+  const ordenadas = [...lista].sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
+  ordenadas.forEach(c => {
+    if (c.banco !== bancoAtual) {
+      if (bancoAtual !== null) html += "</optgroup>"
+      html += `<optgroup label="${c.banco}">`
+      bancoAtual = c.banco
+    }
+    html += `<option value="${c.id}" ${c.id === selecionado ? "selected" : ""}>${c.nome}</option>`
+  })
+  if (bancoAtual !== null) html += "</optgroup>"
+  return html
+}
+
+function atualizarFiltrosDeConta() {
+  const selConta   = document.getElementById("filtro-conta")
+  const selContaAn = document.getElementById("an-filtro-conta")
+  const selContaCt = document.getElementById("ct-filtro-conta")
+
+  selConta.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selConta.value)
+
+  const tipoAn = document.getElementById("an-filtro-tipo").value
+  selContaAn.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaAn.value, tipoAn)
+
+  const tipoCt = document.getElementById("ct-filtro-tipo").value
+  selContaCt.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaCt.value, tipoCt)
+}
+
+function atualizarFiltroContasPorTipo(prefixo) {
+  const tipo = document.getElementById(prefixo + "-filtro-tipo").value
+  const contaSelect = document.getElementById(prefixo + "-filtro-conta")
+  const contaAtual = contaSelect.value
+  contaSelect.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(contaAtual, tipo)
+}
+
+function atualizarFiltroTipoPorConta(prefixo) {
+  const contaId = document.getElementById(prefixo + "-filtro-conta").value
+  if (contaId) {
+    const conta = contasCache.find(c => c.id === contaId)
+    if (conta) document.getElementById(prefixo + "-filtro-tipo").value = conta.tipo
+  }
+}
+
+function construirOptionsCategorias(selecionado, direcao) {
+  let lista = categoriasCache
+  if (direcao === "in")  lista = lista.filter(c => c.eh_recebimento)
+  if (direcao === "out") lista = lista.filter(c => !c.eh_recebimento)
+
+  let html = ""
+  let grupoAtual = null
+  lista.forEach(c => {
+    if (c.grupo !== grupoAtual) {
+      if (grupoAtual !== null) html += "</optgroup>"
+      html += `<optgroup label="${c.grupo}">`
+      grupoAtual = c.grupo
+    }
+    const simbolo = c.eh_recebimento ? "↑" : "↓"
+    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
+    html += `<option value="${c.id}" style="color:${cor}" ${c.id === selecionado ? "selected" : ""}>${simbolo} ${c.nome}</option>`
+  })
+  if (grupoAtual !== null) html += "</optgroup>"
+  return html
+}
+
+function construirOptionsCategoriasFiltro(direcao) {
+  let lista = categoriasCache
+  if (direcao === "in")  lista = categoriasCache.filter(c => c.eh_recebimento)
+  if (direcao === "out") lista = categoriasCache.filter(c => !c.eh_recebimento)
+
+  let html = '<option value="">Todas</option>'
+  let grupoAtual = null
+  lista.forEach(c => {
+    if (c.grupo !== grupoAtual) {
+      if (grupoAtual !== null) html += "</optgroup>"
+      html += `<optgroup label="${c.grupo}">`
+      grupoAtual = c.grupo
+    }
+    const simbolo = c.eh_recebimento ? "↑" : "↓"
+    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
+    html += `<option value="${c.id}" style="color:${cor}">${simbolo} ${c.nome}</option>`
+  })
+  if (grupoAtual !== null) html += "</optgroup>"
+  return html
+}
+
+function atualizarFiltroCategoriasMovimentos() {
+  const direcao = document.getElementById("filtro-direcao").value
+  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(direcao)
+  carregarMovimentos()
+}
+
+function atualizarCategoriasPorTipo() {
+  const tipo = document.getElementById("mov-tipo").value
+  const categoriaAtual = document.getElementById("mov-categoria").value
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(categoriaAtual, tipo)
+}
+
+function fecharModal() {
+  document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
+}
+
+
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: CONTAS
 // ═══════════════════════════════════════════════════════════
@@ -882,7 +958,6 @@ async function carregarContas() {
   const contaSel = document.getElementById("ct-filtro-conta").value
   const tipoSel  = document.getElementById("ct-filtro-tipo").value
 
-  contasCache = await api("/contas")
   contasCache = await api("/contas")
   atualizarFiltrosDeConta()
 
@@ -900,13 +975,20 @@ async function carregarContas() {
   if (tipoSel)  contasFiltradas = contasFiltradas.filter(c => c.tipo === tipoSel)
 
   const moedaContas = moedaPredominante(contasFiltradas)
+  renderizarCardSaldoTotal(contasFiltradas)
+  renderizarGraficoSaldo(saldoDiario, moedaContas)
 
+  contasTabelaCache = contasFiltradas
+  renderizarTabelaContas()
+}
+
+function renderizarCardSaldoTotal(contasFiltradas) {
   const moedasPresentes = [...new Set(contasFiltradas.map(c => c.moeda))]
-  let totalHtml
+  let html
   if (moedasPresentes.length <= 1) {
     const totalConsolidado = contasFiltradas.reduce((s, c) => s + c.saldo, 0)
     const moeda = moedasPresentes[0] || "EUR"
-    totalHtml = `
+    html = `
       <div class="card destaque">
         <div class="label">Saldo Total Consolidado</div>
         <div class="valor positivo">${fmt(totalConsolidado, moeda)}</div>
@@ -917,15 +999,17 @@ async function carregarContas() {
       const total = contasFiltradas.filter(c => c.moeda === moeda).reduce((s, c) => s + c.saldo, 0)
       return `<div class="valor positivo" style="font-size:1.1rem">${fmt(total, moeda)}</div>`
     }).join("")
-    totalHtml = `
+    html = `
       <div class="card destaque">
         <div class="label">Saldo Total Consolidado (por moeda)</div>
         ${subtotais}
         <div class="sub">${contasFiltradas.length} conta(s) em ${moedasPresentes.length} moedas</div>
       </div>`
   }
-  document.getElementById("ct-card-total").innerHTML = totalHtml
+  document.getElementById("ct-card-total").innerHTML = html
+}
 
+function renderizarGraficoSaldo(saldoDiario, moeda) {
   destruirGrafico("saldoMensal")
   graficos.saldoMensal = new Chart(document.getElementById("grafico-saldo-mensal"), {
     type: "line",
@@ -940,7 +1024,7 @@ async function carregarContas() {
     options: {
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaContas)}` } }
+        tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moeda)}` } }
       },
       interaction: { mode: 'index', intersect: false },
       scales: {
@@ -948,9 +1032,6 @@ async function carregarContas() {
       }
     }
   })
-
-  contasTabelaCache = contasFiltradas
-  renderizarTabelaContas()
 }
 
 function ordenarContas(campo) {
@@ -1045,6 +1126,19 @@ async function guardarConta() {
   carregarContas()
 }
 
+async function eliminarConta(id) {
+  if (!confirm("Eliminar esta conta?")) return
+  const r = await apiDelete("/contas/" + id)
+  if (!r.ok) {
+    const d = await r.json()
+    alert(d.detail)
+    return
+  }
+  carregarContas()
+}
+
+
+// ── RECONCILIAÇÕES DE SALDO ──────────────────────────────────
 async function abrirModalAjusteSaldo() {
   const id = document.getElementById("conta-id").value
   document.getElementById("modal-conta").classList.remove("open")
@@ -1075,10 +1169,10 @@ function renderizarTabelaReconciliacoes(comAcoes) {
         <td>${a.data}</td>
         <td style="text-align:right">${fmt(a.saldo_real, conta ? conta.moeda : null)}</td>
         <td style="white-space:nowrap">
-          ${comAcoes ? `
+          <span style="visibility:${comAcoes ? 'visible' : 'hidden'}">
             <button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button>
             <button class="btn-danger" onclick="eliminarReconciliacao(${a.id})">✕</button>
-          ` : ''}
+          </span>
         </td>
       </tr>`
   })
@@ -1132,17 +1226,6 @@ async function eliminarReconciliacao(id) {
   carregarContas()
 }
 
-async function eliminarConta(id) {
-  if (!confirm("Eliminar esta conta?")) return
-  const r = await apiDelete("/contas/" + id)
-  if (!r.ok) {
-    const d = await r.json()
-    alert(d.detail)
-    return
-  }
-  carregarContas()
-}
-
 
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: ANÁLISE
@@ -1171,10 +1254,19 @@ async function carregarAnalise() {
     api("/stats/grupos" + qs)
   ])
 
+  renderizarResumoAnalise(mensal)
+  renderizarGraficoMensal(mensal)
+  renderizarDonutsCategoria(categorias)
+
+  gruposCache = grupos
+  renderizarGrupos()
+}
+
+function renderizarResumoAnalise(mensal) {
   const totalIn  = mensal.reduce((s, m) => s + m.entradas, 0)
   const totalOut = mensal.reduce((s, m) => s + m.saidas, 0)
-  totalEntradasGlobal = totalIn
   const pctGasto = totalIn > 0 ? (totalOut / totalIn * 100) : 0
+
   document.getElementById("summary-mes").innerHTML = `
     <div class="summary-card">
       <div class="label">Cash-In</div>
@@ -1189,7 +1281,9 @@ async function carregarAnalise() {
       <div class="label">Líquido</div>
       <div class="valor ${totalIn - totalOut >= 0 ? 'positivo' : 'negativo'}">${fmt(totalIn - totalOut, moedaAnaliseGlobal)}</div>
     </div>`
+}
 
+function renderizarGraficoMensal(mensal) {
   destruirGrafico("mensal")
   graficos.mensal = new Chart(document.getElementById("grafico-mensal"), {
     type: "bar",
@@ -1202,7 +1296,9 @@ async function carregarAnalise() {
     },
     options: { plugins: { legend: { labels: { font: { size: 11 } } } }, scales: { x: { grid: { display: false } } } }
   })
+}
 
+function renderizarDonutsCategoria(categorias) {
   const cores = ["#1a7a4a","#2563eb","#c0392b","#d97706","#7c3aed","#0891b2","#be185d","#4d7c0f","#b45309","#6b7280","#dc2626","#059669"]
 
   const out = categorias.filter(c => !c.eh_recebimento)
@@ -1220,9 +1316,6 @@ async function carregarAnalise() {
     data: { labels: inp.map(c => c.categoria), datasets: [{ data: inp.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
     options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${inp[ctx.dataIndex].percentagem}%)` } } } }
   })
-
-  gruposCache = grupos
-  renderizarGrupos()
 }
 
 function trocarTipo(tipo) {
@@ -1287,7 +1380,6 @@ async function carregarMovimentos() {
 
   const todos = await api("/movimentos" + qs)
   movimentosCache = todos
-
   movimentosTabelaCache = todos
   renderizarTabelaMovimentos()
 }
@@ -1342,116 +1434,6 @@ function renderizarTabelaMovimentos() {
   })
 }
 
-async function eliminarMovimento(id) {
-  if (!confirm("Eliminar este movimento?")) return
-  await apiDelete("/movimentos/" + id)
-  carregarMovimentos()
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// MODAIS: CONTA, MOVIMENTO E CATEGORIA
-// ═══════════════════════════════════════════════════════════
-function atualizarFiltroContasPorTipo(prefixo) {
-  const tipo = document.getElementById(prefixo + "-filtro-tipo").value
-  const contaSelect = document.getElementById(prefixo + "-filtro-conta")
-  const contaAtual = contaSelect.value
-  contaSelect.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(contaAtual, tipo)
-}
-
-function atualizarFiltroTipoPorConta(prefixo) {
-  const contaId = document.getElementById(prefixo + "-filtro-conta").value
-  if (contaId) {
-    const conta = contasCache.find(c => c.id === contaId)
-    if (conta) document.getElementById(prefixo + "-filtro-tipo").value = conta.tipo
-  }
-}
-
-function construirOptionsContas(selecionado, tipoFiltro) {
-  let html = ""
-  let bancoAtual = null
-  const lista = tipoFiltro ? contasCache.filter(c => c.tipo === tipoFiltro) : contasCache
-  const ordenadas = [...lista].sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
-  ordenadas.forEach(c => {
-    if (c.banco !== bancoAtual) {
-      if (bancoAtual !== null) html += "</optgroup>"
-      html += `<optgroup label="${c.banco}">`
-      bancoAtual = c.banco
-    }
-    html += `<option value="${c.id}" ${c.id === selecionado ? "selected" : ""}>${c.nome}</option>`
-  })
-  if (bancoAtual !== null) html += "</optgroup>"
-  return html
-}
-
-function atualizarFiltrosDeConta() {
-  const selConta   = document.getElementById("filtro-conta")
-  const selContaAn = document.getElementById("an-filtro-conta")
-  const selContaCt = document.getElementById("ct-filtro-conta")
-
-  selConta.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selConta.value)
-
-  const tipoAn = document.getElementById("an-filtro-tipo").value
-  selContaAn.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaAn.value, tipoAn)
-
-  const tipoCt = document.getElementById("ct-filtro-tipo").value
-  selContaCt.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaCt.value, tipoCt)
-}
-
-function atualizarCategoriasPorTipo() {
-  const tipo = document.getElementById("mov-tipo").value
-  const categoriaAtual = document.getElementById("mov-categoria").value
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(categoriaAtual, tipo)
-}
-
-function construirOptionsCategorias(selecionado, direcao) {
-  let lista = categoriasCache
-  if (direcao === "in")  lista = lista.filter(c => c.eh_recebimento)
-  if (direcao === "out") lista = lista.filter(c => !c.eh_recebimento)
-
-  let html = ""
-  let grupoAtual = null
-  lista.forEach(c => {
-    if (c.grupo !== grupoAtual) {
-      if (grupoAtual !== null) html += "</optgroup>"
-      html += `<optgroup label="${c.grupo}">`
-      grupoAtual = c.grupo
-    }
-    const simbolo = c.eh_recebimento ? "↑" : "↓"
-    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
-    html += `<option value="${c.id}" style="color:${cor}" ${c.id === selecionado ? "selected" : ""}>${simbolo} ${c.nome}</option>`
-  })
-  if (grupoAtual !== null) html += "</optgroup>"
-  return html
-}
-
-function construirOptionsCategoriasFiltro(direcao) {
-  let categoriasFiltradas = categoriasCache
-  if (direcao === "in")  categoriasFiltradas = categoriasCache.filter(c => c.eh_recebimento)
-  if (direcao === "out") categoriasFiltradas = categoriasCache.filter(c => !c.eh_recebimento)
-
-  let html = '<option value="">Todas</option>'
-  let grupoAtual = null
-  categoriasFiltradas.forEach(c => {
-    if (c.grupo !== grupoAtual) {
-      if (grupoAtual !== null) html += "</optgroup>"
-      html += `<optgroup label="${c.grupo}">`
-      grupoAtual = c.grupo
-    }
-    const simbolo = c.eh_recebimento ? "↑" : "↓"
-    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
-    html += `<option value="${c.id}" style="color:${cor}">${simbolo} ${c.nome}</option>`
-  })
-  if (grupoAtual !== null) html += "</optgroup>"
-  return html
-}
-
-function atualizarFiltroCategoriasMovimentos() {
-  const direcao = document.getElementById("filtro-direcao").value
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(direcao)
-  carregarMovimentos()
-}
-
 function abrirModalMovimento() {
   document.getElementById("modal-movimento-titulo").textContent = "Adicionar movimento"
   document.getElementById("mov-id").value = ""
@@ -1500,25 +1482,12 @@ async function guardarMovimento() {
   carregarMovimentos()
 }
 
-function abrirEditarCategoria(id, descricao, categoriaId) {
-  document.getElementById("edit-id").value        = id
-  document.getElementById("edit-descricao").value = descricao
-  document.getElementById("edit-categoria").innerHTML = construirOptionsCategorias(categoriaId)
-  document.getElementById("modal-categoria").classList.add("open")
-}
-
-async function guardarCategoria() {
-  const id = document.getElementById("edit-id").value
-  await apiPatch("/movimentos/" + id + "/categoria", {
-    categoria_id: parseInt(document.getElementById("edit-categoria").value)
-  })
-  fecharModal()
+async function eliminarMovimento(id) {
+  if (!confirm("Eliminar este movimento?")) return
+  await apiDelete("/movimentos/" + id)
   carregarMovimentos()
 }
 
-function fecharModal() {
-  document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
-}
 
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: PERFIL
@@ -1563,7 +1532,9 @@ async function eliminarContaUtilizador() {
 }
 
 
-// ── GESTÃO DE CATEGORIAS ────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// GESTÃO DE CATEGORIAS (Perfil)
+// ═══════════════════════════════════════════════════════════
 async function recarregarCategoriasGlobais() {
   categoriasCache = await api("/categorias")
   const direcaoAtual = document.getElementById("filtro-direcao").value
@@ -1695,8 +1666,6 @@ async function moverCategoria(id, direcao) {
   carregarArvoreCategorias()
 }
 
-let elimAtual = { id: null, ehGrupo: false }
-
 async function confirmarEliminarCategoria(id, ehGrupo) {
   elimAtual = { id, ehGrupo }
   const r = await apiDelete("/categorias/" + id)
@@ -1739,6 +1708,7 @@ async function confirmarEliminacaoComMigracao() {
   aposMudarCategorias()
 }
 
+
 // ═══════════════════════════════════════════════════════════
 // INÍCIO
 // ═══════════════════════════════════════════════════════════
@@ -1746,4 +1716,3 @@ if (!verificarTokenReset() && TOKEN) { iniciarApp() }
 </script>
 </body>
 </html>
-

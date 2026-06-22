@@ -13,6 +13,8 @@ from collections import defaultdict
 from datetime import timedelta
 from email_utils import enviar_email
 import uuid
+from datetime import date, timedelta
+import psycopg2
 
 from database import get_connection
 from auth import encriptar_password, verificar_password, criar_token, verificar_token
@@ -55,6 +57,21 @@ class ContaInput(BaseModel):
     iban:  str
     moeda: str
     saldo: float
+
+class ContaEditInput(BaseModel):
+    nome:  str
+    banco: str
+    tipo:  str
+    iban:  str
+    moeda: str
+
+class AjusteSaldoCriarInput(BaseModel):
+    data: str
+    saldo_real: float
+
+class AjusteSaldoEditarInput(BaseModel):
+    data: str
+    saldo_real: float
 
 class MovimentoInput(BaseModel):
     conta_id:     str
@@ -267,6 +284,7 @@ def eliminar_conta_utilizador(utilizador: dict = Depends(utilizador_atual)):
     cursor.execute("DELETE FROM categorias_aprendidas WHERE utilizador_id=%s", (uid,))
     cursor.execute("DELETE FROM movimentos WHERE utilizador_id=%s", (uid,))
     cursor.execute("DELETE FROM categorias WHERE utilizador_id=%s", (uid,))
+    cursor.execute("DELETE FROM ajustes_saldo WHERE conta_id IN (SELECT id FROM contas WHERE utilizador_id=%s)", (uid,))
     cursor.execute("DELETE FROM contas WHERE utilizador_id=%s", (uid,))
     cursor.execute("DELETE FROM utilizadores WHERE id=%s", (uid,))
     conn.commit()
@@ -299,10 +317,14 @@ def listar_contas(utilizador: dict = Depends(utilizador_atual)):
 def criar_conta(dados: ContaInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
+    conta_id = str(uuid.uuid4())
     cursor.execute("""
         INSERT INTO contas (id, nome, banco, iban, moeda, saldo, tipo, utilizador_id)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (str(uuid.uuid4()), dados.nome, dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, utilizador["sub"]))
+    """, (conta_id, dados.nome, dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, utilizador["sub"]))
+    cursor.execute("""
+        INSERT INTO ajustes_saldo (conta_id, data, saldo_real) VALUES (%s, CURRENT_DATE, %s)
+    """, (conta_id, dados.saldo))
     conn.commit()
     cursor.close()
     conn.close()
@@ -310,16 +332,133 @@ def criar_conta(dados: ContaInput, utilizador: dict = Depends(utilizador_atual))
 
 
 @app.put("/contas/{conta_id}")
-def editar_conta(conta_id: str, dados: ContaInput, utilizador: dict = Depends(utilizador_atual)):
+def editar_conta(conta_id: str, dados: ContaEditInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        UPDATE contas SET nome=%s, banco=%s, iban=%s, moeda=%s, saldo=%s, tipo=%s
+        UPDATE contas SET nome=%s, banco=%s, iban=%s, moeda=%s, tipo=%s
         WHERE id=%s AND utilizador_id=%s
-    """, (dados.nome, dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, conta_id, utilizador["sub"]))
+    """, (dados.nome, dados.banco, dados.iban, dados.moeda, dados.tipo, conta_id, utilizador["sub"]))
     conn.commit()
     cursor.close()
     conn.close()
+    return {"ok": True}
+
+
+def atualizar_saldo_atual(cursor, conta_id):
+    cursor.execute("""
+        SELECT saldo_real FROM ajustes_saldo WHERE conta_id=%s ORDER BY data DESC LIMIT 1
+    """, (conta_id,))
+    row = cursor.fetchone()
+    if row:
+        cursor.execute("UPDATE contas SET saldo=%s WHERE id=%s", (row[0], conta_id))
+
+
+@app.get("/contas/{conta_id}/ajustes-saldo")
+def listar_ajustes_saldo(conta_id: str, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT a.id, a.data, a.saldo_real FROM ajustes_saldo a
+        JOIN contas c ON a.conta_id = c.id
+        WHERE a.conta_id=%s AND c.utilizador_id=%s
+        ORDER BY a.data DESC
+    """, (conta_id, utilizador["sub"]))
+    rows = cursor.fetchall()
+    cursor.close(); conn.close()
+    return [{"id": r[0], "data": str(r[1]), "saldo_real": float(r[2])} for r in rows]
+
+
+@app.post("/contas/{conta_id}/ajustes-saldo")
+def criar_ajuste_saldo(conta_id: str, dados: AjusteSaldoCriarInput, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+
+    cursor.execute("SELECT id FROM contas WHERE id=%s AND utilizador_id=%s", (conta_id, uid))
+    if not cursor.fetchone():
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=404, detail="Conta não encontrada")
+
+    if dados.data > str(date.today()):
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Não é possível reconciliar uma data futura.")
+
+    try:
+        cursor.execute("""
+            INSERT INTO ajustes_saldo (conta_id, data, saldo_real) VALUES (%s, %s, %s)
+        """, (conta_id, dados.data, dados.saldo_real))
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Já existe uma reconciliação nessa data.")
+
+    atualizar_saldo_atual(cursor, conta_id)
+    conn.commit()
+    cursor.close(); conn.close()
+    return {"ok": True}
+
+
+@app.put("/ajustes-saldo/{ajuste_id}")
+def editar_ajuste_saldo(ajuste_id: int, dados: AjusteSaldoEditarInput, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+
+    cursor.execute("""
+        SELECT a.conta_id FROM ajustes_saldo a
+        JOIN contas c ON a.conta_id = c.id
+        WHERE a.id=%s AND c.utilizador_id=%s
+    """, (ajuste_id, uid))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=404, detail="Reconciliação não encontrada")
+    conta_id = row[0]
+
+    if dados.data > str(date.today()):
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Não é possível reconciliar uma data futura.")
+
+    try:
+        cursor.execute("UPDATE ajustes_saldo SET data=%s, saldo_real=%s WHERE id=%s", (dados.data, dados.saldo_real, ajuste_id))
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Já existe uma reconciliação nessa data.")
+
+    atualizar_saldo_atual(cursor, conta_id)
+    conn.commit()
+    cursor.close(); conn.close()
+    return {"ok": True}
+
+
+@app.delete("/ajustes-saldo/{ajuste_id}")
+def eliminar_ajuste_saldo(ajuste_id: int, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+
+    cursor.execute("""
+        SELECT a.conta_id FROM ajustes_saldo a
+        JOIN contas c ON a.conta_id = c.id
+        WHERE a.id=%s AND c.utilizador_id=%s
+    """, (ajuste_id, uid))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=404, detail="Reconciliação não encontrada")
+    conta_id = row[0]
+
+    cursor.execute("SELECT COUNT(*) FROM ajustes_saldo WHERE conta_id=%s", (conta_id,))
+    if cursor.fetchone()[0] <= 1:
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Uma conta precisa de pelo menos uma reconciliação.")
+
+    cursor.execute("DELETE FROM ajustes_saldo WHERE id=%s", (ajuste_id,))
+    atualizar_saldo_atual(cursor, conta_id)
+    conn.commit()
+    cursor.close(); conn.close()
     return {"ok": True}
 
 
@@ -945,35 +1084,37 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
     uid = utilizador["sub"]
 
     cursor.execute("""
-        SELECT SUM(saldo) FROM contas
-        WHERE utilizador_id = %s
-          AND (%s IS NULL OR id = %s)
-          AND (%s IS NULL OR tipo = %s)
-    """, [uid, conta_id, conta_id, tipo, tipo])
-    saldo_atual = float(cursor.fetchone()[0] or 0)
-
-    cursor.execute("""
-        WITH dias AS (
+        WITH contas_filtradas AS (
+            SELECT id FROM contas
+            WHERE utilizador_id = %s
+              AND (%s IS NULL OR id = %s)
+              AND (%s IS NULL OR tipo = %s)
+        ),
+        dias AS (
             SELECT generate_series(
-                (SELECT MIN(data) FROM movimentos WHERE utilizador_id = %s),
-                CURRENT_DATE,
-                '1 day'::interval
+                (SELECT MIN(data) FROM ajustes_saldo WHERE conta_id IN (SELECT id FROM contas_filtradas)),
+                CURRENT_DATE, '1 day'::interval
             )::date AS dia
         ),
-        movs_por_dia AS (
-            SELECT m.data AS dia, SUM(m.valor) AS soma_dia
-            FROM movimentos m
-            JOIN contas ct ON m.conta_id = ct.id
-            WHERE m.utilizador_id = %s
-              AND (%s IS NULL OR m.conta_id = %s)
-              AND (%s IS NULL OR ct.tipo = %s)
-            GROUP BY m.data
+        saldo_por_conta_dia AS (
+            SELECT d.dia, cf.id AS conta_id,
+                   a.saldo_real + COALESCE((
+                       SELECT SUM(m.valor) FROM movimentos m
+                       WHERE m.conta_id = cf.id AND m.data > a.data AND m.data <= d.dia
+                   ), 0) AS saldo
+            FROM dias d
+            CROSS JOIN contas_filtradas cf
+            CROSS JOIN LATERAL (
+                SELECT saldo_real, data FROM ajustes_saldo
+                WHERE conta_id = cf.id AND data <= d.dia
+                ORDER BY data DESC LIMIT 1
+            ) a
         )
-        SELECT d.dia, COALESCE(SUM(mp.soma_dia) OVER (ORDER BY d.dia ROWS UNBOUNDED PRECEDING), 0) AS acumulado
-        FROM dias d
-        LEFT JOIN movs_por_dia mp ON mp.dia = d.dia
-        ORDER BY d.dia
-    """, [uid, uid, conta_id, conta_id, tipo, tipo])
+        SELECT dia, SUM(saldo) AS saldo
+        FROM saldo_por_conta_dia
+        GROUP BY dia
+        ORDER BY dia
+    """, [uid, conta_id, conta_id, tipo, tipo])
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -981,8 +1122,7 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
     if not rows:
         return []
 
-    offset = saldo_atual - float(rows[-1][1])
-    pontos = [{"data": str(r[0]), "saldo": round(float(r[1]) + offset, 2)} for r in rows]
+    pontos = [{"data": str(r[0]), "saldo": round(float(r[1]), 2)} for r in rows]
 
     if data_de:
         pontos = [p for p in pontos if p["data"] >= data_de]

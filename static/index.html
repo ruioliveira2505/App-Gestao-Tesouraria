@@ -437,7 +437,13 @@
         <option value="BRL">BRL (R$)</option>
       </select>
   </div>
-    <div class="field"><label>Saldo</label><input type="number" id="conta-saldo" step="0.01"></div>
+    <div class="field">
+      <label id="conta-saldo-label">Saldo Inicial</label>
+      <input type="number" id="conta-saldo" step="0.01">
+      <div id="conta-saldo-ajustar" style="display:none;margin-top:0.4rem">
+        <a href="#" onclick="abrirModalAjusteSaldo(); return false" style="font-size:0.8rem;color:#888">Ajustar saldo →</a>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
       <button class="btn-primary" onclick="guardarConta()">Guardar</button>
@@ -489,6 +495,35 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-reconciliacoes">
+  <div class="modal">
+    <h2>Reconciliações de Saldo</h2>
+    <input type="hidden" id="reconc-conta-id">
+    <div class="table-wrap" style="margin-bottom:1rem;max-height:300px;overflow-y:auto">
+      <table>
+        <thead><tr><th>Data</th><th style="text-align:right">Saldo Reconciliado</th><th></th></tr></thead>
+        <tbody id="tabela-reconciliacoes"></tbody>
+      </table>
+    </div>
+
+    <div id="form-reconciliacao" style="display:none;border-top:1px solid #e5e5e5;padding-top:1rem;margin-bottom:1rem">
+      <input type="hidden" id="reconc-id">
+      <div class="field"><label>Data</label><input type="text" id="reconc-data" placeholder="Selecionar data"></div>
+      <div class="field"><label>Saldo Reconciliado</label><input type="number" id="reconc-valor" step="0.01"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="esconderFormReconciliacao()">Cancelar</button>
+        <button class="btn-primary" onclick="guardarReconciliacao()">Guardar</button>
+      </div>
+    </div>
+
+    <button class="btn-sm" id="btn-add-reconciliacao" onclick="mostrarFormReconciliacao()">+ Adicionar reconciliação</button>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalReconciliacoes()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 // CONFIGURAÇÃO E ESTADO GLOBAL
@@ -524,6 +559,10 @@ const ICONE_OLHO_ABERTO = `<svg width="18" height="18" viewBox="0 0 24 24" fill=
 const ICONE_OLHO_FECHADO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
 
 let pickerMovData = null
+let pickerReconc = null
+
+let reconciliacoesCache = []
+
 // ═══════════════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════════════
@@ -630,6 +669,16 @@ function iniciarPickerContas() {
         carregarContas()
       })
     }
+  })
+}
+
+function iniciarPickerReconciliacao() {
+  pickerReconc = new Litepicker({
+    element: document.getElementById('reconc-data'),
+    singleMode: true,
+    format: 'YYYY-MM-DD',
+    maxDate: new Date(),
+    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
   })
 }
 
@@ -792,6 +841,7 @@ async function iniciarApp() {
   iniciarPickerAnalise()
   iniciarPickerMovimentos()
   iniciarPickerMovData()
+  iniciarPickerReconciliacao()
   carregarPagina(pagina)
 }
 
@@ -954,6 +1004,9 @@ function abrirModalConta() {
   document.getElementById("conta-iban").value = ""
   document.getElementById("conta-moeda").value = "EUR"
   document.getElementById("conta-saldo").value = ""
+  document.getElementById("conta-saldo").disabled = false
+  document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"
+  document.getElementById("conta-saldo-ajustar").style.display = "none"
   document.getElementById("modal-conta").classList.add("open")
 }
 
@@ -967,6 +1020,9 @@ function abrirEditarConta(id) {
   document.getElementById("conta-iban").value = c.iban
   document.getElementById("conta-moeda").value = c.moeda
   document.getElementById("conta-saldo").value = c.saldo
+  document.getElementById("conta-saldo").disabled = true
+  document.getElementById("conta-saldo-label").textContent = "Saldo Atual"
+  document.getElementById("conta-saldo-ajustar").style.display = "block"
   document.getElementById("modal-conta").classList.add("open")
 }
 
@@ -978,14 +1034,101 @@ async function guardarConta() {
     tipo:  document.getElementById("conta-tipo").value,
     iban:  document.getElementById("conta-iban").value,
     moeda: document.getElementById("conta-moeda").value,
-    saldo: parseFloat(document.getElementById("conta-saldo").value),
   }
   if (id) {
     await apiPut("/contas/" + id, body)
   } else {
+    body.saldo = parseFloat(document.getElementById("conta-saldo").value)
     await apiPost("/contas", body)
   }
   fecharModal()
+  carregarContas()
+}
+
+async function abrirModalAjusteSaldo() {
+  const id = document.getElementById("conta-id").value
+  document.getElementById("modal-conta").classList.remove("open")
+  document.getElementById("reconc-conta-id").value = id
+  esconderFormReconciliacao()
+  await carregarReconciliacoes(id)
+  document.getElementById("modal-reconciliacoes").classList.add("open")
+}
+
+function fecharModalReconciliacoes() {
+  document.getElementById("modal-reconciliacoes").classList.remove("open")
+  abrirEditarConta(document.getElementById("conta-id").value)
+}
+
+async function carregarReconciliacoes(contaId) {
+  reconciliacoesCache = await api("/contas/" + contaId + "/ajustes-saldo")
+  renderizarTabelaReconciliacoes(true)
+}
+
+function renderizarTabelaReconciliacoes(comAcoes) {
+  const contaId = document.getElementById("reconc-conta-id").value
+  const conta = contasCache.find(c => c.id === contaId)
+  const tb = document.getElementById("tabela-reconciliacoes")
+  tb.innerHTML = ""
+  reconciliacoesCache.forEach(a => {
+    tb.innerHTML += `
+      <tr>
+        <td>${a.data}</td>
+        <td style="text-align:right">${fmt(a.saldo_real, conta ? conta.moeda : null)}</td>
+        <td style="white-space:nowrap">
+          ${comAcoes ? `
+            <button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button>
+            <button class="btn-danger" onclick="eliminarReconciliacao(${a.id})">✕</button>
+          ` : ''}
+        </td>
+      </tr>`
+  })
+}
+
+function mostrarFormReconciliacao(id, data, valor) {
+  document.getElementById("reconc-id").value = id || ""
+  pickerReconc.setDate(data || new Date())
+  document.getElementById("reconc-valor").value = valor !== undefined ? valor : ""
+  document.getElementById("form-reconciliacao").style.display = "block"
+  document.getElementById("btn-add-reconciliacao").style.display = "none"
+  renderizarTabelaReconciliacoes(false)
+}
+
+function esconderFormReconciliacao() {
+  document.getElementById("form-reconciliacao").style.display = "none"
+  document.getElementById("btn-add-reconciliacao").style.display = "inline-block"
+  renderizarTabelaReconciliacoes(true)
+}
+
+async function guardarReconciliacao() {
+  const id = document.getElementById("reconc-id").value
+  const contaId = document.getElementById("reconc-conta-id").value
+  const body = {
+    data: document.getElementById("reconc-data").value,
+    saldo_real: parseFloat(document.getElementById("reconc-valor").value),
+  }
+  const r = id
+    ? await apiPut("/ajustes-saldo/" + id, body)
+    : await apiPost("/contas/" + contaId + "/ajustes-saldo", body)
+  if (!r.ok) {
+    const d = await r.json()
+    alert(d.detail)
+    return
+  }
+  esconderFormReconciliacao()
+  await carregarReconciliacoes(contaId)
+  carregarContas()
+}
+
+async function eliminarReconciliacao(id) {
+  if (!confirm("Eliminar esta reconciliação?")) return
+  const contaId = document.getElementById("reconc-conta-id").value
+  const r = await apiDelete("/ajustes-saldo/" + id)
+  if (!r.ok) {
+    const d = await r.json()
+    alert(d.detail)
+    return
+  }
+  await carregarReconciliacoes(contaId)
   carregarContas()
 }
 

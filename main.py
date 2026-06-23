@@ -167,6 +167,8 @@ def registar(request: Request, dados: RegistoInput):
 
     cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
     if cursor.fetchone():
+        cursor.close()
+        conn.close()
         raise HTTPException(status_code=400, detail="Email já registado")
 
     hash_pw = encriptar_password(dados.password)
@@ -251,7 +253,13 @@ def redefinir_password(dados: RedefinirPasswordInput):
 # ═══════════════════════════════════════════════════════════════
 @app.get("/me")
 def perfil(utilizador: dict = Depends(utilizador_atual)):
-    return {"email": utilizador["email"], "id": utilizador["sub"]}
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT nome FROM utilizadores WHERE id=%s", (utilizador["sub"],))
+    nome = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return {"email": utilizador["email"], "id": utilizador["sub"], "nome": nome}
 
 
 @app.put("/me")
@@ -303,16 +311,25 @@ def listar_contas(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, nome, banco, iban, moeda, saldo, tipo
-        FROM contas
-        WHERE utilizador_id = %s
-        ORDER BY nome
+        SELECT c.id, c.nome, c.banco, c.iban, c.moeda, c.tipo,
+               a.saldo_real + COALESCE((
+                   SELECT SUM(m.valor) FROM movimentos m
+                   WHERE m.conta_id = c.id AND m.data > a.data AND m.data <= CURRENT_DATE
+               ), 0) AS saldo
+        FROM contas c
+        CROSS JOIN LATERAL (
+            SELECT saldo_real, data FROM ajustes_saldo
+            WHERE conta_id = c.id
+            ORDER BY data DESC LIMIT 1
+        ) a
+        WHERE c.utilizador_id = %s
+        ORDER BY c.nome
     """, (utilizador["sub"],))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
     return [
-        {"id": r[0], "nome": r[1], "banco": r[2], "iban": r[3], "moeda": r[4], "saldo": float(r[5]), "tipo": r[6]}
+        {"id": r[0], "nome": r[1], "banco": r[2], "iban": r[3], "moeda": r[4], "tipo": r[5], "saldo": float(r[6])}
         for r in rows
     ]
 
@@ -350,19 +367,26 @@ def editar_conta(conta_id: str, dados: ContaEditInput, utilizador: dict = Depend
 
 
 @app.delete("/contas/{conta_id}")
-def eliminar_conta(conta_id: str, utilizador: dict = Depends(utilizador_atual)):
+def eliminar_conta(conta_id: str, forcar: bool = False, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
+    uid = utilizador["sub"]
+
     cursor.execute("""
         SELECT COUNT(*) FROM movimentos WHERE conta_id = %s AND utilizador_id = %s
-    """, (conta_id, utilizador["sub"]))
+    """, (conta_id, uid))
     n = cursor.fetchone()[0]
-    if n > 0:
+
+    if n > 0 and not forcar:
         cursor.close()
         conn.close()
-        raise HTTPException(status_code=400, detail=f"Esta conta tem {n} movimento(s) associados. Elimina-os primeiro.")
+        raise HTTPException(status_code=400, detail=f"Esta conta tem {n} movimento(s) associados. Confirma a eliminação para os apagar também.")
 
-    cursor.execute("DELETE FROM contas WHERE id = %s AND utilizador_id = %s", (conta_id, utilizador["sub"]))
+    if n > 0:
+        cursor.execute("DELETE FROM movimentos WHERE conta_id = %s AND utilizador_id = %s", (conta_id, uid))
+
+    cursor.execute("DELETE FROM ajustes_saldo WHERE conta_id = %s", (conta_id,))
+    cursor.execute("DELETE FROM contas WHERE id = %s AND utilizador_id = %s", (conta_id, uid))
     conn.commit()
     cursor.close()
     conn.close()
@@ -377,6 +401,18 @@ def atualizar_saldo_atual(cursor, conta_id):
     row = cursor.fetchone()
     if row:
         cursor.execute("UPDATE contas SET saldo=%s WHERE id=%s", (row[0], conta_id))
+
+
+def primeiro_movimento_data(cursor, conta_id):
+    cursor.execute("SELECT MIN(data) FROM movimentos WHERE conta_id=%s", (conta_id,))
+    row = cursor.fetchone()
+    return str(row[0]) if row and row[0] else None
+
+
+def reconciliacao_mais_antiga_data(cursor, conta_id):
+    cursor.execute("SELECT MIN(data) FROM ajustes_saldo WHERE conta_id=%s", (conta_id,))
+    row = cursor.fetchone()
+    return str(row[0]) if row and row[0] else None
 
 
 @app.get("/contas/{conta_id}/ajustes-saldo")
@@ -445,6 +481,19 @@ def editar_ajuste_saldo(ajuste_id: int, dados: AjusteSaldoEditarInput, utilizado
         cursor.close(); conn.close()
         raise HTTPException(status_code=400, detail="Não é possível reconciliar uma data futura.")
 
+    cursor.execute("SELECT MIN(data) FROM ajustes_saldo WHERE conta_id=%s AND id != %s", (conta_id, ajuste_id))
+    outra_row = cursor.fetchone()
+    outras_mais_antiga = str(outra_row[0]) if outra_row and outra_row[0] else None
+    nova_mais_antiga = min(outras_mais_antiga, dados.data) if outras_mais_antiga else dados.data
+
+    primeiro_mov = primeiro_movimento_data(cursor, conta_id)
+    if primeiro_mov and nova_mais_antiga > primeiro_mov:
+        cursor.close(); conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Esta conta tem movimentos a partir de {primeiro_mov}. A reconciliação mais antiga não pode ficar depois dessa data."
+        )
+
     try:
         cursor.execute("UPDATE ajustes_saldo SET data=%s, saldo_real=%s WHERE id=%s", (dados.data, dados.saldo_real, ajuste_id))
     except psycopg2.errors.UniqueViolation:
@@ -479,6 +528,18 @@ def eliminar_ajuste_saldo(ajuste_id: int, utilizador: dict = Depends(utilizador_
     if cursor.fetchone()[0] <= 1:
         cursor.close(); conn.close()
         raise HTTPException(status_code=400, detail="Uma conta precisa de pelo menos uma reconciliação.")
+
+    cursor.execute("SELECT MIN(data) FROM ajustes_saldo WHERE conta_id=%s AND id != %s", (conta_id, ajuste_id))
+    resto_row = cursor.fetchone()
+    nova_mais_antiga = str(resto_row[0]) if resto_row and resto_row[0] else None
+
+    primeiro_mov = primeiro_movimento_data(cursor, conta_id)
+    if primeiro_mov and nova_mais_antiga and nova_mais_antiga > primeiro_mov:
+        cursor.close(); conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Não é possível eliminar: esta conta tem movimentos a partir de {primeiro_mov}, e a reconciliação mais antiga que restaria é de {nova_mais_antiga}."
+        )
 
     cursor.execute("DELETE FROM ajustes_saldo WHERE id=%s", (ajuste_id,))
     atualizar_saldo_atual(cursor, conta_id)
@@ -745,12 +806,22 @@ def listar_movimentos(
 def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual)):
     conn   = get_connection()
     cursor = conn.cursor()
+    uid = utilizador["sub"]
+
+    reconciliacao_mais_antiga = reconciliacao_mais_antiga_data(cursor, dados.conta_id)
+    if reconciliacao_mais_antiga and dados.data < reconciliacao_mais_antiga:
+        cursor.close(); conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Esta conta só tem reconciliações a partir de {reconciliacao_mais_antiga}. Cria uma reconciliação anterior a {dados.data} antes de adicionar este movimento."
+        )
+
     cursor.execute("""
         INSERT INTO movimentos (id, conta_id, data, descricao, valor, categoria_id, origem_cat, utilizador_id)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """, (
         str(uuid.uuid4()), dados.conta_id, dados.data, dados.descricao,
-        dados.valor, dados.categoria_id, "manual", utilizador["sub"]
+        dados.valor, dados.categoria_id, "manual", uid
     ))
     conn.commit()
     cursor.close()
@@ -763,6 +834,14 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
     conn   = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+
+    reconciliacao_mais_antiga = reconciliacao_mais_antiga_data(cursor, dados.conta_id)
+    if reconciliacao_mais_antiga and dados.data < reconciliacao_mais_antiga:
+        cursor.close(); conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Esta conta só tem reconciliações a partir de {reconciliacao_mais_antiga}. Cria uma reconciliação anterior a {dados.data} antes de mover este movimento para essa data."
+        )
 
     cursor.execute("""
         UPDATE movimentos
@@ -980,6 +1059,60 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
         pontos = [p for p in pontos if p["data"] <= data_ate]
 
     return pontos
+
+@app.get("/stats/recorrentes")
+def stats_recorrentes(utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT m.descricao, c.nome AS categoria, g.nome AS grupo, m.data, m.valor
+        FROM movimentos m
+        JOIN categorias c ON m.categoria_id = c.id
+        JOIN categorias g ON c.parent_id = g.id
+        WHERE m.utilizador_id = %s AND m.valor < 0
+        ORDER BY m.descricao, c.nome, m.data
+    """, (utilizador["sub"],))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    grupos = defaultdict(list)
+    for descricao, categoria, grupo, data_mov, valor in rows:
+        grupos[(descricao, categoria, grupo)].append((data_mov, float(valor)))
+
+    resultado = []
+    for (descricao, categoria, grupo), ocorrencias in grupos.items():
+        if len(ocorrencias) < 2:
+            continue
+
+        datas = [o[0] for o in ocorrencias]
+        valores = [o[1] for o in ocorrencias]
+        intervalos = [(datas[i] - datas[i-1]).days for i in range(1, len(datas))]
+
+        intervalo_medio = sum(intervalos) / len(intervalos)
+        if intervalo_medio == 0:
+            continue
+
+        desvio = (sum((i - intervalo_medio) ** 2 for i in intervalos) / len(intervalos)) ** 0.5
+        regular = (desvio / intervalo_medio) < 0.4
+
+        proxima_data = datas[-1] + timedelta(days=round(intervalo_medio))
+
+        resultado.append({
+            "descricao": descricao,
+            "categoria": categoria,
+            "grupo": grupo,
+            "ocorrencias": len(ocorrencias),
+            "valor_medio": round(sum(valores) / len(valores), 2),
+            "ultima_vez": str(datas[-1]),
+            "intervalo_medio_dias": round(intervalo_medio),
+            "proxima_data_estimada": str(proxima_data),
+            "regular": regular,
+        })
+
+    resultado.sort(key=lambda x: (not x["regular"], -x["ocorrencias"]))
+    return resultado
 
 # arrancar servidor
 # uvicorn main:app --reload

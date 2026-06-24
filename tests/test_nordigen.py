@@ -226,17 +226,23 @@ def test_categorizar_por_llm_sem_categorias_disponiveis_devolve_none(client, hea
 
 
 # ═══════════════════════════════════════════════════════════
-# escolher_por_llm — chamada ao Ollama, isolada com mock de requests
+# escolher_por_llm — chamada à API da Groq, isolada com mock de requests
 # ═══════════════════════════════════════════════════════════
 class RespostaFalsa:
-    def __init__(self, texto):
+    def __init__(self, texto, status_ok=True):
         self._texto = texto
+        self._status_ok = status_ok
+
+    def raise_for_status(self):
+        if not self._status_ok:
+            raise requests.HTTPError("erro simulado")
 
     def json(self):
-        return {"response": self._texto}
+        return {"choices": [{"message": {"content": self._texto}}]}
 
 
 def test_escolher_por_llm_interpreta_resposta_numerica(monkeypatch):
+    monkeypatch.setattr(nordigen, "GROQ_API_KEY", "chave-falsa-para-teste")
     opcoes = [(10, "Alimentação > Supermercado"), (11, "Alimentação > Restaurantes e Cafés")]
     monkeypatch.setattr(nordigen.requests, "post", lambda *a, **k: RespostaFalsa("2"))
 
@@ -244,6 +250,7 @@ def test_escolher_por_llm_interpreta_resposta_numerica(monkeypatch):
 
 
 def test_escolher_por_llm_resposta_fora_de_gama_devolve_none(monkeypatch):
+    monkeypatch.setattr(nordigen, "GROQ_API_KEY", "chave-falsa-para-teste")
     opcoes = [(10, "Alimentação > Supermercado")]
     monkeypatch.setattr(nordigen.requests, "post", lambda *a, **k: RespostaFalsa("99"))
 
@@ -251,18 +258,56 @@ def test_escolher_por_llm_resposta_fora_de_gama_devolve_none(monkeypatch):
 
 
 def test_escolher_por_llm_resposta_sem_numero_devolve_none(monkeypatch):
+    monkeypatch.setattr(nordigen, "GROQ_API_KEY", "chave-falsa-para-teste")
     opcoes = [(10, "Alimentação > Supermercado")]
     monkeypatch.setattr(nordigen.requests, "post", lambda *a, **k: RespostaFalsa("não sei"))
 
     assert nordigen.escolher_por_llm("X", -20.0, opcoes) is None
 
 
+def test_escolher_por_llm_erro_http_devolve_none(monkeypatch):
+    monkeypatch.setattr(nordigen, "GROQ_API_KEY", "chave-falsa-para-teste")
+    opcoes = [(10, "Alimentação > Supermercado")]
+    monkeypatch.setattr(nordigen.requests, "post", lambda *a, **k: RespostaFalsa("2", status_ok=False))
+
+    assert nordigen.escolher_por_llm("X", -20.0, opcoes) is None
+
+
 def test_escolher_por_llm_falha_de_rede_devolve_none(monkeypatch):
+    monkeypatch.setattr(nordigen, "GROQ_API_KEY", "chave-falsa-para-teste")
     opcoes = [(10, "Alimentação > Supermercado")]
 
     def levanta_excecao(*a, **k):
-        raise ConnectionError("Ollama não está acessível")
+        raise ConnectionError("API não está acessível")
 
     monkeypatch.setattr(nordigen.requests, "post", levanta_excecao)
-
     assert nordigen.escolher_por_llm("X", -20.0, opcoes) is None
+
+
+def test_escolher_por_llm_sem_api_key_nao_chama_rede(monkeypatch):
+    monkeypatch.setattr(nordigen, "GROQ_API_KEY", None)
+    chamou_rede = []
+    monkeypatch.setattr(nordigen.requests, "post", lambda *a, **k: chamou_rede.append(1))
+
+    opcoes = [(10, "Alimentação > Supermercado")]
+    assert nordigen.escolher_por_llm("X", -20.0, opcoes) is None
+    assert chamou_rede == []
+
+
+def test_regra_at_nao_apanha_substrings_dentro_de_outras_palavras():
+    # "SEAT" contém "at " mas não é a Autoridade Tributária
+    resultado = nordigen.categorizar_por_regras("PRESTACAO SEAT IBIZA BRAGA")
+    assert resultado != ("Impostos", "Outros")
+
+
+def test_regra_renda_e_reconhecida():
+    assert nordigen.categorizar_por_regras("RENDA APARTAMENTO MAIO") == ("Habitação", "Renda")
+
+
+def test_regra_farmacia_e_reconhecida():
+    assert nordigen.categorizar_por_regras("FARMACIA CENTRAL BRAGA") == ("Saúde e Auto-Cuidado", "Tratamentos e Medicamentos")
+
+
+def test_regra_renda_nao_apanha_palavras_derivadas():
+    # "rendas" (plural) não deve disparar a regra "renda" — \b exige fronteira de palavra completa
+    assert nordigen.categorizar_por_regras("PAGAMENTO DE RENDAS ATRASADAS") is None

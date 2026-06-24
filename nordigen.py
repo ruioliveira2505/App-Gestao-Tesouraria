@@ -1,7 +1,14 @@
+import os
 import json
 import requests
 import re
+from dotenv import load_dotenv
 from database import get_connection
+
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL   = "llama-3.3-70b-versatile"
 
 
 REGRAS = [
@@ -10,11 +17,12 @@ REGRAS = [
     ("vencimento",            ("Trabalho", "Salário")),
 
     # Habitação
-    ("edp ",                  ("Habitação", "Água, Eletricidade e Gás")),
+    ("edp",                   ("Habitação", "Água, Eletricidade e Gás")),
     ("galp",                  ("Transportes", "Combustível")),
-    ("nos ",                  ("Habitação", "Telecomunicações")),
-    ("meo ",                  ("Habitação", "Telecomunicações")),
+    ("nos",                   ("Habitação", "Telecomunicações")),
+    ("meo",                   ("Habitação", "Telecomunicações")),
     ("vodafone",              ("Habitação", "Telecomunicações")),
+    ("renda",                 ("Habitação", "Renda")),
 
     # Alimentação
     ("continente",            ("Alimentação", "Supermercado")),
@@ -26,23 +34,26 @@ REGRAS = [
     ("minipreco",             ("Alimentação", "Supermercado")),
 
     # Transportes
-    ("bp ",                   ("Transportes", "Combustível")),
+    ("bp",                    ("Transportes", "Combustível")),
     ("repsol",                ("Transportes", "Combustível")),
     ("cepsa",                 ("Transportes", "Combustível")),
     ("via verde",             ("Transportes", "Portagens e Estacionamento")),
-    ("cp ",                   ("Transportes", "Transportes Públicos e TVDE")),
-    ("uber ",                 ("Transportes", "Transportes Públicos e TVDE")),
-    ("bolt ",                 ("Transportes", "Transportes Públicos e TVDE")),
+    ("cp",                    ("Transportes", "Transportes Públicos e TVDE")),
+    ("uber",                  ("Transportes", "Transportes Públicos e TVDE")),
+    ("bolt",                  ("Transportes", "Transportes Públicos e TVDE")),
 
     # Impostos
     ("pagamento irs",         ("Impostos", "IRS")),
-    ("at ",                   ("Impostos", "Outros")),
-    ("iuc ",                  ("Impostos", "IUC")),
-    ("imi ",                  ("Impostos", "IMI")),
+    ("at",                    ("Impostos", "Outros")),
+    ("iuc",                   ("Impostos", "IUC")),
+    ("imi",                   ("Impostos", "IMI")),
 
     # Seguros
     ("medis",                 ("Seguros", "Saúde")),
     ("multicare",             ("Seguros", "Saúde")),
+
+    # Saúde e Auto-Cuidado
+    ("farmacia",              ("Saúde e Auto-Cuidado", "Tratamentos e Medicamentos")),
 
     # Entretenimento
     ("netflix",               ("Entretenimento", "Subscrições")),
@@ -56,7 +67,17 @@ REGRAS = [
 def categorizar_por_regras(descricao):
     descricao_lower = descricao.lower()
     for palavra, (grupo, categoria) in REGRAS:
-        if palavra in descricao_lower:
+        padrao = r"\b" + re.escape(palavra) + r"\b"
+        if re.search(padrao, descricao_lower):
+            return grupo, categoria
+    return None
+
+
+def categorizar_por_regras(descricao):
+    descricao_lower = descricao.lower()
+    for palavra, (grupo, categoria) in REGRAS:
+        padrao = r"\b" + re.escape(palavra) + r"\b"
+        if re.search(padrao, descricao_lower):
             return grupo, categoria
     return None
 
@@ -136,13 +157,24 @@ def escolher_por_llm(descricao, valor, opcoes, contexto=""):
         f"{lista_texto}"
     )
 
+    if not GROQ_API_KEY:
+        print("GROQ_API_KEY não está definida — a saltar categorização por LLM.")
+        return None
+
     try:
         resposta = requests.post(
-            "http://localhost:11434/api/generate",
-            json={"model": "llama3.1:8b", "prompt": prompt, "stream": False},
-            timeout=60,
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0,
+                "max_tokens": 10,
+            },
+            timeout=15,
         )
-        texto = resposta.json()["response"].strip()
+        resposta.raise_for_status()
+        texto = resposta.json()["choices"][0]["message"]["content"].strip()
         match = re.search(r"\d+", texto)
         if match:
             indice = int(match.group()) - 1
@@ -150,7 +182,7 @@ def escolher_por_llm(descricao, valor, opcoes, contexto=""):
                 return opcoes[indice][0]
         return None
     except Exception as e:
-        print(f"Erro ao chamar o Ollama: {e}")
+        print(f"Erro ao chamar a API da Groq: {e}")
         return None
 
 

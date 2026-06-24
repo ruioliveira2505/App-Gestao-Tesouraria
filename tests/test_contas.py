@@ -1,3 +1,10 @@
+from datetime import date
+
+
+def hoje():
+    return str(date.today())
+
+
 def conta_exemplo(**overrides):
     base = {
         "nome": "Conta Principal", "banco": "CGD", "tipo": "corrente",
@@ -49,7 +56,7 @@ def test_eliminar_conta_com_movimentos_pede_confirmacao(client, headers_autentic
     categoria_id = client.get("/categorias", headers=headers_autenticado).json()[0]["id"]
 
     client.post("/movimentos", json={
-        "conta_id": conta_id, "data": "2026-06-01", "descricao": "Teste",
+        "conta_id": conta_id, "data": hoje(), "descricao": "Teste",
         "valor": -50.0, "categoria_id": categoria_id,
     }, headers=headers_autenticado)
 
@@ -63,7 +70,7 @@ def test_eliminar_conta_com_forcar_remove_tudo(client, headers_autenticado):
     categoria_id = client.get("/categorias", headers=headers_autenticado).json()[0]["id"]
 
     client.post("/movimentos", json={
-        "conta_id": conta_id, "data": "2026-06-01", "descricao": "Teste",
+        "conta_id": conta_id, "data": hoje(), "descricao": "Teste",
         "valor": -50.0, "categoria_id": categoria_id,
     }, headers=headers_autenticado)
 

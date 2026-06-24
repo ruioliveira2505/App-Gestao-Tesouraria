@@ -14,6 +14,7 @@ from collections import defaultdict
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from pydantic import BaseModel, EmailStr
 
 from database import get_connection
 from auth import encriptar_password, verificar_password, criar_token, verificar_token
@@ -43,7 +44,7 @@ security = HTTPBearer()
 # ═══════════════════════════════════════════════════════════════
 class RegistoInput(BaseModel):
     nome:     str
-    email:    str
+    email:    EmailStr
     password: str
 
 class LoginInput(BaseModel):
@@ -52,7 +53,7 @@ class LoginInput(BaseModel):
 
 class PerfilUpdateInput(BaseModel):
     nome:  str
-    email: str
+    email: EmailStr
 
 class PasswordUpdateInput(BaseModel):
     password_atual: str
@@ -106,7 +107,7 @@ class CategoriaGestaoInput(BaseModel):
 # ═══════════════════════════════════════════════════════════════
 def utilizador_atual(credentials: HTTPAuthorizationCredentials = Depends(security)):
     payload = verificar_token(credentials.credentials)
-    if not payload:
+    if not payload or payload.get("tipo") == "reset":
         raise HTTPException(status_code=401, detail="Token inválido ou expirado")
     return payload
 
@@ -255,17 +256,23 @@ def redefinir_password(dados: RedefinirPasswordInput):
 def perfil(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT nome FROM utilizadores WHERE id=%s", (utilizador["sub"],))
-    nome = cursor.fetchone()[0]
+    cursor.execute("SELECT nome, email FROM utilizadores WHERE id=%s", (utilizador["sub"],))
+    nome, email = cursor.fetchone()
     cursor.close()
     conn.close()
-    return {"email": utilizador["email"], "id": utilizador["sub"], "nome": nome}
+    return {"email": email, "id": utilizador["sub"], "nome": nome}
 
 
 @app.put("/me")
 def atualizar_perfil(dados: PerfilUpdateInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM utilizadores WHERE email=%s AND id != %s", (dados.email, utilizador["sub"]))
+    if cursor.fetchone():
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Email já está em uso")
+
     cursor.execute("UPDATE utilizadores SET nome=%s, email=%s WHERE id=%s", (dados.nome, dados.email, utilizador["sub"]))
     conn.commit()
     cursor.close(); conn.close()
@@ -314,7 +321,7 @@ def listar_contas(utilizador: dict = Depends(utilizador_atual)):
         SELECT c.id, c.nome, c.banco, c.iban, c.moeda, c.tipo,
                a.saldo_real + COALESCE((
                    SELECT SUM(m.valor) FROM movimentos m
-                   WHERE m.conta_id = c.id AND m.data > a.data AND m.data <= CURRENT_DATE
+                   WHERE m.conta_id = c.id AND m.data >= a.data AND m.data <= CURRENT_DATE
                ), 0) AS saldo
         FROM contas c
         CROSS JOIN LATERAL (
@@ -551,6 +558,10 @@ def eliminar_ajuste_saldo(ajuste_id: int, utilizador: dict = Depends(utilizador_
 # ═══════════════════════════════════════════════════════════════
 # CATEGORIAS
 # ═══════════════════════════════════════════════════════════════
+def categoria_pertence_ao_utilizador(cursor, categoria_id, uid):
+    cursor.execute("SELECT id FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+    return cursor.fetchone() is not None
+
 @app.get("/categorias")
 def listar_categorias(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
@@ -603,7 +614,6 @@ def arvore_categorias(utilizador: dict = Depends(utilizador_atual)):
         for gid, nome, eh_rec in grupos
     ]
 
-
 @app.post("/categorias")
 def criar_categoria(dados: CategoriaGestaoInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
@@ -614,11 +624,14 @@ def criar_categoria(dados: CategoriaGestaoInput, utilizador: dict = Depends(util
         cursor.close(); conn.close()
         raise HTTPException(status_code=400, detail="Um grupo novo precisa de indicar se é Entrada ou Saída.")
 
+    if dados.parent_id is not None and not categoria_pertence_ao_utilizador(cursor, dados.parent_id, uid):
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=404, detail="Grupo não encontrado")
+
     if dados.parent_id is None:
         cursor.execute("SELECT COALESCE(MAX(ordem),0)+1 FROM categorias WHERE utilizador_id=%s AND parent_id IS NULL", (uid,))
         eh_recebimento = dados.eh_recebimento
     else:
-        cursor.execute("SELECT COALESCE(MAX(ordem),0)+1 FROM categorias WHERE parent_id=%s", (dados.parent_id,))
         cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s", (dados.parent_id,))
         eh_recebimento = cursor.fetchone()[0]
         cursor.execute("SELECT COALESCE(MAX(ordem),0)+1 FROM categorias WHERE parent_id=%s", (dados.parent_id,))
@@ -650,6 +663,9 @@ def editar_categoria_nome(categoria_id: int, dados: CategoriaGestaoInput, utiliz
         if eh_grupo:
             cursor.close(); conn.close()
             raise HTTPException(status_code=400, detail="Um grupo não pode ser movido para dentro de outro grupo.")
+        if not categoria_pertence_ao_utilizador(cursor, dados.parent_id, uid):
+            cursor.close(); conn.close()
+            raise HTTPException(status_code=404, detail="Grupo de destino não encontrado")
         cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s", (dados.parent_id,))
         eh_recebimento = cursor.fetchone()[0]
         cursor.execute("""
@@ -679,6 +695,10 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
     parent_id = row[0]
 
+    if migrar_para_id and not categoria_pertence_ao_utilizador(cursor, migrar_para_id, uid):
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=404, detail="Categoria de destino não encontrada")
+    
     if parent_id is None:
         cursor.execute("SELECT COUNT(*) FROM categorias WHERE parent_id=%s", (categoria_id,))
         n = cursor.fetchone()[0]
@@ -1029,7 +1049,7 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
             SELECT d.dia, cf.id AS conta_id,
                    a.saldo_real + COALESCE((
                        SELECT SUM(m.valor) FROM movimentos m
-                       WHERE m.conta_id = cf.id AND m.data > a.data AND m.data <= d.dia
+                       WHERE m.conta_id = cf.id AND m.data >= a.data AND m.data <= d.dia
                    ), 0) AS saldo
             FROM dias d
             CROSS JOIN contas_filtradas cf

@@ -1,29 +1,27 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 import bcrypt
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+from app.core.config import settings
 
-SECRET_KEY = os.getenv("SECRET_KEY", "muda-isto-para-algo-secreto")
-ALGORITMO  = "HS256"
-TOKEN_DIAS = 30
 
 def encriptar_password(password: str) -> str:
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
+
 def verificar_password(password: str, hash: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), hash.encode("utf-8"))
 
+
 def criar_token(dados: dict, validade: timedelta = None) -> str:
     payload = dados.copy()
-    payload["exp"] = datetime.utcnow() + (validade or timedelta(days=TOKEN_DIAS))
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITMO)
+    payload["exp"] = datetime.now(timezone.utc) + (validade or timedelta(days=settings.TOKEN_DIAS))
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITMO_JWT)
+
 
 def verificar_token(token: str) -> dict | None:
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITMO])
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITMO_JWT])
     except JWTError:
         return None

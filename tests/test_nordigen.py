@@ -1,5 +1,6 @@
-import nordigen
-from database import get_connection
+from app.services import categorizacao as nordigen
+import requests
+from app.db.database import get_connection
 
 
 def uid_de(client, headers):

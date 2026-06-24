@@ -1,6 +1,6 @@
 import re
 from datetime import timedelta
-from auth import criar_token
+from app.core.security import criar_token
 
 
 def extrair_token_do_corpo(corpo):
@@ -13,7 +13,7 @@ def extrair_token_do_corpo(corpo):
 # ═══════════════════════════════════════════════════════════
 def test_esqueci_password_com_email_existente_envia_email(client, headers_autenticado, monkeypatch):
     enviados = []
-    monkeypatch.setattr("main.enviar_email", lambda destinatario, assunto, corpo: enviados.append((destinatario, assunto, corpo)))
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda destinatario, assunto, corpo: enviados.append((destinatario, assunto, corpo)))
 
     r = client.post("/esqueci-password", json={"email": "ana@exemplo.com"})
     assert r.status_code == 200
@@ -24,7 +24,7 @@ def test_esqueci_password_com_email_existente_envia_email(client, headers_autent
 
 def test_esqueci_password_com_email_inexistente_nao_revela_nem_envia(client, monkeypatch):
     enviados = []
-    monkeypatch.setattr("main.enviar_email", lambda destinatario, assunto, corpo: enviados.append((destinatario, assunto, corpo)))
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda destinatario, assunto, corpo: enviados.append((destinatario, assunto, corpo)))
 
     r = client.post("/esqueci-password", json={"email": "naoexiste@exemplo.com"})
     assert r.status_code == 200
@@ -33,7 +33,7 @@ def test_esqueci_password_com_email_inexistente_nao_revela_nem_envia(client, mon
 
 
 def test_esqueci_password_mensagem_identica_para_existente_e_inexistente(client, headers_autenticado, monkeypatch):
-    monkeypatch.setattr("main.enviar_email", lambda *a, **k: None)
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda *a, **k: None)
 
     r1 = client.post("/esqueci-password", json={"email": "ana@exemplo.com"})
     r2 = client.post("/esqueci-password", json={"email": "naoexiste@exemplo.com"})
@@ -41,7 +41,7 @@ def test_esqueci_password_mensagem_identica_para_existente_e_inexistente(client,
 
 
 def test_limite_de_pedidos_esqueci_password(client, monkeypatch):
-    monkeypatch.setattr("main.enviar_email", lambda *a, **k: None)
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda *a, **k: None)
 
     for _ in range(3):
         r = client.post("/esqueci-password", json={"email": "qualquer@exemplo.com"})
@@ -56,7 +56,7 @@ def test_limite_de_pedidos_esqueci_password(client, monkeypatch):
 # ═══════════════════════════════════════════════════════════
 def test_redefinir_password_com_token_valido_funciona(client, headers_autenticado, monkeypatch):
     enviados = []
-    monkeypatch.setattr("main.enviar_email", lambda destinatario, assunto, corpo: enviados.append(corpo))
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda destinatario, assunto, corpo: enviados.append(corpo))
 
     client.post("/esqueci-password", json={"email": "ana@exemplo.com"})
     token = extrair_token_do_corpo(enviados[0])
@@ -93,7 +93,7 @@ def test_redefinir_password_com_token_expirado_falha(client, headers_autenticado
 
 def test_token_de_reset_nao_pode_acessar_rotas_normais(client, headers_autenticado, monkeypatch):
     enviados = []
-    monkeypatch.setattr("main.enviar_email", lambda destinatario, assunto, corpo: enviados.append(corpo))
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda destinatario, assunto, corpo: enviados.append(corpo))
     client.post("/esqueci-password", json={"email": "ana@exemplo.com"})
     token_reset = extrair_token_do_corpo(enviados[0])
 

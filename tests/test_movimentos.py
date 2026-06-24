@@ -18,9 +18,14 @@ def movimento_exemplo(conta_id, categoria_id, **overrides):
     return base
 
 
-def test_criar_movimento(client, headers_autenticado, conta_id, categoria_id):
-    r = client.post("/movimentos", json=movimento_exemplo(conta_id, categoria_id), headers=headers_autenticado)
+def criar_movimento(client, headers, conta_id, categoria_id, descricao="Teste", valor=-50.0):
+    r = client.post("/movimentos", json={
+        "conta_id": conta_id, "data": hoje(), "descricao": descricao,
+        "valor": valor, "categoria_id": categoria_id,
+    }, headers=headers)
     assert r.status_code == 200
+    movimentos = client.get("/movimentos", headers=headers).json()
+    return next(m for m in movimentos if m["descricao"] == descricao)["id"]
 
 
 def test_listar_movimentos(client, headers_autenticado, conta_id, categoria_id):

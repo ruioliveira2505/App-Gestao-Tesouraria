@@ -1,14 +1,12 @@
-import os
 import json
 import requests
 import re
-from dotenv import load_dotenv
-from database import get_connection
 
-load_dotenv()
+from app.core.config import settings
+from app.db.database import get_connection
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL   = "llama-3.3-70b-versatile"
+GROQ_API_KEY = settings.GROQ_API_KEY
+GROQ_MODEL   = settings.GROQ_MODEL
 
 
 REGRAS = [
@@ -62,15 +60,6 @@ REGRAS = [
     ("disney",                ("Entretenimento", "Subscrições")),
     ("amazon prime",          ("Entretenimento", "Subscrições")),
 ]
-
-
-def categorizar_por_regras(descricao):
-    descricao_lower = descricao.lower()
-    for palavra, (grupo, categoria) in REGRAS:
-        padrao = r"\b" + re.escape(palavra) + r"\b"
-        if re.search(padrao, descricao_lower):
-            return grupo, categoria
-    return None
 
 
 def categorizar_por_regras(descricao):

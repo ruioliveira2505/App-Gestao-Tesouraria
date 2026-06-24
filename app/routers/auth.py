@@ -1,0 +1,101 @@
+from fastapi import APIRouter, HTTPException, Request
+
+from app.db.database import get_connection
+from app.core.config import settings
+from app.core.security import encriptar_password, verificar_password, criar_token, verificar_token
+from app.core.limiter import limiter
+from app.services.email import enviar_email
+from app.services.categorias_seed import seed_categorias_padrao
+from app.schemas.auth import RegistoInput, LoginInput, EsqueciPasswordInput, RedefinirPasswordInput
+from datetime import timedelta
+
+router = APIRouter()
+
+
+@router.post("/registro")
+@limiter.limit("5/minute")
+def registar(request: Request, dados: RegistoInput):
+    conn   = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        raise HTTPException(status_code=400, detail="Email já registado")
+
+    hash_pw = encriptar_password(dados.password)
+    cursor.execute(
+        "INSERT INTO utilizadores (nome, email, password) VALUES (%s, %s, %s) RETURNING id",
+        (dados.nome, dados.email, hash_pw)
+    )
+    utilizador_id = cursor.fetchone()[0]
+    conn.commit()
+    cursor.close()
+
+    seed_categorias_padrao(conn, utilizador_id)
+    conn.close()
+
+    token = criar_token({"sub": str(utilizador_id), "email": dados.email})
+    return {"token": token, "nome": dados.nome}
+
+
+@router.post("/login")
+@limiter.limit("5/minute")
+def login(request: Request, dados: LoginInput):
+    conn   = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT id, nome, password FROM utilizadores WHERE email = %s",
+        (dados.email,)
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row or not verificar_password(dados.password, row[2]):
+        raise HTTPException(status_code=401, detail="Email ou password incorretos")
+
+    token = criar_token({"sub": str(row[0]), "email": dados.email})
+    return {"token": token, "nome": row[1]}
+
+
+@router.post("/esqueci-password")
+@limiter.limit("3/hour")
+def esqueci_password(request: Request, dados: EsqueciPasswordInput):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if row:
+        token = criar_token({"sub": str(row[0]), "tipo": "reset"}, timedelta(hours=1))
+        link = f"{settings.BASE_URL}/static/index.html?token={token}"
+        enviar_email(
+            dados.email,
+            "Recuperar password — Tesouraria",
+            f"Clica neste link para definires uma password nova (válido por 1 hora):\n\n{link}"
+        )
+
+    return {"ok": True, "mensagem": "Se o email existir, enviámos instruções."}
+
+
+@router.post("/redefinir-password")
+def redefinir_password(dados: RedefinirPasswordInput):
+    payload = verificar_token(dados.token)
+    if not payload or payload.get("tipo") != "reset":
+        raise HTTPException(status_code=400, detail="Link inválido ou expirado")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE utilizadores SET password = %s WHERE id = %s",
+        (encriptar_password(dados.password_nova), payload["sub"])
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"ok": True}

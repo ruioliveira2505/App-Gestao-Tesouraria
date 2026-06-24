@@ -1,5 +1,5 @@
 from datetime import date
-from database import get_connection
+from app.db.database import get_connection
 
 
 def hoje():

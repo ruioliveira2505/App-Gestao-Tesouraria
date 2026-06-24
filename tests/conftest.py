@@ -4,8 +4,8 @@ os.environ["DB_NAME"] = "tesouraria_test"
 import pytest
 from fastapi.testclient import TestClient
 
-from main import app
-from database import get_connection
+from app.main import app
+from app.db.database import get_connection
 
 
 @pytest.fixture(autouse=True)

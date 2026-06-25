@@ -9,68 +9,6 @@ GROQ_API_KEY = settings.GROQ_API_KEY
 GROQ_MODEL   = settings.GROQ_MODEL
 
 
-REGRAS = [
-    # Trabalho
-    ("salario",               ("Trabalho", "Salário")),
-    ("vencimento",            ("Trabalho", "Salário")),
-
-    # Habitação
-    ("edp",                   ("Habitação", "Água, Eletricidade e Gás")),
-    ("galp",                  ("Transportes", "Combustível")),
-    ("nos",                   ("Habitação", "Telecomunicações")),
-    ("meo",                   ("Habitação", "Telecomunicações")),
-    ("vodafone",              ("Habitação", "Telecomunicações")),
-    ("renda",                 ("Habitação", "Renda")),
-
-    # Alimentação
-    ("continente",            ("Alimentação", "Supermercado")),
-    ("pingo doce",            ("Alimentação", "Supermercado")),
-    ("aldi",                  ("Alimentação", "Supermercado")),
-    ("lidl",                  ("Alimentação", "Supermercado")),
-    ("mercadona",             ("Alimentação", "Supermercado")),
-    ("intermarche",           ("Alimentação", "Supermercado")),
-    ("minipreco",             ("Alimentação", "Supermercado")),
-
-    # Transportes
-    ("bp",                    ("Transportes", "Combustível")),
-    ("repsol",                ("Transportes", "Combustível")),
-    ("cepsa",                 ("Transportes", "Combustível")),
-    ("via verde",             ("Transportes", "Portagens e Estacionamento")),
-    ("cp",                    ("Transportes", "Transportes Públicos e TVDE")),
-    ("uber",                  ("Transportes", "Transportes Públicos e TVDE")),
-    ("bolt",                  ("Transportes", "Transportes Públicos e TVDE")),
-
-    # Impostos
-    ("pagamento irs",         ("Impostos", "IRS")),
-    ("at",                    ("Impostos", "Outros")),
-    ("iuc",                   ("Impostos", "IUC")),
-    ("imi",                   ("Impostos", "IMI")),
-
-    # Seguros
-    ("medis",                 ("Seguros", "Saúde")),
-    ("multicare",             ("Seguros", "Saúde")),
-
-    # Saúde e Auto-Cuidado
-    ("farmacia",              ("Saúde e Auto-Cuidado", "Tratamentos e Medicamentos")),
-
-    # Entretenimento
-    ("netflix",               ("Entretenimento", "Subscrições")),
-    ("spotify",               ("Entretenimento", "Subscrições")),
-    ("hbo",                   ("Entretenimento", "Subscrições")),
-    ("disney",                ("Entretenimento", "Subscrições")),
-    ("amazon prime",          ("Entretenimento", "Subscrições")),
-]
-
-
-def categorizar_por_regras(descricao):
-    descricao_lower = descricao.lower()
-    for palavra, (grupo, categoria) in REGRAS:
-        padrao = r"\b" + re.escape(palavra) + r"\b"
-        if re.search(padrao, descricao_lower):
-            return grupo, categoria
-    return None
-
-
 def resolver_categoria_id(conn, grupo, categoria, utilizador_id):
     cursor = conn.cursor()
     cursor.execute("""
@@ -86,22 +24,22 @@ def resolver_categoria_id(conn, grupo, categoria, utilizador_id):
 def buscar_em_cache(conn, descricao, utilizador_id):
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT categoria_id FROM categorias_aprendidas
+        SELECT categoria_id, confirmado FROM categorias_aprendidas
         WHERE descricao = %s AND utilizador_id = %s
     """, (descricao, utilizador_id))
     row = cursor.fetchone()
     cursor.close()
-    return row[0] if row else None
+    return row if row else None  # (categoria_id, confirmado) ou None
 
 
-def guardar_em_cache(conn, descricao, categoria_id, utilizador_id):
+def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False):
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO categorias_aprendidas (descricao, categoria_id, utilizador_id)
-        VALUES (%s, %s, %s)
+        INSERT INTO categorias_aprendidas (descricao, categoria_id, utilizador_id, confirmado)
+        VALUES (%s, %s, %s, %s)
         ON CONFLICT (descricao, utilizador_id)
-        DO UPDATE SET categoria_id = EXCLUDED.categoria_id
-    """, (descricao, categoria_id, utilizador_id))
+        DO UPDATE SET categoria_id = EXCLUDED.categoria_id, confirmado = EXCLUDED.confirmado
+    """, (descricao, categoria_id, utilizador_id, confirmado))
     conn.commit()
     cursor.close()
 
@@ -183,26 +121,25 @@ def categorizar_por_llm(descricao, valor, conn, utilizador_id):
 
 
 def categorizar(descricao, valor, utilizador_id, conn=None):
-    """Devolve (categoria_id, origem) para um movimento."""
+    """Devolve (categoria_id, origem) para um movimento.
+
+    'cache'  → confirmado pelo utilizador, pode confiar-se sem mais perguntas.
+    'llm'    → sugestão (nova ou reaproveitada de cache não confirmada), precisa de confirmação.
+    'sem_match' → nem o LLM soube responder, cai em "Outros".
+    """
     proprio_conn = conn is None
     if proprio_conn:
         conn = get_connection()
 
     try:
-        resultado_regra = categorizar_por_regras(descricao)
-        if resultado_regra:
-            grupo, categoria = resultado_regra
-            categoria_id = resolver_categoria_id(conn, grupo, categoria, utilizador_id)
-            if categoria_id:
-                return categoria_id, "regra"
-
-        categoria_id = buscar_em_cache(conn, descricao, utilizador_id)
-        if categoria_id:
-            return categoria_id, "cache"
+        em_cache = buscar_em_cache(conn, descricao, utilizador_id)
+        if em_cache:
+            categoria_id, confirmado = em_cache
+            return categoria_id, ("cache" if confirmado else "llm")
 
         categoria_id = categorizar_por_llm(descricao, valor, conn, utilizador_id)
         if categoria_id:
-            guardar_em_cache(conn, descricao, categoria_id, utilizador_id)
+            guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False)
             return categoria_id, "llm"
 
         grupo_fallback = "Outros Recebimentos" if valor > 0 else "Outros Pagamentos"

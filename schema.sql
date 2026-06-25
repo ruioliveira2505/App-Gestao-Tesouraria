@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict cGAzCi4BLoPhkOE0GeEOSHK6I4tw0DtNPMd4WvOuDePb0eLbNHywxEG9i9Z929t
+\restrict VbQcfQ86UsICiJrOL6n2cO0kTYt0AODbRrZCnrAgBqmBamJdZxYxS4KDJgcBCPN
 
 -- Dumped from database version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
@@ -86,7 +86,8 @@ CREATE TABLE public.categorias_aprendidas (
     descricao text NOT NULL,
     categoria_id integer NOT NULL,
     utilizador_id integer NOT NULL,
-    criado_em timestamp without time zone DEFAULT now()
+    criado_em timestamp without time zone DEFAULT now(),
+    confirmado boolean DEFAULT false NOT NULL
 );
 
 
@@ -401,5 +402,5 @@ ALTER TABLE ONLY public.movimentos
 -- PostgreSQL database dump complete
 --
 
-\unrestrict cGAzCi4BLoPhkOE0GeEOSHK6I4tw0DtNPMd4WvOuDePb0eLbNHywxEG9i9Z929t
+\unrestrict VbQcfQ86UsICiJrOL6n2cO0kTYt0AODbRrZCnrAgBqmBamJdZxYxS4KDJgcBCPN
 

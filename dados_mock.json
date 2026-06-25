@@ -2,6 +2,7 @@
   "contas": [
     {
       "id": "conta_001",
+      "nome": "Conta Principal",
       "banco": "Millennium BCP",
       "iban": "PT50 0010 0000 1234 5678 9015 4",
       "moeda": "EUR",
@@ -9,6 +10,7 @@
     },
     {
       "id": "conta_002",
+      "nome": "Conta Secundária",
       "banco": "Caixa Geral de Depósitos",
       "iban": "PT50 0035 0000 9876 5432 1015 8",
       "moeda": "EUR",

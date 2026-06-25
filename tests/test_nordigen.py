@@ -14,26 +14,6 @@ def id_categoria(client, headers, nome_grupo, nome_categoria):
 
 
 # ═══════════════════════════════════════════════════════════
-# categorizar_por_regras — função pura, sem BD
-# ═══════════════════════════════════════════════════════════
-def test_regra_simples_e_reconhecida():
-    assert nordigen.categorizar_por_regras("EDP COMERCIAL 111111111") == ("Habitação", "Água, Eletricidade e Gás")
-
-
-def test_regra_e_case_insensitive():
-    assert nordigen.categorizar_por_regras("netflix amsterdam") == ("Entretenimento", "Subscrições")
-    assert nordigen.categorizar_por_regras("NETFLIX AMSTERDAM") == ("Entretenimento", "Subscrições")
-
-
-def test_descricao_sem_regra_correspondente_devolve_none():
-    assert nordigen.categorizar_por_regras("FORNECEDOR GRAFICA SILVA LDA") is None
-
-
-def test_primeira_regra_correspondente_ganha():
-    assert nordigen.categorizar_por_regras("SALARIO MAIO EMPRESA XYZ") == ("Trabalho", "Salário")
-
-
-# ═══════════════════════════════════════════════════════════
 # resolver_categoria_id
 # ═══════════════════════════════════════════════════════════
 def test_resolver_categoria_id_encontra_categoria_existente(client, headers_autenticado):
@@ -89,7 +69,7 @@ def test_guardar_e_buscar_em_cache(client, headers_autenticado):
     resultado = nordigen.buscar_em_cache(conn, "LOJA GADGETS LDA", uid)
     conn.close()
 
-    assert resultado == categoria_id
+    assert resultado == (categoria_id, False)   # não confirmado por defeito
 
 
 def test_guardar_em_cache_atualiza_entrada_existente(client, headers_autenticado):
@@ -103,7 +83,7 @@ def test_guardar_em_cache_atualiza_entrada_existente(client, headers_autenticado
     resultado = nordigen.buscar_em_cache(conn, "LOJA GADGETS LDA", uid)
     conn.close()
 
-    assert resultado == software
+    assert resultado == (software, False)
 
 
 def test_cache_e_isolado_por_utilizador(client, headers_autenticado):
@@ -124,24 +104,12 @@ def test_cache_e_isolado_por_utilizador(client, headers_autenticado):
 # ═══════════════════════════════════════════════════════════
 # categorizar() — orquestração: regras → cache → LLM → fallback
 # ═══════════════════════════════════════════════════════════
-def test_categorizar_usa_regra_quando_existe(client, headers_autenticado, monkeypatch):
-    uid = uid_de(client, headers_autenticado)
-    chamou_llm = []
-    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda *a, **k: chamou_llm.append(1))
-
-    categoria_id, origem = nordigen.categorizar("EDP COMERCIAL 111111111", -50.0, uid)
-
-    assert origem == "regra"
-    assert categoria_id == id_categoria(client, headers_autenticado, "Habitação", "Água, Eletricidade e Gás")
-    assert chamou_llm == []
-
-
-def test_categorizar_usa_cache_quando_nao_ha_regra(client, headers_autenticado, monkeypatch):
+def test_categorizar_usa_cache_confirmada_sem_chamar_llm(client, headers_autenticado, monkeypatch):
     uid = uid_de(client, headers_autenticado)
     categoria_id_esperada = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
 
     conn = get_connection()
-    nordigen.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id_esperada, uid)
+    nordigen.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id_esperada, uid, confirmado=True)
     conn.close()
 
     chamou_llm = []
@@ -150,6 +118,26 @@ def test_categorizar_usa_cache_quando_nao_ha_regra(client, headers_autenticado, 
     categoria_id, origem = nordigen.categorizar("LOJA GADGETS LDA", -80.0, uid)
 
     assert origem == "cache"
+    assert categoria_id == categoria_id_esperada
+    assert chamou_llm == []
+
+
+def test_categorizar_usa_cache_nao_confirmada_mas_continua_pendente(client, headers_autenticado, monkeypatch):
+    """Uma sugestão do LLM ainda não confirmada deve continuar a aparecer como
+    pendente ('llm'), mesmo já em cache — e sem voltar a gastar tokens."""
+    uid = uid_de(client, headers_autenticado)
+    categoria_id_esperada = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
+
+    conn = get_connection()
+    nordigen.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id_esperada, uid, confirmado=False)
+    conn.close()
+
+    chamou_llm = []
+    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda *a, **k: chamou_llm.append(1))
+
+    categoria_id, origem = nordigen.categorizar("LOJA GADGETS LDA", -80.0, uid)
+
+    assert origem == "llm"
     assert categoria_id == categoria_id_esperada
     assert chamou_llm == []
 
@@ -167,7 +155,7 @@ def test_categorizar_recorre_ao_llm_quando_nao_ha_regra_nem_cache(client, header
     conn = get_connection()
     em_cache = nordigen.buscar_em_cache(conn, "DESCRICAO MUITO ESTRANHA 123", uid)
     conn.close()
-    assert em_cache == categoria_id_llm  # a escolha do LLM fica guardada para a próxima vez
+    assert em_cache == (categoria_id_llm, False) # gravado, mas ainda não confirmado
 
 
 def test_categorizar_cai_em_fallback_quando_llm_nao_decide(client, headers_autenticado, monkeypatch):
@@ -293,22 +281,3 @@ def test_escolher_por_llm_sem_api_key_nao_chama_rede(monkeypatch):
     opcoes = [(10, "Alimentação > Supermercado")]
     assert nordigen.escolher_por_llm("X", -20.0, opcoes) is None
     assert chamou_rede == []
-
-
-def test_regra_at_nao_apanha_substrings_dentro_de_outras_palavras():
-    # "SEAT" contém "at " mas não é a Autoridade Tributária
-    resultado = nordigen.categorizar_por_regras("PRESTACAO SEAT IBIZA BRAGA")
-    assert resultado != ("Impostos", "Outros")
-
-
-def test_regra_renda_e_reconhecida():
-    assert nordigen.categorizar_por_regras("RENDA APARTAMENTO MAIO") == ("Habitação", "Renda")
-
-
-def test_regra_farmacia_e_reconhecida():
-    assert nordigen.categorizar_por_regras("FARMACIA CENTRAL BRAGA") == ("Saúde e Auto-Cuidado", "Tratamentos e Medicamentos")
-
-
-def test_regra_renda_nao_apanha_palavras_derivadas():
-    # "rendas" (plural) não deve disparar a regra "renda" — \b exige fronteira de palavra completa
-    assert nordigen.categorizar_por_regras("PAGAMENTO DE RENDAS ATRASADAS") is None

@@ -99,6 +99,9 @@ def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador
         dados.valor, dados.categoria_id, "manual", uid
     ))
     conn.commit()
+    
+    guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
+
     cursor.close()
     conn.close()
     return {"ok": True}
@@ -125,7 +128,7 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
     """, (dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, movimento_id, uid))
     conn.commit()
 
-    guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid)
+    guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
 
     cursor.close()
     conn.close()
@@ -151,7 +154,7 @@ def confirmar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador
     cursor.execute("UPDATE movimentos SET origem_cat='manual' WHERE id=%s", (movimento_id,))
     conn.commit()
 
-    guardar_em_cache(conn, descricao, categoria_id, uid)
+    guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
 
     cursor.close()
     conn.close()
@@ -177,7 +180,7 @@ def confirmar_todos_os_pendentes(utilizador: dict = Depends(utilizador_atual)):
     conn.commit()
 
     for descricao, categoria_id in pendentes:
-        guardar_em_cache(conn, descricao, categoria_id, uid)
+        guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
 
     cursor.close()
     conn.close()

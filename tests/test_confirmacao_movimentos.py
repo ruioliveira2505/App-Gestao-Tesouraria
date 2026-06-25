@@ -154,7 +154,7 @@ def test_confirmar_movimento_alimenta_o_cache_de_categorizacao(client, headers_a
     conn = get_connection()
     categoria_em_cache = buscar_em_cache(conn, "LOJA NOVA LDA", uid)
     conn.close()
-    assert categoria_em_cache == categoria_id
+    assert categoria_em_cache == (categoria_id, True)
 
 
 # ═══════════════════════════════════════════════════════════

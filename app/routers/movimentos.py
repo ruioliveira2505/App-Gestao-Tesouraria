@@ -10,6 +10,19 @@ from app.schemas.movimentos import MovimentoInput
 router = APIRouter()
 
 
+# ─── helpers internos ────────────────────────────────────────────────────────
+
+def _validar_data_movimento(cursor, conta_id, data, acao):
+    rec = reconciliacao_mais_antiga_data(cursor, conta_id)
+    if rec and data < rec:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Esta conta só tem reconciliações a partir de {rec}. Cria uma reconciliação anterior a {data} antes de {acao}."
+        )
+
+
+# ─── listagem ─────────────────────────────────────────────────────────────────
+
 @router.get("/movimentos")
 def listar_movimentos(
     utilizador: dict = Depends(utilizador_atual),
@@ -79,29 +92,22 @@ def contar_movimentos_pendentes(utilizador: dict = Depends(utilizador_atual)):
     return {"contagem": contagem}
 
 
+# ─── escrita ──────────────────────────────────────────────────────────────────
+
 @router.post("/movimentos")
 def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual)):
-    conn   = get_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
-    reconciliacao_mais_antiga = reconciliacao_mais_antiga_data(cursor, dados.conta_id)
-    if reconciliacao_mais_antiga and dados.data < reconciliacao_mais_antiga:
-        cursor.close(); conn.close()
-        raise HTTPException(
-            status_code=400,
-            detail=f"Esta conta só tem reconciliações a partir de {reconciliacao_mais_antiga}. Cria uma reconciliação anterior a {dados.data} antes de adicionar este movimento."
-        )
+    _validar_data_movimento(cursor, dados.conta_id, dados.data, "adicionar este movimento")
 
     cursor.execute("""
         INSERT INTO movimentos (id, conta_id, data, descricao, valor, categoria_id, origem_cat, utilizador_id)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (
-        str(uuid.uuid4()), dados.conta_id, dados.data, dados.descricao,
-        dados.valor, dados.categoria_id, "manual", uid
-    ))
+    """, (str(uuid.uuid4()), dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, "manual", uid))
     conn.commit()
-    
+
     guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
 
     cursor.close()
@@ -111,17 +117,11 @@ def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador
 
 @router.put("/movimentos/{movimento_id}")
 def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual)):
-    conn   = get_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
-    reconciliacao_mais_antiga = reconciliacao_mais_antiga_data(cursor, dados.conta_id)
-    if reconciliacao_mais_antiga and dados.data < reconciliacao_mais_antiga:
-        cursor.close(); conn.close()
-        raise HTTPException(
-            status_code=400,
-            detail=f"Esta conta só tem reconciliações a partir de {reconciliacao_mais_antiga}. Cria uma reconciliação anterior a {dados.data} antes de mover este movimento para essa data."
-        )
+    _validar_data_movimento(cursor, dados.conta_id, dados.data, "mover este movimento para essa data")
 
     cursor.execute("""
         UPDATE movimentos
@@ -136,6 +136,19 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
     conn.close()
     return {"ok": True}
 
+
+@router.delete("/movimentos/{movimento_id}")
+def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM movimentos WHERE id = %s AND utilizador_id = %s", (movimento_id, utilizador["sub"]))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"ok": True}
+
+
+# ─── confirmação ──────────────────────────────────────────────────────────────
 
 @router.post("/movimentos/{movimento_id}/confirmar")
 def confirmar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):
@@ -187,16 +200,3 @@ def confirmar_todos_os_pendentes(utilizador: dict = Depends(utilizador_atual)):
     cursor.close()
     conn.close()
     return {"ok": True, "confirmados": len(pendentes)}
-
-
-@router.delete("/movimentos/{movimento_id}")
-def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):
-    conn   = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        DELETE FROM movimentos WHERE id = %s AND utilizador_id = %s
-    """, (movimento_id, utilizador["sub"]))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return {"ok": True}

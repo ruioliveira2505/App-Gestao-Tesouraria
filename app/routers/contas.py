@@ -6,10 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.db.database import get_connection
 from app.core.deps import utilizador_atual
 from app.services.reconciliacoes import atualizar_saldo_atual, primeiro_movimento_data
-from app.schemas.contas import ContaInput, ContaEditInput, AjusteSaldoCriarInput, AjusteSaldoEditarInput
+from app.schemas.contas import ContaInput, ContaEditInput, AjusteSaldoInput
 
 router = APIRouter()
 
+
+# ─── contas ───────────────────────────────────────────────────────────────────
 
 @router.get("/contas")
 def listar_contas(utilizador: dict = Depends(utilizador_atual)):
@@ -77,14 +79,11 @@ def eliminar_conta(conta_id: str, forcar: bool = False, utilizador: dict = Depen
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
-    cursor.execute("""
-        SELECT COUNT(*) FROM movimentos WHERE conta_id = %s AND utilizador_id = %s
-    """, (conta_id, uid))
+    cursor.execute("SELECT COUNT(*) FROM movimentos WHERE conta_id = %s AND utilizador_id = %s", (conta_id, uid))
     n = cursor.fetchone()[0]
 
     if n > 0 and not forcar:
-        cursor.close()
-        conn.close()
+        cursor.close(); conn.close()
         raise HTTPException(status_code=400, detail=f"Esta conta tem {n} movimento(s) associados. Confirma a eliminação para os apagar também.")
 
     if n > 0:
@@ -97,6 +96,8 @@ def eliminar_conta(conta_id: str, forcar: bool = False, utilizador: dict = Depen
     conn.close()
     return {"ok": True}
 
+
+# ─── ajustes de saldo (reconciliações) ───────────────────────────────────────
 
 @router.get("/contas/{conta_id}/ajustes-saldo")
 def listar_ajustes_saldo(conta_id: str, utilizador: dict = Depends(utilizador_atual)):
@@ -114,7 +115,7 @@ def listar_ajustes_saldo(conta_id: str, utilizador: dict = Depends(utilizador_at
 
 
 @router.post("/contas/{conta_id}/ajustes-saldo")
-def criar_ajuste_saldo(conta_id: str, dados: AjusteSaldoCriarInput, utilizador: dict = Depends(utilizador_atual)):
+def criar_ajuste_saldo(conta_id: str, dados: AjusteSaldoInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
@@ -144,7 +145,7 @@ def criar_ajuste_saldo(conta_id: str, dados: AjusteSaldoCriarInput, utilizador: 
 
 
 @router.put("/ajustes-saldo/{ajuste_id}")
-def editar_ajuste_saldo(ajuste_id: int, dados: AjusteSaldoEditarInput, utilizador: dict = Depends(utilizador_atual)):
+def editar_ajuste_saldo(ajuste_id: int, dados: AjusteSaldoInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]

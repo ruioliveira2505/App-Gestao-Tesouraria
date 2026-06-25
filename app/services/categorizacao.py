@@ -1,6 +1,5 @@
-import json
-import requests
 import re
+import requests
 
 from app.core.config import settings
 from app.db.database import get_connection
@@ -9,9 +8,9 @@ GROQ_API_KEY = settings.GROQ_API_KEY
 GROQ_MODEL   = settings.GROQ_MODEL
 
 
+# ─── BD helpers ──────────────────────────────────────────────────────────────
+
 def resolver_categoria_id(conn, grupo, categoria, utilizador_id):
-    """Resolve uma categoria pelo nome — só para categorias normais,
-    nunca para o fallback do sistema (ver resolver_categoria_fallback)."""
     cursor = conn.cursor()
     cursor.execute("""
         SELECT c.id FROM categorias c
@@ -24,9 +23,7 @@ def resolver_categoria_id(conn, grupo, categoria, utilizador_id):
 
 
 def resolver_categoria_fallback(conn, eh_recebimento, utilizador_id):
-    """Encontra o destino-fallback do sistema para a direção indicada.
-    Não depende de nomes — usa só 'protegida' + direção, por isso é imune
-    a qualquer renomeação ou reorganização da árvore de categorias."""
+    # Usa 'protegida' + direção — imune a renomeações na árvore de categorias.
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id FROM categorias
@@ -61,9 +58,6 @@ def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=Fa
 
 
 def listar_categorias_planas(conn, utilizador_id, valor):
-    """Lista todas as categorias finais (sem filhos) do lado certo da árvore.
-    Inclui 'Outros' como qualquer outra — é uma opção legítima, o LLM
-    pode escolhê-la deliberadamente quando fizer sentido."""
     cursor = conn.cursor()
     cursor.execute("""
         WITH RECURSIVE arvore AS (
@@ -89,10 +83,10 @@ def listar_categorias_planas(conn, utilizador_id, valor):
     return rows
 
 
+# ─── LLM ─────────────────────────────────────────────────────────────────────
+
 def escolher_por_llm(descricao, valor, opcoes, contexto=""):
-    """opcoes: lista de (id, nome). Devolve o id escolhido, ou None se o LLM
-    recusar explicitamente ('0'), falhar, ou a resposta não for interpretável
-    — os três casos são tratados da mesma forma pelo chamador."""
+    # Devolve o id escolhido, ou None se o LLM recusar ('0'), falhar ou resposta ilegível.
     direcao = "um recebimento (dinheiro a entrar)" if valor > 0 else "um pagamento (dinheiro a saír)"
     lista_texto = "\n".join(f"{i+1}. {nome}" for i, (_, nome) in enumerate(opcoes))
 
@@ -143,19 +137,10 @@ def categorizar_por_llm(descricao, valor, conn, utilizador_id):
     return escolher_por_llm(descricao, valor, categorias_disponiveis)
 
 
+# ─── Orquestração ─────────────────────────────────────────────────────────────
+# origem possível: 'manual' | 'cache' | 'llm' | 'sem_match'
+
 def categorizar(descricao, valor, utilizador_id, conn=None):
-    """Devolve (categoria_id, origem) para um movimento.
-
-    origem:
-      'manual'    → entrada manual, ou confirmação humana de qualquer pendente
-      'cache'     → reaproveitado de cache já confirmada
-      'llm'       → sugestão do LLM (nova, ou reaproveitada de cache ainda não confirmada)
-      'sem_match' → o LLM não conseguiu/recusou decidir; usou-se o fallback do sistema
-
-    O resultado é SEMPRE gravado em cache, mesmo quando cai no fallback —
-    a mesma descrição nunca volta a gastar tokens, só passa a ser revista
-    mais depressa pelo utilizador.
-    """
     proprio_conn = conn is None
     if proprio_conn:
         conn = get_connection()
@@ -178,19 +163,3 @@ def categorizar(descricao, valor, utilizador_id, conn=None):
     finally:
         if proprio_conn:
             conn.close()
-
-
-if __name__ == "__main__":
-    with open("dados_mock.json", "r", encoding="utf-8") as f:
-        dados = json.load(f)
-
-    conn = get_connection()
-
-    print(f"{'DATA':<12} {'DESCRIÇÃO':<38} {'VALOR':>10}  ORIGEM")
-    print("-" * 80)
-
-    for m in dados["movimentos"]:
-        categoria_id, origem = categorizar(m["descricao"], m["valor"], 1, conn)
-        print(f"{m['data']:<12} {m['descricao']:<38} {m['valor']:>10.2f}  [{origem}] id={categoria_id}")
-
-    conn.close()

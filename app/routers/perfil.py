@@ -58,8 +58,7 @@ def eliminar_conta_utilizador(utilizador: dict = Depends(utilizador_atual)):
     cursor.execute("DELETE FROM categorias_aprendidas WHERE utilizador_id=%s", (uid,))
     cursor.execute("DELETE FROM movimentos WHERE utilizador_id=%s", (uid,))
     cursor.execute("DELETE FROM categorias WHERE utilizador_id=%s", (uid,))
-    cursor.execute("DELETE FROM ajustes_saldo WHERE conta_id IN (SELECT id FROM contas WHERE utilizador_id=%s)", (uid,))
-    cursor.execute("DELETE FROM contas WHERE utilizador_id=%s", (uid,))
+    cursor.execute("DELETE FROM contas WHERE utilizador_id=%s", (uid,))  # ajustes_saldo caem em CASCADE
     cursor.execute("DELETE FROM utilizadores WHERE id=%s", (uid,))
     conn.commit()
     cursor.close(); conn.close()

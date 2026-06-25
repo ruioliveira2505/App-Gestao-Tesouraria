@@ -16,10 +16,6 @@ class ContaEditInput(BaseModel):
     iban:  str
     moeda: str
 
-class AjusteSaldoCriarInput(BaseModel):
-    data:       str
-    saldo_real: float
-
-class AjusteSaldoEditarInput(BaseModel):
+class AjusteSaldoInput(BaseModel):
     data:       str
     saldo_real: float

@@ -1,5 +1,5 @@
 from datetime import date
-
+from app.db.database import get_connection
 
 def hoje():
     return str(date.today())
@@ -264,3 +264,47 @@ def test_mover_grupo_de_topo(client, headers_autenticado):
     assert r.status_code == 200
     despesas2 = [g for g in arvore(client, headers_autenticado) if not g["eh_recebimento"]]
     assert despesas2[0]["nome"] == segundo["nome"]
+
+# ---
+def test_nao_e_possivel_eliminar_a_folha_outros_protegida(client, headers_autenticado):
+    outros_pagamentos = grupo(client, headers_autenticado, "Outros Pagamentos")
+    outros = next(c for c in outros_pagamentos["categorias"] if c["nome"] == "Outros")
+    r = client.delete(f"/categorias/{outros['id']}", headers=headers_autenticado)
+    assert r.status_code == 400
+
+
+def test_nao_e_possivel_renomear_a_folha_outros_protegida(client, headers_autenticado):
+    outros_pagamentos = grupo(client, headers_autenticado, "Outros Pagamentos")
+    outros = next(c for c in outros_pagamentos["categorias"] if c["nome"] == "Outros")
+    r = client.put(f"/categorias/{outros['id']}", json={"nome": "Diversos"}, headers=headers_autenticado)
+    assert r.status_code == 400
+
+
+def test_e_possivel_renomear_o_grupo_outros_pagamentos(client, headers_autenticado):
+    outros_pagamentos = grupo(client, headers_autenticado, "Outros Pagamentos")
+    r = client.put(f"/categorias/{outros_pagamentos['id']}", json={"nome": "Diversos"}, headers=headers_autenticado)
+    assert r.status_code == 200
+
+
+def test_e_possivel_adicionar_categoria_nova_a_outros_pagamentos(client, headers_autenticado):
+    outros_pagamentos = grupo(client, headers_autenticado, "Outros Pagamentos")
+    r = client.post("/categorias", json={"nome": "Multas", "parent_id": outros_pagamentos["id"]}, headers=headers_autenticado)
+    assert r.status_code == 200
+
+
+def test_nao_e_possivel_forcar_eliminacao_do_grupo_outros_pagamentos(client, headers_autenticado):
+    outros_pagamentos = grupo(client, headers_autenticado, "Outros Pagamentos")
+    r = client.delete(f"/categorias/{outros_pagamentos['id']}?forcar=true", headers=headers_autenticado)
+    assert r.status_code == 400
+
+
+def test_categoria_outros_aparece_normalmente_em_categorias_flat(client, headers_autenticado):
+    categorias = client.get("/categorias", headers=headers_autenticado).json()
+    assert any(c["nome"] == "Outros" and c["grupo"] == "Outros Pagamentos" for c in categorias)
+
+def test_nao_e_possivel_eliminar_grupo_outros_pagamentos_mesmo_com_migracao(client, headers_autenticado):
+    outros_pagamentos = grupo(client, headers_autenticado, "Outros Pagamentos")
+    habitacao = grupo(client, headers_autenticado, "Habitação")
+
+    r = client.delete(f"/categorias/{outros_pagamentos['id']}?migrar_para_id={habitacao['id']}", headers=headers_autenticado)
+    assert r.status_code == 400

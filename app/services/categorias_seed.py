@@ -21,9 +21,15 @@ ARVORE_PADRAO = [
     ("Outros Pagamentos", False, ["Presentes", "Donativos", "Quotas", "Outros"]),
 ]
 
+# Dentro destes dois grupos, a categoria-folha "Outros" é o destino estrutural
+# do fallback do sistema — fica protegida (nunca pode ser renomeada ou
+# eliminada). Os grupos à volta, e as outras subcategorias, ficam livres.
+GRUPOS_COM_OUTROS_PROTEGIDO = {"Outros Recebimentos", "Outros Pagamentos"}
+
 
 def seed_categorias_padrao(conn, utilizador_id):
     cursor = conn.cursor()
+
     for ordem_grupo, (nome_grupo, eh_recebimento, categorias) in enumerate(ARVORE_PADRAO, start=1):
         cursor.execute("""
             INSERT INTO categorias (nome, eh_recebimento, ordem, utilizador_id)
@@ -32,10 +38,11 @@ def seed_categorias_padrao(conn, utilizador_id):
         grupo_id = cursor.fetchone()[0]
 
         for ordem_cat, nome_cat in enumerate(categorias, start=1):
+            protegida = nome_grupo in GRUPOS_COM_OUTROS_PROTEGIDO and nome_cat == "Outros"
             cursor.execute("""
-                INSERT INTO categorias (nome, parent_id, eh_recebimento, ordem, utilizador_id)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (nome_cat, grupo_id, eh_recebimento, ordem_cat, utilizador_id))
+                INSERT INTO categorias (nome, parent_id, eh_recebimento, ordem, utilizador_id, protegida)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (nome_cat, grupo_id, eh_recebimento, ordem_cat, utilizador_id, protegida))
 
     conn.commit()
     cursor.close()

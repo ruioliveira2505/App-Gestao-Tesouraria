@@ -12,7 +12,8 @@ def criar_movimento(client, headers, conta_id, categoria_id, descricao="Teste", 
         "valor": valor, "categoria_id": categoria_id,
     }, headers=headers)
     assert r.status_code == 200
-    return client.get("/movimentos", headers=headers).json()[0]["id"]
+    movimentos = client.get("/movimentos", headers=headers).json()
+    return next(m for m in movimentos if m["descricao"] == descricao)["id"]
 
 
 def forcar_origem(movimento_id, origem):

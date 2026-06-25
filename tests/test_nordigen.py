@@ -158,25 +158,18 @@ def test_categorizar_recorre_ao_llm_quando_nao_ha_regra_nem_cache(client, header
     assert em_cache == (categoria_id_llm, False) # gravado, mas ainda não confirmado
 
 
-def test_categorizar_cai_em_fallback_quando_llm_nao_decide(client, headers_autenticado, monkeypatch):
+def test_resolver_categoria_fallback_funciona_mesmo_com_nomes_repetidos(client, headers_autenticado):
+    """Os dois grupos protegidos chamam-se ambos 'Sem Categoria' — confirma
+    que a resolução por direção nunca devolve o da direção errada."""
     uid = uid_de(client, headers_autenticado)
-    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda *a, **k: None)
+    conn = get_connection()
+    fallback_saida = nordigen.resolver_categoria_fallback(conn, False, uid)
+    fallback_entrada = nordigen.resolver_categoria_fallback(conn, True, uid)
+    conn.close()
 
-    categoria_id, origem = nordigen.categorizar("DESCRICAO TOTALMENTE DESCONHECIDA", -15.0, uid)
-
-    assert origem == "sem_match"
-    assert categoria_id == id_categoria(client, headers_autenticado, "Outros Pagamentos", "Outros")
-
-
-def test_categorizar_fallback_distingue_entrada_e_saida(client, headers_autenticado, monkeypatch):
-    uid = uid_de(client, headers_autenticado)
-    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda *a, **k: None)
-
-    categoria_id, origem = nordigen.categorizar("RECEBIMENTO DESCONHECIDO", 200.0, uid)
-
-    assert origem == "sem_match"
-    assert categoria_id == id_categoria(client, headers_autenticado, "Outros Recebimentos", "Outros")
-
+    assert fallback_saida != fallback_entrada
+    assert fallback_saida is not None and fallback_entrada is not None
+    
 
 def test_categorizar_com_conn_externa_nao_fecha_a_ligacao_do_chamador(client, headers_autenticado, monkeypatch):
     uid = uid_de(client, headers_autenticado)
@@ -281,3 +274,70 @@ def test_escolher_por_llm_sem_api_key_nao_chama_rede(monkeypatch):
     opcoes = [(10, "Alimentação > Supermercado")]
     assert nordigen.escolher_por_llm("X", -20.0, opcoes) is None
     assert chamou_rede == []
+
+# ---
+def test_categorizar_cai_em_fallback_quando_llm_nao_decide(client, headers_autenticado, monkeypatch):
+    uid = uid_de(client, headers_autenticado)
+    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda *a, **k: None)
+
+    categoria_id, origem = nordigen.categorizar("DESCRICAO TOTALMENTE DESCONHECIDA", -15.0, uid)
+
+    assert origem == "sem_match"
+    outros_pagamentos = id_categoria(client, headers_autenticado, "Outros Pagamentos", "Outros")
+    assert categoria_id == outros_pagamentos
+
+    conn = get_connection()
+    em_cache = nordigen.buscar_em_cache(conn, "DESCRICAO TOTALMENTE DESCONHECIDA", uid)
+    conn.close()
+    assert em_cache == (outros_pagamentos, False)
+
+
+def test_categorizar_fallback_distingue_entrada_e_saida(client, headers_autenticado, monkeypatch):
+    uid = uid_de(client, headers_autenticado)
+    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda *a, **k: None)
+
+    categoria_id, origem = nordigen.categorizar("RECEBIMENTO DESCONHECIDO", 200.0, uid)
+
+    assert origem == "sem_match"
+    outros_recebimentos = id_categoria(client, headers_autenticado, "Outros Recebimentos", "Outros")
+    assert categoria_id == outros_recebimentos
+
+
+def test_categorizar_com_categorias_quase_todas_eliminadas_ainda_resolve(client, headers_autenticado, monkeypatch):
+    uid = uid_de(client, headers_autenticado)
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM categorias WHERE utilizador_id=%s AND NOT protegida AND parent_id IS NOT NULL", (uid,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda descricao, valor, opcoes, contexto="": opcoes[0][0])
+
+    categoria_id, origem = nordigen.categorizar("QUALQUER DESCRICAO", -10.0, uid)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT protegida FROM categorias WHERE id=%s", (categoria_id,))
+    protegida = cursor.fetchone()[0]
+    conn.close()
+    assert protegida is True
+
+
+def test_escolher_por_llm_resposta_zero_significa_nenhuma_opcao_aplica(monkeypatch):
+    opcoes = [(10, "Categoria Estranha A"), (11, "Categoria Estranha B")]
+    monkeypatch.setattr(nordigen.requests, "post", lambda *a, **k: RespostaFalsa("0"))
+    assert nordigen.escolher_por_llm("X", -20.0, opcoes) is None
+
+
+def test_resolver_categoria_fallback_e_imune_a_renomeacao(client, headers_autenticado, monkeypatch):
+    uid = uid_de(client, headers_autenticado)
+    monkeypatch.setattr(nordigen, "escolher_por_llm", lambda *a, **k: None)
+
+    arvore_atual = client.get("/categorias/arvore", headers=headers_autenticado).json()
+    outros_pagamentos = next(g for g in arvore_atual if g["nome"] == "Outros Pagamentos")
+    client.put(f"/categorias/{outros_pagamentos['id']}", json={"nome": "Diversos"}, headers=headers_autenticado)
+
+    categoria_id, origem = nordigen.categorizar("DESCRICAO QUALQUER", -10.0, uid)
+    assert origem == "sem_match"
+    assert categoria_id is not None

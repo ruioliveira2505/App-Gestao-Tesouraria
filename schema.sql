@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict VbQcfQ86UsICiJrOL6n2cO0kTYt0AODbRrZCnrAgBqmBamJdZxYxS4KDJgcBCPN
+\restrict QAzgKuO2QYVG8fPSTjWaKEMhrcNw4WQ7gq6N3KTO1HebD11IUYTNSKVN5hS7eAb
 
 -- Dumped from database version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
@@ -71,7 +71,8 @@ CREATE TABLE public.categorias (
     eh_recebimento boolean,
     utilizador_id integer NOT NULL,
     criado_em timestamp without time zone DEFAULT now(),
-    ordem integer DEFAULT 0
+    ordem integer DEFAULT 0,
+    protegida boolean DEFAULT false NOT NULL
 );
 
 
@@ -402,5 +403,5 @@ ALTER TABLE ONLY public.movimentos
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VbQcfQ86UsICiJrOL6n2cO0kTYt0AODbRrZCnrAgBqmBamJdZxYxS4KDJgcBCPN
+\unrestrict QAzgKuO2QYVG8fPSTjWaKEMhrcNw4WQ7gq6N3KTO1HebD11IUYTNSKVN5hS7eAb
 

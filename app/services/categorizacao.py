@@ -10,12 +10,28 @@ GROQ_MODEL   = settings.GROQ_MODEL
 
 
 def resolver_categoria_id(conn, grupo, categoria, utilizador_id):
+    """Resolve uma categoria pelo nome — só para categorias normais,
+    nunca para o fallback do sistema (ver resolver_categoria_fallback)."""
     cursor = conn.cursor()
     cursor.execute("""
         SELECT c.id FROM categorias c
         JOIN categorias g ON c.parent_id = g.id
         WHERE g.nome = %s AND c.nome = %s AND c.utilizador_id = %s
     """, (grupo, categoria, utilizador_id))
+    row = cursor.fetchone()
+    cursor.close()
+    return row[0] if row else None
+
+
+def resolver_categoria_fallback(conn, eh_recebimento, utilizador_id):
+    """Encontra o destino-fallback do sistema para a direção indicada.
+    Não depende de nomes — usa só 'protegida' + direção, por isso é imune
+    a qualquer renomeação ou reorganização da árvore de categorias."""
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id FROM categorias
+        WHERE protegida = true AND eh_recebimento = %s AND utilizador_id = %s
+    """, (eh_recebimento, utilizador_id))
     row = cursor.fetchone()
     cursor.close()
     return row[0] if row else None
@@ -29,7 +45,7 @@ def buscar_em_cache(conn, descricao, utilizador_id):
     """, (descricao, utilizador_id))
     row = cursor.fetchone()
     cursor.close()
-    return row if row else None  # (categoria_id, confirmado) ou None
+    return row if row else None
 
 
 def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False):
@@ -45,8 +61,9 @@ def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=Fa
 
 
 def listar_categorias_planas(conn, utilizador_id, valor):
-    """Lista todas as categorias finais (sem filhos) do lado certo da árvore,
-    com o caminho completo, ex: 'Habitação > Água, Eletricidade e Gás'."""
+    """Lista todas as categorias finais (sem filhos) do lado certo da árvore.
+    Inclui 'Outros' como qualquer outra — é uma opção legítima, o LLM
+    pode escolhê-la deliberadamente quando fizer sentido."""
     cursor = conn.cursor()
     cursor.execute("""
         WITH RECURSIVE arvore AS (
@@ -63,6 +80,7 @@ def listar_categorias_planas(conn, utilizador_id, valor):
         SELECT a.id, a.caminho
         FROM arvore a
         WHERE a.eh_recebimento = %s
+          AND a.parent_id IS NOT NULL
           AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
         ORDER BY a.caminho
     """, (utilizador_id, valor > 0))
@@ -72,7 +90,9 @@ def listar_categorias_planas(conn, utilizador_id, valor):
 
 
 def escolher_por_llm(descricao, valor, opcoes, contexto=""):
-    """opcoes: lista de (id, nome). Devolve o id escolhido ou None."""
+    """opcoes: lista de (id, nome). Devolve o id escolhido, ou None se o LLM
+    recusar explicitamente ('0'), falhar, ou a resposta não for interpretável
+    — os três casos são tratados da mesma forma pelo chamador."""
     direcao = "um recebimento (dinheiro a entrar)" if valor > 0 else "um pagamento (dinheiro a saír)"
     lista_texto = "\n".join(f"{i+1}. {nome}" for i, (_, nome) in enumerate(opcoes))
 
@@ -80,7 +100,9 @@ def escolher_por_llm(descricao, valor, opcoes, contexto=""):
         f"Este é {direcao} numa conta bancária pessoal.{contexto}\n\n"
         f'Descrição do movimento: "{descricao}"\n\n'
         "Escolhe a opção mais adequada desta lista, indicando APENAS o número "
-        "correspondente, sem mais nenhum texto:\n\n"
+        "correspondente, sem mais nenhum texto. Se nenhuma das opções descrever "
+        "bem este movimento, responde 0.\n\n"
+        "0. Nenhuma das opções se aplica\n"
         f"{lista_texto}"
     )
 
@@ -103,10 +125,11 @@ def escolher_por_llm(descricao, valor, opcoes, contexto=""):
         resposta.raise_for_status()
         texto = resposta.json()["choices"][0]["message"]["content"].strip()
         match = re.search(r"\d+", texto)
-        if match:
-            indice = int(match.group()) - 1
-            if 0 <= indice < len(opcoes):
-                return opcoes[indice][0]
+        if not match:
+            return None
+        indice = int(match.group()) - 1
+        if 0 <= indice < len(opcoes):
+            return opcoes[indice][0]
         return None
     except Exception as e:
         print(f"Erro ao chamar a API da Groq: {e}")
@@ -123,9 +146,15 @@ def categorizar_por_llm(descricao, valor, conn, utilizador_id):
 def categorizar(descricao, valor, utilizador_id, conn=None):
     """Devolve (categoria_id, origem) para um movimento.
 
-    'cache'  → confirmado pelo utilizador, pode confiar-se sem mais perguntas.
-    'llm'    → sugestão (nova ou reaproveitada de cache não confirmada), precisa de confirmação.
-    'sem_match' → nem o LLM soube responder, cai em "Outros".
+    origem:
+      'manual'    → entrada manual, ou confirmação humana de qualquer pendente
+      'cache'     → reaproveitado de cache já confirmada
+      'llm'       → sugestão do LLM (nova, ou reaproveitada de cache ainda não confirmada)
+      'sem_match' → o LLM não conseguiu/recusou decidir; usou-se o fallback do sistema
+
+    O resultado é SEMPRE gravado em cache, mesmo quando cai no fallback —
+    a mesma descrição nunca volta a gastar tokens, só passa a ser revista
+    mais depressa pelo utilizador.
     """
     proprio_conn = conn is None
     if proprio_conn:
@@ -142,8 +171,9 @@ def categorizar(descricao, valor, utilizador_id, conn=None):
             guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False)
             return categoria_id, "llm"
 
-        grupo_fallback = "Outros Recebimentos" if valor > 0 else "Outros Pagamentos"
-        categoria_id = resolver_categoria_id(conn, grupo_fallback, "Outros", utilizador_id)
+        categoria_id = resolver_categoria_fallback(conn, valor > 0, utilizador_id)
+        if categoria_id:
+            guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False)
         return categoria_id, "sem_match"
     finally:
         if proprio_conn:

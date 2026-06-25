@@ -38,7 +38,7 @@ def listar_movimentos(
 
     cursor.execute("""
         SELECT m.id, m.conta_id, m.data, m.descricao, m.valor,
-               m.categoria_id, c.nome, g.nome, m.origem_cat
+               m.categoria_id, c.nome, g.nome, m.origem_cat, c.protegida
         FROM movimentos m
         JOIN categorias c ON m.categoria_id = c.id
         JOIN categorias g ON c.parent_id = g.id
@@ -58,6 +58,8 @@ def listar_movimentos(
         {
             "id": r[0], "conta_id": r[1], "data": str(r[2]), "descricao": r[3], "valor": float(r[4]),
             "categoria_id": r[5], "categoria": r[6], "grupo": r[7], "origem_cat": r[8],
+            "confirmado": r[8] in ("manual", "cache"),
+            "sem_categoria": r[9],
         }
         for r in rows
     ]

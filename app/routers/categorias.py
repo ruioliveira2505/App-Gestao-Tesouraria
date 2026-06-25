@@ -47,7 +47,7 @@ def arvore_categorias(utilizador: dict = Depends(utilizador_atual)):
     grupos = cursor.fetchall()
 
     cursor.execute("""
-        SELECT id, nome, parent_id FROM categorias
+        SELECT id, nome, parent_id, protegida FROM categorias
         WHERE utilizador_id=%s AND parent_id IS NOT NULL
         ORDER BY ordem
     """, (uid,))
@@ -59,7 +59,7 @@ def arvore_categorias(utilizador: dict = Depends(utilizador_atual)):
     return [
         {
             "id": gid, "nome": nome, "eh_recebimento": eh_rec,
-            "categorias": [{"id": c[0], "nome": c[1]} for c in categorias if c[2] == gid]
+            "categorias": [{"id": c[0], "nome": c[1], "protegida": c[3]} for c in categorias if c[2] == gid]
         }
         for gid, nome, eh_rec in grupos
     ]
@@ -103,12 +103,18 @@ def editar_categoria_nome(categoria_id: int, dados: CategoriaGestaoInput, utiliz
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
-    cursor.execute("SELECT parent_id FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+    cursor.execute("SELECT parent_id, protegida FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
     row = cursor.fetchone()
     if not row:
         cursor.close(); conn.close()
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    eh_grupo = row[0] is None
+    parent_id, protegida = row
+
+    if protegida:
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Esta categoria é necessária para o sistema funcionar e não pode ser editada.")
+
+    eh_grupo = parent_id is None
 
     if dados.parent_id is not None:
         if eh_grupo:
@@ -139,23 +145,36 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
-    cursor.execute("SELECT parent_id FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+    cursor.execute("SELECT parent_id, protegida FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
     row = cursor.fetchone()
     if not row:
         cursor.close(); conn.close()
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    parent_id = row[0]
+    parent_id, protegida = row
+
+    if protegida:
+        cursor.close(); conn.close()
+        raise HTTPException(status_code=400, detail="Esta categoria é necessária para o sistema funcionar e não pode ser eliminada.")
 
     if migrar_para_id and not categoria_pertence_ao_utilizador(cursor, migrar_para_id, uid):
         cursor.close(); conn.close()
         raise HTTPException(status_code=404, detail="Categoria de destino não encontrada")
 
     if parent_id is None:
+        cursor.execute("SELECT COUNT(*) FROM categorias WHERE parent_id=%s AND protegida", (categoria_id,))
+        if cursor.fetchone()[0] > 0:
+            cursor.close(); conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail="Este grupo contém uma categoria necessária para o sistema e não pode ser eliminado."
+            )
+
         cursor.execute("SELECT COUNT(*) FROM categorias WHERE parent_id=%s", (categoria_id,))
         n = cursor.fetchone()[0]
         if n > 0 and not migrar_para_id and not forcar:
             cursor.close(); conn.close()
             raise HTTPException(status_code=400, detail=f"Este grupo tem {n} categoria(s). Escolhe um grupo de destino ou confirma a eliminação total.")
+
         if n > 0 and migrar_para_id:
             cursor.execute("UPDATE categorias SET parent_id=%s WHERE parent_id=%s", (migrar_para_id, categoria_id))
         elif n > 0 and forcar:

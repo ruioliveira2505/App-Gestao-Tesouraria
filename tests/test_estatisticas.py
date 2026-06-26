@@ -1,31 +1,7 @@
-from datetime import date, timedelta
-
-
-def hoje():
-    return str(date.today())
-
-
-def dias_atras(n):
-    return str(date.today() - timedelta(days=n))
-
-
-def id_categoria(client, headers, nome_grupo, nome_categoria):
-    arvore = client.get("/categorias/arvore", headers=headers).json()
-    grupo = next(g for g in arvore if g["nome"] == nome_grupo)
-    return next(c["id"] for c in grupo["categorias"] if c["nome"] == nome_categoria)
-
-
-def criar_movimento(client, headers, conta_id, categoria_id, valor, data=None, descricao="Teste"):
-    r = client.post("/movimentos", json={
-        "conta_id": conta_id, "data": data or hoje(), "descricao": descricao,
-        "valor": valor, "categoria_id": categoria_id,
-    }, headers=headers)
-    assert r.status_code == 200, r.json()
+from conftest import hoje, dias_atras, id_categoria, criar_movimento
 
 
 def recuar_reconciliacao(client, headers, conta_id, data):
-    """Empurra a reconciliação inicial da conta para uma data anterior,
-    para permitir criar movimentos com data passada."""
     ajustes = client.get(f"/contas/{conta_id}/ajustes-saldo", headers=headers).json()
     ajuste_id = ajustes[0]["id"]
     r = client.put(f"/ajustes-saldo/{ajuste_id}", json={

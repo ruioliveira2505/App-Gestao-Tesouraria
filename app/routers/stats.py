@@ -1,9 +1,10 @@
 from collections import defaultdict
 from datetime import timedelta
+
 from fastapi import APIRouter, Depends
 
-from app.db.database import get_connection
 from app.core.deps import utilizador_atual
+from app.db.database import get_connection
 
 router = APIRouter()
 
@@ -13,25 +14,26 @@ def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
-
-    cursor.execute("""
-        SELECT
-            TO_CHAR(DATE_TRUNC('month', m.data), 'YYYY-MM') AS mes,
-            SUM(CASE WHEN m.valor > 0 THEN m.valor ELSE 0 END) AS entradas,
-            SUM(CASE WHEN m.valor < 0 THEN ABS(m.valor) ELSE 0 END) AS saidas
-        FROM movimentos m
-        JOIN contas ct ON m.conta_id = ct.id
-        WHERE m.utilizador_id = %s
-          AND (%s IS NULL OR m.conta_id = %s)
-          AND (%s IS NULL OR ct.tipo = %s)
-          AND (%s IS NULL OR m.data >= %s)
-          AND (%s IS NULL OR m.data <= %s)
-        GROUP BY DATE_TRUNC('month', m.data)
-        ORDER BY DATE_TRUNC('month', m.data)
-    """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            SELECT
+                TO_CHAR(DATE_TRUNC('month', m.data), 'YYYY-MM') AS mes,
+                SUM(CASE WHEN m.valor > 0 THEN m.valor ELSE 0 END) AS entradas,
+                SUM(CASE WHEN m.valor < 0 THEN ABS(m.valor) ELSE 0 END) AS saidas
+            FROM movimentos m
+            JOIN contas ct ON m.conta_id = ct.id
+            WHERE m.utilizador_id = %s
+              AND (%s IS NULL OR m.conta_id = %s)
+              AND (%s IS NULL OR ct.tipo = %s)
+              AND (%s IS NULL OR m.data >= %s)
+              AND (%s IS NULL OR m.data <= %s)
+            GROUP BY DATE_TRUNC('month', m.data)
+            ORDER BY DATE_TRUNC('month', m.data)
+        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
     return [
         {"mes": r[0], "entradas": float(r[1]), "saidas": float(r[2]), "liquido": float(r[1]) - float(r[2])}
@@ -44,37 +46,37 @@ def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
-
-    cursor.execute("""
-        WITH RECURSIVE arvore AS (
-            SELECT id, parent_id, nome AS caminho, nome AS grupo_raiz, eh_recebimento
-            FROM categorias
-            WHERE utilizador_id = %s AND parent_id IS NULL
-            UNION ALL
-            SELECT c.id, c.parent_id,
-                   a.caminho || ' > ' || c.nome,
-                   a.grupo_raiz, a.eh_recebimento
-            FROM categorias c
-            JOIN arvore a ON c.parent_id = a.id
-        )
-        SELECT a.grupo_raiz, a.caminho, a.eh_recebimento,
-               COUNT(*) AS n, SUM(ABS(m.valor)) AS total
-        FROM movimentos m
-        JOIN contas ct ON m.conta_id = ct.id
-        JOIN arvore a ON m.categoria_id = a.id
-        WHERE m.utilizador_id = %s
-          AND (%s IS NULL OR m.conta_id = %s)
-          AND (%s IS NULL OR ct.tipo = %s)
-          AND (%s IS NULL OR m.data >= %s)
-          AND (%s IS NULL OR m.data <= %s)
-          AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
-        GROUP BY a.grupo_raiz, a.caminho, a.eh_recebimento
-        ORDER BY a.eh_recebimento DESC, total DESC
-    """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
-
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            WITH RECURSIVE arvore AS (
+                SELECT id, parent_id, nome AS caminho, nome AS grupo_raiz, eh_recebimento
+                FROM categorias
+                WHERE utilizador_id = %s AND parent_id IS NULL
+                UNION ALL
+                SELECT c.id, c.parent_id,
+                       a.caminho || ' > ' || c.nome,
+                       a.grupo_raiz, a.eh_recebimento
+                FROM categorias c
+                JOIN arvore a ON c.parent_id = a.id
+            )
+            SELECT a.grupo_raiz, a.caminho, a.eh_recebimento,
+                   COUNT(*) AS n, SUM(ABS(m.valor)) AS total
+            FROM movimentos m
+            JOIN contas ct ON m.conta_id = ct.id
+            JOIN arvore a ON m.categoria_id = a.id
+            WHERE m.utilizador_id = %s
+              AND (%s IS NULL OR m.conta_id = %s)
+              AND (%s IS NULL OR ct.tipo = %s)
+              AND (%s IS NULL OR m.data >= %s)
+              AND (%s IS NULL OR m.data <= %s)
+              AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
+            GROUP BY a.grupo_raiz, a.caminho, a.eh_recebimento
+            ORDER BY a.eh_recebimento DESC, total DESC
+        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
     total_out = sum(float(r[4]) for r in rows if not r[2])
     total_in  = sum(float(r[4]) for r in rows if r[2])
@@ -94,38 +96,37 @@ def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
-
-    cursor.execute("""
-        WITH RECURSIVE arvore AS (
-            SELECT id, parent_id, nome, nome AS grupo_raiz, eh_recebimento, 0 AS nivel
-            FROM categorias
-            WHERE utilizador_id = %s AND parent_id IS NULL
-            UNION ALL
-            SELECT c.id, c.parent_id, c.nome, a.grupo_raiz, a.eh_recebimento, a.nivel + 1
-            FROM categorias c
-            JOIN arvore a ON c.parent_id = a.id
-        )
-        SELECT a.grupo_raiz, a.eh_recebimento, a.nome AS categoria,
-               a.nivel, COUNT(*) AS n, SUM(ABS(m.valor)) AS total
-        FROM movimentos m
-        JOIN contas ct ON m.conta_id = ct.id
-        JOIN arvore a ON m.categoria_id = a.id
-        WHERE m.utilizador_id = %s
-          AND (%s IS NULL OR m.conta_id = %s)
-          AND (%s IS NULL OR ct.tipo = %s)
-          AND (%s IS NULL OR m.data >= %s)
-          AND (%s IS NULL OR m.data <= %s)
-          AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
-        GROUP BY a.grupo_raiz, a.eh_recebimento, a.nome, a.nivel
-        ORDER BY a.eh_recebimento DESC, a.grupo_raiz, total DESC
-    """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
-
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            WITH RECURSIVE arvore AS (
+                SELECT id, parent_id, nome, nome AS grupo_raiz, eh_recebimento, 0 AS nivel
+                FROM categorias
+                WHERE utilizador_id = %s AND parent_id IS NULL
+                UNION ALL
+                SELECT c.id, c.parent_id, c.nome, a.grupo_raiz, a.eh_recebimento, a.nivel + 1
+                FROM categorias c
+                JOIN arvore a ON c.parent_id = a.id
+            )
+            SELECT a.grupo_raiz, a.eh_recebimento, a.nome AS categoria,
+                   a.nivel, COUNT(*) AS n, SUM(ABS(m.valor)) AS total
+            FROM movimentos m
+            JOIN contas ct ON m.conta_id = ct.id
+            JOIN arvore a ON m.categoria_id = a.id
+            WHERE m.utilizador_id = %s
+              AND (%s IS NULL OR m.conta_id = %s)
+              AND (%s IS NULL OR ct.tipo = %s)
+              AND (%s IS NULL OR m.data >= %s)
+              AND (%s IS NULL OR m.data <= %s)
+              AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
+            GROUP BY a.grupo_raiz, a.eh_recebimento, a.nome, a.nivel
+            ORDER BY a.eh_recebimento DESC, a.grupo_raiz, total DESC
+        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
     grupos = defaultdict(lambda: {"eh_recebimento": None, "total": 0.0, "subcategorias": []})
-
     for r in rows:
         grupos[r[0]]["eh_recebimento"] = r[1]
         grupos[r[0]]["total"] += float(r[5])
@@ -146,53 +147,52 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
-
-    cursor.execute("""
-        WITH contas_filtradas AS (
-            SELECT id FROM contas
-            WHERE utilizador_id = %s
-              AND (%s IS NULL OR id = %s)
-              AND (%s IS NULL OR tipo = %s)
-        ),
-        dias AS (
-            SELECT generate_series(
-                (SELECT MIN(data) FROM ajustes_saldo WHERE conta_id IN (SELECT id FROM contas_filtradas)),
-                CURRENT_DATE, '1 day'::interval
-            )::date AS dia
-        ),
-        saldo_por_conta_dia AS (
-            SELECT d.dia, cf.id AS conta_id,
-                   a.saldo_real + COALESCE((
-                       SELECT SUM(m.valor) FROM movimentos m
-                       WHERE m.conta_id = cf.id AND m.data >= a.data AND m.data <= d.dia
-                   ), 0) AS saldo
-            FROM dias d
-            CROSS JOIN contas_filtradas cf
-            CROSS JOIN LATERAL (
-                SELECT saldo_real, data FROM ajustes_saldo
-                WHERE conta_id = cf.id AND data <= d.dia
-                ORDER BY data DESC LIMIT 1
-            ) a
-        )
-        SELECT dia, SUM(saldo) AS saldo
-        FROM saldo_por_conta_dia
-        GROUP BY dia
-        ORDER BY dia
-    """, [uid, conta_id, conta_id, tipo, tipo])
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            WITH contas_filtradas AS (
+                SELECT id FROM contas
+                WHERE utilizador_id = %s
+                  AND (%s IS NULL OR id = %s)
+                  AND (%s IS NULL OR tipo = %s)
+            ),
+            dias AS (
+                SELECT generate_series(
+                    (SELECT MIN(data) FROM ajustes_saldo WHERE conta_id IN (SELECT id FROM contas_filtradas)),
+                    CURRENT_DATE, '1 day'::interval
+                )::date AS dia
+            ),
+            saldo_por_conta_dia AS (
+                SELECT d.dia, cf.id AS conta_id,
+                       a.saldo_real + COALESCE((
+                           SELECT SUM(m.valor) FROM movimentos m
+                           WHERE m.conta_id = cf.id AND m.data >= a.data AND m.data <= d.dia
+                       ), 0) AS saldo
+                FROM dias d
+                CROSS JOIN contas_filtradas cf
+                CROSS JOIN LATERAL (
+                    SELECT saldo_real, data FROM ajustes_saldo
+                    WHERE conta_id = cf.id AND data <= d.dia
+                    ORDER BY data DESC LIMIT 1
+                ) a
+            )
+            SELECT dia, SUM(saldo) AS saldo
+            FROM saldo_por_conta_dia
+            GROUP BY dia
+            ORDER BY dia
+        """, [uid, conta_id, conta_id, tipo, tipo])
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
     if not rows:
         return []
 
     pontos = [{"data": str(r[0]), "saldo": round(float(r[1]), 2)} for r in rows]
-
     if data_de:
         pontos = [p for p in pontos if p["data"] >= data_de]
     if data_ate:
         pontos = [p for p in pontos if p["data"] <= data_ate]
-
     return pontos
 
 
@@ -200,18 +200,19 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
 def stats_recorrentes(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT m.descricao, c.nome AS categoria, g.nome AS grupo, m.data, m.valor
-        FROM movimentos m
-        JOIN categorias c ON m.categoria_id = c.id
-        JOIN categorias g ON c.parent_id = g.id
-        WHERE m.utilizador_id = %s AND m.valor < 0
-        ORDER BY m.descricao, c.nome, m.data
-    """, (utilizador["sub"],))
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            SELECT m.descricao, c.nome AS categoria, g.nome AS grupo, m.data, m.valor
+            FROM movimentos m
+            JOIN categorias c ON m.categoria_id = c.id
+            JOIN categorias g ON c.parent_id = g.id
+            WHERE m.utilizador_id = %s AND m.valor < 0
+            ORDER BY m.descricao, c.nome, m.data
+        """, (utilizador["sub"],))
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
     grupos = defaultdict(list)
     for descricao, categoria, grupo, data_mov, valor in rows:
@@ -232,7 +233,6 @@ def stats_recorrentes(utilizador: dict = Depends(utilizador_atual)):
 
         desvio = (sum((i - intervalo_medio) ** 2 for i in intervalos) / len(intervalos)) ** 0.5
         regular = (desvio / intervalo_medio) < 0.4
-
         proxima_data = datas[-1] + timedelta(days=round(intervalo_medio))
 
         resultado.append({

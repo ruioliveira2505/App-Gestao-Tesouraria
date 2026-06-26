@@ -1,12 +1,4 @@
-from datetime import date, timedelta
-
-
-def dias_atras(n):
-    return str(date.today() - timedelta(days=n))
-
-
-def hoje():
-    return str(date.today())
+from conftest import hoje, dias_atras
 
 
 def movimento_exemplo(conta_id, categoria_id, **overrides):
@@ -16,16 +8,6 @@ def movimento_exemplo(conta_id, categoria_id, **overrides):
     }
     base.update(overrides)
     return base
-
-
-def criar_movimento(client, headers, conta_id, categoria_id, descricao="Teste", valor=-50.0):
-    r = client.post("/movimentos", json={
-        "conta_id": conta_id, "data": hoje(), "descricao": descricao,
-        "valor": valor, "categoria_id": categoria_id,
-    }, headers=headers)
-    assert r.status_code == 200
-    movimentos = client.get("/movimentos", headers=headers).json()
-    return next(m for m in movimentos if m["descricao"] == descricao)["id"]
 
 
 def test_listar_movimentos(client, headers_autenticado, conta_id, categoria_id):

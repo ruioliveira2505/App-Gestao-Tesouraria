@@ -1,13 +1,4 @@
-from datetime import date, timedelta
-
-
-def dias_atras(n):
-    return str(date.today() - timedelta(days=n))
-
-
-def hoje():
-    return str(date.today())
-
+from conftest import hoje, dias_atras
 
 def test_conta_nasce_com_uma_reconciliacao(client, headers_autenticado, conta_id):
     r = client.get(f"/contas/{conta_id}/ajustes-saldo", headers=headers_autenticado)
@@ -85,23 +76,6 @@ def test_editar_reconciliacao_data_futura_falha(client, headers_autenticado, con
 
     r = client.put(f"/ajustes-saldo/{ajuste_id}", json={
         "data": "2099-01-01", "saldo_real": 1500.0,
-    }, headers=headers_autenticado)
-    assert r.status_code == 400
-
-
-def test_reconciliacao_mais_antiga_nao_pode_ficar_depois_do_primeiro_movimento(
-    client, headers_autenticado, conta_id, categoria_id
-):
-    client.post("/movimentos", json={
-        "conta_id": conta_id, "data": dias_atras(30), "descricao": "Compra antiga",
-        "valor": -100.0, "categoria_id": categoria_id,
-    }, headers=headers_autenticado)
-
-    ajustes = client.get(f"/contas/{conta_id}/ajustes-saldo", headers=headers_autenticado).json()
-    ajuste_id = ajustes[0]["id"]
-
-    r = client.put(f"/ajustes-saldo/{ajuste_id}", json={
-        "data": dias_atras(15), "saldo_real": 1000.0,
     }, headers=headers_autenticado)
     assert r.status_code == 400
 

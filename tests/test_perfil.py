@@ -1,9 +1,5 @@
-from datetime import date
 from app.db.database import get_connection
-
-
-def hoje():
-    return str(date.today())
+from conftest import hoje
 
 
 # ═══════════════════════════════════════════════════════════

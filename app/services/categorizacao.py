@@ -10,18 +10,6 @@ GROQ_MODEL   = settings.GROQ_MODEL
 
 # ─── BD helpers ──────────────────────────────────────────────────────────────
 
-def resolver_categoria_id(conn, grupo, categoria, utilizador_id):
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT c.id FROM categorias c
-        JOIN categorias g ON c.parent_id = g.id
-        WHERE g.nome = %s AND c.nome = %s AND c.utilizador_id = %s
-    """, (grupo, categoria, utilizador_id))
-    row = cursor.fetchone()
-    cursor.close()
-    return row[0] if row else None
-
-
 def resolver_categoria_fallback(conn, eh_recebimento, utilizador_id):
     # Usa 'protegida' + direção — imune a renomeações na árvore de categorias.
     cursor = conn.cursor()

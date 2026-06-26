@@ -1,24 +1,8 @@
-from datetime import date
 from app.db.database import get_connection
-
-
-def hoje():
-    return str(date.today())
-
-
-def criar_movimento(client, headers, conta_id, categoria_id, descricao="Teste", valor=-50.0):
-    r = client.post("/movimentos", json={
-        "conta_id": conta_id, "data": hoje(), "descricao": descricao,
-        "valor": valor, "categoria_id": categoria_id,
-    }, headers=headers)
-    assert r.status_code == 200
-    movimentos = client.get("/movimentos", headers=headers).json()
-    return next(m for m in movimentos if m["descricao"] == descricao)["id"]
+from conftest import hoje, criar_movimento
 
 
 def forcar_origem(movimento_id, origem):
-    """Simula o que o futuro sync do Enable Banking vai produzir:
-    um movimento cuja categoria foi atribuída automaticamente, não pelo utilizador."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE movimentos SET origem_cat=%s WHERE id=%s", (origem, movimento_id))

@@ -49,23 +49,25 @@ def listar_movimentos(
     elif precisa_confirmacao is False:
         filtro_confirmacao = "AND m.origem_cat NOT IN ('llm', 'sem_match')"
 
-    cursor.execute("""
-        SELECT m.id, m.conta_id, m.data, m.descricao, m.valor,
-               m.categoria_id, c.nome, g.nome, m.origem_cat, c.protegida
-        FROM movimentos m
-        JOIN categorias c ON m.categoria_id = c.id
-        JOIN categorias g ON c.parent_id = g.id
-        WHERE m.utilizador_id = %s
-          AND (%s IS NULL OR m.conta_id = %s)
-          AND (%s IS NULL OR m.categoria_id = %s)
-          AND (%s IS NULL OR m.data >= %s)
-          AND (%s IS NULL OR m.data <= %s)
-    """ + filtro_direcao + filtro_confirmacao + """
-        ORDER BY m.data DESC, m.criado_em DESC
-    """, [uid, conta_id, conta_id, categoria_id, categoria_id, data_de, data_de, data_ate, data_ate])
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            SELECT m.id, m.conta_id, m.data, m.descricao, m.valor,
+                   m.categoria_id, c.nome, g.nome, m.origem_cat, c.protegida
+            FROM movimentos m
+            JOIN categorias c ON m.categoria_id = c.id
+            JOIN categorias g ON c.parent_id = g.id
+            WHERE m.utilizador_id = %s
+              AND (%s IS NULL OR m.conta_id = %s)
+              AND (%s IS NULL OR m.categoria_id = %s)
+              AND (%s IS NULL OR m.data >= %s)
+              AND (%s IS NULL OR m.data <= %s)
+        """ + filtro_direcao + filtro_confirmacao + """
+            ORDER BY m.data DESC, m.criado_em DESC
+        """, [uid, conta_id, conta_id, categoria_id, categoria_id, data_de, data_de, data_ate, data_ate])
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
     return [
         {
@@ -82,13 +84,15 @@ def listar_movimentos(
 def contar_movimentos_pendentes(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT COUNT(*) FROM movimentos
-        WHERE utilizador_id = %s AND origem_cat IN ('llm', 'sem_match')
-    """, (utilizador["sub"],))
-    contagem = cursor.fetchone()[0]
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            SELECT COUNT(*) FROM movimentos
+            WHERE utilizador_id = %s AND origem_cat IN ('llm', 'sem_match')
+        """, (utilizador["sub"],))
+        contagem = cursor.fetchone()[0]
+    finally:
+        cursor.close()
+        conn.close()
     return {"contagem": contagem}
 
 
@@ -99,19 +103,17 @@ def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
-
-    _validar_data_movimento(cursor, dados.conta_id, dados.data, "adicionar este movimento")
-
-    cursor.execute("""
-        INSERT INTO movimentos (id, conta_id, data, descricao, valor, categoria_id, origem_cat, utilizador_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (str(uuid.uuid4()), dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, "manual", uid))
-    conn.commit()
-
-    guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
-
-    cursor.close()
-    conn.close()
+    try:
+        _validar_data_movimento(cursor, dados.conta_id, dados.data, "adicionar este movimento")
+        cursor.execute("""
+            INSERT INTO movimentos (id, conta_id, data, descricao, valor, categoria_id, origem_cat, utilizador_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (str(uuid.uuid4()), dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, "manual", uid))
+        conn.commit()
+        guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
+    finally:
+        cursor.close()
+        conn.close()
     return {"ok": True}
 
 
@@ -120,20 +122,18 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
-
-    _validar_data_movimento(cursor, dados.conta_id, dados.data, "mover este movimento para essa data")
-
-    cursor.execute("""
-        UPDATE movimentos
-        SET conta_id=%s, data=%s, descricao=%s, valor=%s, categoria_id=%s, origem_cat='manual'
-        WHERE id=%s AND utilizador_id=%s
-    """, (dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, movimento_id, uid))
-    conn.commit()
-
-    guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
-
-    cursor.close()
-    conn.close()
+    try:
+        _validar_data_movimento(cursor, dados.conta_id, dados.data, "mover este movimento para essa data")
+        cursor.execute("""
+            UPDATE movimentos
+            SET conta_id=%s, data=%s, descricao=%s, valor=%s, categoria_id=%s, origem_cat='manual'
+            WHERE id=%s AND utilizador_id=%s
+        """, (dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, movimento_id, uid))
+        conn.commit()
+        guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
+    finally:
+        cursor.close()
+        conn.close()
     return {"ok": True}
 
 
@@ -141,10 +141,12 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
 def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM movimentos WHERE id = %s AND utilizador_id = %s", (movimento_id, utilizador["sub"]))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("DELETE FROM movimentos WHERE id = %s AND utilizador_id = %s", (movimento_id, utilizador["sub"]))
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
     return {"ok": True}
 
 
@@ -155,24 +157,22 @@ def confirmar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    try:
+        cursor.execute(
+            "SELECT descricao, categoria_id FROM movimentos WHERE id=%s AND utilizador_id=%s",
+            (movimento_id, uid)
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Movimento não encontrado")
+        descricao, categoria_id = row
 
-    cursor.execute(
-        "SELECT descricao, categoria_id FROM movimentos WHERE id=%s AND utilizador_id=%s",
-        (movimento_id, uid)
-    )
-    row = cursor.fetchone()
-    if not row:
-        cursor.close(); conn.close()
-        raise HTTPException(status_code=404, detail="Movimento não encontrado")
-    descricao, categoria_id = row
-
-    cursor.execute("UPDATE movimentos SET origem_cat='manual' WHERE id=%s", (movimento_id,))
-    conn.commit()
-
-    guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
-
-    cursor.close()
-    conn.close()
+        cursor.execute("UPDATE movimentos SET origem_cat='manual' WHERE id=%s", (movimento_id,))
+        conn.commit()
+        guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
+    finally:
+        cursor.close()
+        conn.close()
     return {"ok": True}
 
 
@@ -181,22 +181,22 @@ def confirmar_todos_os_pendentes(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    try:
+        cursor.execute("""
+            SELECT DISTINCT descricao, categoria_id FROM movimentos
+            WHERE utilizador_id=%s AND origem_cat IN ('llm', 'sem_match')
+        """, (uid,))
+        pendentes = cursor.fetchall()
 
-    cursor.execute("""
-        SELECT DISTINCT descricao, categoria_id FROM movimentos
-        WHERE utilizador_id=%s AND origem_cat IN ('llm', 'sem_match')
-    """, (uid,))
-    pendentes = cursor.fetchall()
+        cursor.execute("""
+            UPDATE movimentos SET origem_cat='manual'
+            WHERE utilizador_id=%s AND origem_cat IN ('llm', 'sem_match')
+        """, (uid,))
+        conn.commit()
 
-    cursor.execute("""
-        UPDATE movimentos SET origem_cat='manual'
-        WHERE utilizador_id=%s AND origem_cat IN ('llm', 'sem_match')
-    """, (uid,))
-    conn.commit()
-
-    for descricao, categoria_id in pendentes:
-        guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
-
-    cursor.close()
-    conn.close()
+        for descricao, categoria_id in pendentes:
+            guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
+    finally:
+        cursor.close()
+        conn.close()
     return {"ok": True, "confirmados": len(pendentes)}

@@ -1,8 +1,4 @@
-from datetime import date
-
-
-def hoje():
-    return str(date.today())
+from conftest import hoje
 
 
 def conta_exemplo(**overrides):

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QAzgKuO2QYVG8fPSTjWaKEMhrcNw4WQ7gq6N3KTO1HebD11IUYTNSKVN5hS7eAb
+\restrict lNAPobhyJpO6YWjwcgzUOiURXX8rRGjzcDDxL49RO4m1SOdFprEabDbBvg6tIrh
 
 -- Dumped from database version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
@@ -170,7 +170,7 @@ CREATE TABLE public.movimentos (
     origem_cat text,
     criado_em timestamp without time zone DEFAULT now(),
     utilizador_id integer,
-    categoria_id integer
+    categoria_id integer NOT NULL
 );
 
 
@@ -314,6 +314,13 @@ ALTER TABLE ONLY public.utilizadores
 
 
 --
+-- Name: idx_categorias_utilizador_parent; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_categorias_utilizador_parent ON public.categorias USING btree (utilizador_id, parent_id);
+
+
+--
 -- Name: idx_movimentos_conta; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -403,5 +410,5 @@ ALTER TABLE ONLY public.movimentos
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QAzgKuO2QYVG8fPSTjWaKEMhrcNw4WQ7gq6N3KTO1HebD11IUYTNSKVN5hS7eAb
+\unrestrict lNAPobhyJpO6YWjwcgzUOiURXX8rRGjzcDDxL49RO4m1SOdFprEabDbBvg6tIrh
 

@@ -95,13 +95,12 @@
       padding: 0.9rem 1.1rem; margin-bottom: 1rem;
       display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
     }
-    .banner-pendentes .texto { font-size: 0.875rem; color: #5c4a1a; }
+    .banner-pendentes .texto { font-size: 0.875rem; color: #5c4a1a; display: flex; align-items: center; gap: 6px; }
     .banner-pendentes .acoes { display: flex; gap: 0.5rem; flex-shrink: 0; }
     .icone-auto { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
     .icone-auto.llm svg { color: #b45309; }
     .icone-auto.sem-match svg { color: #c0392b; }
     .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: #888; cursor: help; }
-    .banner-pendentes .texto { font-size: 0.875rem; color: #5c4a1a; display: flex; align-items: center; gap: 6px; }
     .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; cursor: pointer; color: #166534; }
     .btn-confirmar:hover { background: #dcfce7; }
 
@@ -386,12 +385,13 @@
           <tbody id="tabela-movimentos"></tbody>
         </table>
       </div>
+      <div class="banner-pendentes" id="banner-pendentes" style="display:none">
+        <span class="texto" id="banner-pendentes-texto"></span>
+        <div class="acoes"></div>
+      </div>
     </div>
 
-    <div class="banner-pendentes" id="banner-pendentes" style="display:none">
-      <span class="texto" id="banner-pendentes-texto"></span>
-      <div class="acoes"></div>
-    </div>
+
 
     <!-- ── PERFIL ───────────────────────────────────── -->
     <div class="page" id="page-perfil">
@@ -591,6 +591,7 @@ let graficos = {}
 let anDataDe, anDataAte
 let movDataDe = null, movDataAte = null
 let ctDataDe  = null, ctDataAte  = null
+let pendentesAtivo = false
 
 let ordenacaoContas        = { campo: null, direcao: 1 }
 let contasTabelaCache      = []
@@ -599,7 +600,7 @@ let movimentosTabelaCache  = []
 let ordenacaoRecorrentes   = { campo: null, direcao: 1 }
 let recorrentesTabelaCache = []
 
-let elimAtual = { id: null, ehGrupo: false }
+let elimAtual = null
 
 let pickerMovData = null
 let pickerReconc  = null
@@ -1710,8 +1711,8 @@ function renderizarTabelaMovimentos() {
     const pendente = !m.confirmado
     const iconePendente = !pendente ? "" : (
       m.sem_categoria
-        ? `<span class="icone-auto sem-match" title="Foi atribuída uma categoria genérica. Recomenda-se a sua validação.">${ICONE_SEM_MATCH}</span>`
-        : `<span class="icone-auto llm" title="Categoria atribuída automaticamente. Recomenda-se a sua confirmação.">${ICONE_SUGESTAO_LLM}</span>`
+        ? `<span class="icone-auto sem-match" title="Foi atribuída uma categoria genérica.">${ICONE_SEM_MATCH}</span>`
+        : `<span class="icone-auto llm" title="Foi atribuída uma categoria automaticamente.">${ICONE_SUGESTAO_LLM}</span>`
     )
 
     tb.innerHTML += `
@@ -1792,8 +1793,6 @@ async function eliminarMovimento(id) {
   carregarMovimentos()
 }
 
-let pendentesAtivo = false
-
 async function atualizarBadgePendentes() {
   const r = await api("/movimentos/pendentes/contagem")
   const badge = document.getElementById("badge-pendentes")
@@ -1818,7 +1817,7 @@ function renderizarBannerPendentes(contagem) {
       <button class="btn-sm" onclick="limparModoPendentes()">Ver todos os movimentos</button>`
     banner.style.display = "flex"
   } else if (contagem > 0) {
-    texto.innerHTML = `${ICONE_SUGESTAO_LLM} ${contagem} movimento(s) foram categorizados automaticamente — vale a pena confirmar.`
+    texto.innerHTML = `${ICONE_SUGESTAO_LLM} ${contagem} movimento(s) foram categorizados automaticamente - confirme.`
     acoes.innerHTML = `
       <button class="btn-sm" onclick="filtrarApenasPendentes()">Ver pendentes</button>
       <button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button>`
@@ -2054,7 +2053,7 @@ async function moverCategoria(id, direcao) {
 }
 
 async function confirmarEliminarCategoria(id, ehGrupo) {
-  elimAtual = { id, ehGrupo }
+  elimAtual = id
   const r = await apiDelete("/categorias/" + id)
   if (r.ok) {
     aposMudarCategorias()
@@ -2083,14 +2082,14 @@ async function confirmarEliminarCategoria(id, ehGrupo) {
 
 async function confirmarEliminacaoForcada() {
   if (!confirm("Isto vai eliminar também os movimentos associados, de forma permanente. Continuar?")) return
-  await apiDelete("/categorias/" + elimAtual.id + "?forcar=true")
+  await apiDelete("/categorias/" + elimAtual + "?forcar=true")
   fecharModal()
   aposMudarCategorias()
 }
 
 async function confirmarEliminacaoComMigracao() {
   const destino = document.getElementById("elim-migrar-para").value
-  await apiDelete("/categorias/" + elimAtual.id + "?migrar_para_id=" + destino)
+  await apiDelete("/categorias/" + elimAtual + "?migrar_para_id=" + destino)
   fecharModal()
   aposMudarCategorias()
 }

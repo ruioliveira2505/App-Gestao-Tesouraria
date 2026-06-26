@@ -1,13 +1,14 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, HTTPException, Request
 
-from app.db.database import get_connection
 from app.core.config import settings
-from app.core.security import encriptar_password, verificar_password, criar_token, verificar_token
 from app.core.limiter import limiter
-from app.services.email import enviar_email
-from app.services.categorias_seed import seed_categorias_padrao
+from app.core.security import encriptar_password, verificar_password, criar_token, verificar_token
+from app.db.database import get_connection
 from app.schemas.auth import RegistoInput, LoginInput, EsqueciPasswordInput, RedefinirPasswordInput
-from datetime import timedelta
+from app.services.categorias_seed import seed_categorias_padrao
+from app.services.email import enviar_email
 
 router = APIRouter()
 
@@ -15,26 +16,24 @@ router = APIRouter()
 @router.post("/registro")
 @limiter.limit("5/minute")
 def registar(request: Request, dados: RegistoInput):
-    conn   = get_connection()
+    conn = get_connection()
     cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="Email já registado")
 
-    cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
-    if cursor.fetchone():
+        hash_pw = encriptar_password(dados.password)
+        cursor.execute(
+            "INSERT INTO utilizadores (nome, email, password) VALUES (%s, %s, %s) RETURNING id",
+            (dados.nome, dados.email, hash_pw)
+        )
+        utilizador_id = cursor.fetchone()[0]
+        conn.commit()
+        seed_categorias_padrao(conn, utilizador_id)
+    finally:
         cursor.close()
         conn.close()
-        raise HTTPException(status_code=400, detail="Email já registado")
-
-    hash_pw = encriptar_password(dados.password)
-    cursor.execute(
-        "INSERT INTO utilizadores (nome, email, password) VALUES (%s, %s, %s) RETURNING id",
-        (dados.nome, dados.email, hash_pw)
-    )
-    utilizador_id = cursor.fetchone()[0]
-    conn.commit()
-    cursor.close()
-
-    seed_categorias_padrao(conn, utilizador_id)
-    conn.close()
 
     token = criar_token({"sub": str(utilizador_id), "email": dados.email})
     return {"token": token, "nome": dados.nome}
@@ -43,16 +42,17 @@ def registar(request: Request, dados: RegistoInput):
 @router.post("/login")
 @limiter.limit("5/minute")
 def login(request: Request, dados: LoginInput):
-    conn   = get_connection()
+    conn = get_connection()
     cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT id, nome, password FROM utilizadores WHERE email = %s",
-        (dados.email,)
-    )
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute(
+            "SELECT id, nome, password FROM utilizadores WHERE email = %s",
+            (dados.email,)
+        )
+        row = cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
 
     if not row or not verificar_password(dados.password, row[2]):
         raise HTTPException(status_code=401, detail="Email ou password incorretos")
@@ -66,10 +66,12 @@ def login(request: Request, dados: LoginInput):
 def esqueci_password(request: Request, dados: EsqueciPasswordInput):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
+        row = cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
 
     if row:
         token = criar_token({"sub": str(row[0]), "tipo": "reset"}, timedelta(hours=1))
@@ -91,11 +93,14 @@ def redefinir_password(dados: RedefinirPasswordInput):
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE utilizadores SET password = %s WHERE id = %s",
-        (encriptar_password(dados.password_nova), payload["sub"])
-    )
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute(
+            "UPDATE utilizadores SET password = %s WHERE id = %s",
+            (encriptar_password(dados.password_nova), payload["sub"])
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
     return {"ok": True}

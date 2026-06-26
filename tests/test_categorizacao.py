@@ -1,52 +1,11 @@
 from app.services import categorizacao
 import requests
 from app.db.database import get_connection
+from conftest import id_categoria
 
 
 def uid_de(client, headers):
     return client.get("/me", headers=headers).json()["id"]
-
-
-def id_categoria(client, headers, nome_grupo, nome_categoria):
-    arvore = client.get("/categorias/arvore", headers=headers).json()
-    grupo = next(g for g in arvore if g["nome"] == nome_grupo)
-    return next(c["id"] for c in grupo["categorias"] if c["nome"] == nome_categoria)
-
-
-# ═══════════════════════════════════════════════════════════
-# resolver_categoria_id
-# ═══════════════════════════════════════════════════════════
-def test_resolver_categoria_id_encontra_categoria_existente(client, headers_autenticado):
-    uid = uid_de(client, headers_autenticado)
-    conn = get_connection()
-    categoria_id = categorizacao.resolver_categoria_id(conn, "Habitação", "Água, Eletricidade e Gás", uid)
-    conn.close()
-
-    esperado = id_categoria(client, headers_autenticado, "Habitação", "Água, Eletricidade e Gás")
-    assert categoria_id == esperado
-
-
-def test_resolver_categoria_id_devolve_none_se_nao_existir(client, headers_autenticado):
-    uid = uid_de(client, headers_autenticado)
-    conn = get_connection()
-    categoria_id = categorizacao.resolver_categoria_id(conn, "Grupo Inexistente", "Categoria Inexistente", uid)
-    conn.close()
-    assert categoria_id is None
-
-
-def test_resolver_categoria_id_nao_atravessa_utilizadores(client, headers_autenticado):
-    client.post("/registro", json={"nome": "Outro", "email": "outro@exemplo.com", "password": "senha123"})
-    r_outro = client.post("/login", json={"email": "outro@exemplo.com", "password": "senha123"})
-    uid_outro = client.get("/me", headers={"Authorization": f"Bearer {r_outro.json()['token']}"}).json()["id"]
-    uid_ana = uid_de(client, headers_autenticado)
-
-    conn = get_connection()
-    categoria_id_ana   = categorizacao.resolver_categoria_id(conn, "Habitação", "Água, Eletricidade e Gás", uid_ana)
-    categoria_id_outro = categorizacao.resolver_categoria_id(conn, "Habitação", "Água, Eletricidade e Gás", uid_outro)
-    conn.close()
-
-    assert categoria_id_ana is not None and categoria_id_outro is not None
-    assert categoria_id_ana != categoria_id_outro
 
 
 # ═══════════════════════════════════════════════════════════
@@ -123,8 +82,6 @@ def test_categorizar_usa_cache_confirmada_sem_chamar_llm(client, headers_autenti
 
 
 def test_categorizar_usa_cache_nao_confirmada_mas_continua_pendente(client, headers_autenticado, monkeypatch):
-    """Uma sugestão do LLM ainda não confirmada deve continuar a aparecer como
-    pendente ('llm'), mesmo já em cache — e sem voltar a gastar tokens."""
     uid = uid_de(client, headers_autenticado)
     categoria_id_esperada = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
 
@@ -159,8 +116,6 @@ def test_categorizar_recorre_ao_llm_quando_nao_ha_regra_nem_cache(client, header
 
 
 def test_resolver_categoria_fallback_funciona_mesmo_com_nomes_repetidos(client, headers_autenticado):
-    """Os dois grupos protegidos chamam-se ambos 'Sem Categoria' — confirma
-    que a resolução por direção nunca devolve o da direção errada."""
     uid = uid_de(client, headers_autenticado)
     conn = get_connection()
     fallback_saida = categorizacao.resolver_categoria_fallback(conn, False, uid)

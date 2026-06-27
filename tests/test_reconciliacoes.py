@@ -1,4 +1,4 @@
-from conftest import hoje, dias_atras
+from tests.helpers import hoje, dias_atras
 
 def test_conta_nasce_com_uma_reconciliacao(client, headers_autenticado, conta_id):
     r = client.get(f"/contas/{conta_id}/ajustes-saldo", headers=headers_autenticado)

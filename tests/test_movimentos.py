@@ -1,4 +1,4 @@
-from conftest import hoje, dias_atras
+from tests.helpers import hoje, dias_atras
 
 
 def movimento_exemplo(conta_id, categoria_id, **overrides):
@@ -122,4 +122,15 @@ def test_editar_movimento_para_data_antes_da_reconciliacao_falha(client, headers
     r = client.put(f"/movimentos/{movimento_id}", json=movimento_exemplo(
         conta_id, categoria_id, data=dias_atras(10)
     ), headers=headers_autenticado)
+    assert r.status_code == 400
+
+
+def test_criar_movimento_com_categoria_da_direcao_errada_falha(client, headers_autenticado, conta_id):
+    categorias = client.get("/categorias", headers=headers_autenticado).json()
+    categoria_entrada = next(c for c in categorias if c["eh_recebimento"])
+
+    r = client.post("/movimentos", json={
+        "conta_id": conta_id, "data": hoje(), "descricao": "Errado",
+        "valor": -50.0, "categoria_id": categoria_entrada["id"],
+    }, headers=headers_autenticado)
     assert r.status_code == 400

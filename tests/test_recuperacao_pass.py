@@ -62,24 +62,24 @@ def test_redefinir_password_com_token_valido_funciona(client, headers_autenticad
     token = extrair_token_do_corpo(enviados[0])
     assert token
 
-    r = client.post("/redefinir-password", json={"token": token, "password_nova": "nova456"})
+    r = client.post("/redefinir-password", json={"token": token, "password_nova": "nova45678"})
     assert r.status_code == 200
 
     r_velha = client.post("/login", json={"email": "ana@exemplo.com", "password": "senha123"})
     assert r_velha.status_code == 401
 
-    r_nova = client.post("/login", json={"email": "ana@exemplo.com", "password": "nova456"})
+    r_nova = client.post("/login", json={"email": "ana@exemplo.com", "password": "nova45678"})
     assert r_nova.status_code == 200
 
 
 def test_redefinir_password_com_token_invalido_falha(client):
-    r = client.post("/redefinir-password", json={"token": "isto-nao-e-um-jwt-valido", "password_nova": "nova456"})
+    r = client.post("/redefinir-password", json={"token": "isto-nao-e-um-jwt-valido", "password_nova": "nova45678"})
     assert r.status_code == 400
 
 
 def test_redefinir_password_com_token_de_sessao_normal_falha(client, headers_autenticado):
     token_sessao = headers_autenticado["Authorization"].split(" ")[1]
-    r = client.post("/redefinir-password", json={"token": token_sessao, "password_nova": "nova456"})
+    r = client.post("/redefinir-password", json={"token": token_sessao, "password_nova": "nova45678"})
     assert r.status_code == 400
 
 
@@ -87,7 +87,7 @@ def test_redefinir_password_com_token_expirado_falha(client, headers_autenticado
     uid = client.get("/me", headers=headers_autenticado).json()["id"]
     token_expirado = criar_token({"sub": str(uid), "tipo": "reset"}, timedelta(seconds=-1))
 
-    r = client.post("/redefinir-password", json={"token": token_expirado, "password_nova": "nova456"})
+    r = client.post("/redefinir-password", json={"token": token_expirado, "password_nova": "nova45678"})
     assert r.status_code == 400
 
 
@@ -99,3 +99,13 @@ def test_token_de_reset_nao_pode_acessar_rotas_normais(client, headers_autentica
 
     r = client.get("/me", headers={"Authorization": f"Bearer {token_reset}"})
     assert r.status_code == 401
+
+
+def test_redefinir_password_curta_falha(client, headers_autenticado, monkeypatch):
+    enviados = []
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda destinatario, assunto, corpo: enviados.append(corpo))
+    client.post("/esqueci-password", json={"email": "ana@exemplo.com"})
+    token = extrair_token_do_corpo(enviados[0])
+
+    r = client.post("/redefinir-password", json={"token": token, "password_nova": "abc"})
+    assert r.status_code == 422

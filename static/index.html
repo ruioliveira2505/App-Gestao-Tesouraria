@@ -9,30 +9,72 @@
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/plugins/ranges.js"></script>
   <style>
+    :root {
+      --color-bg: #f5f5f3;
+      --color-text: #1a1a1a;
+      --color-text-secondary: #888;
+      --color-text-tertiary: #555;
+      --color-text-faint: #aaa;
+      --color-border: #e5e5e5;
+      --color-border-light: #f5f5f5;
+      --color-white: #ffffff;
+      --color-surface: #fafafa;
+
+      --color-positivo: #1a7a4a;
+      --color-positivo-bg: #f0fdf4;
+      --color-positivo-bg-hover: #dcfce7;
+      --color-positivo-border: #86efac;
+      --color-positivo-text: #166534;
+
+      --color-negativo: #c0392b;
+      --color-negativo-bg: #fef2f2;
+      --color-negativo-border: #fca5a5;
+      --color-negativo-text: #991b1b;
+
+      --color-aviso-bg: #fff7e6;
+      --color-aviso-border: #f0c36d;
+      --color-aviso-text: #5c4a1a;
+      --color-aviso-icone: #b45309;
+
+      --color-primary: #1a1a1a;
+      --color-primary-hover: #333;
+      --color-disabled: #ccc;
+
+      --color-badge-bg: #f0f0f0;
+      --color-badge-text: #555;
+
+      --color-overlay: rgba(0, 0, 0, 0.4);
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 10px;
+      --radius-xl: 12px;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
+    body { font-family: system-ui, sans-serif; background: var(--color-bg); color: var(--color-text); min-height: 100vh; }
 
     /* ── AUTH ───────────────────────────────────────────── */
     #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     #reset-screen.visible { display: block; }
-    .auth-card { background: white; border-radius: 12px; border: 1px solid #e5e5e5; padding: 2rem; width: 100%; max-width: 380px; }
+    .auth-card { background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid var(--color-border); padding: 2rem; width: 100%; max-width: 380px; }
     .auth-card h1 { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
-    .auth-tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
-    .auth-tab { padding: 0.5rem 1rem; font-size: 0.875rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; color: #888; }
-    .auth-tab.active { border-bottom-color: #1a1a1a; color: #1a1a1a; font-weight: 500; }
-    .auth-error { font-size: 0.8rem; color: #c0392b; margin-top: 0.75rem; text-align: center; }
+    .auth-tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); }
+    .auth-tab { padding: 0.5rem 1rem; font-size: 0.875rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--color-text-secondary); }
+    .auth-tab.active { border-bottom-color: var(--color-text); color: var(--color-text); font-weight: 500; }
+    .auth-error { font-size: 0.8rem; color: var(--color-negativo); margin-top: 0.75rem; text-align: center; }
 
     /* ── NAV ────────────────────────────────────────────── */
     #app-screen { display: none; }
-    nav { background: white; border-bottom: 1px solid #e5e5e5; padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 52px; position: sticky; top: 0; z-index: 50; }
+    nav { background: var(--color-white); border-bottom: 1px solid var(--color-border); padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 52px; position: sticky; top: 0; z-index: 50; }
     .nav-brand { font-size: 0.95rem; font-weight: 600; }
     .nav-links { display: flex; flex: 1; }
-    .nav-link { padding: 0 1rem; height: 52px; display: flex; align-items: center; font-size: 0.875rem; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
-    .nav-link.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+    .nav-link { padding: 0 1rem; height: 52px; display: flex; align-items: center; font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
+    .nav-link.active { color: var(--color-text); border-bottom-color: var(--color-text); font-weight: 500; }
     .nav-right { display: flex; align-items: center; gap: 1rem; margin-left: auto; }
-    .nav-user { font-size: 0.8rem; color: #888; }
-    .btn-logout { font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; }
-    .btn-logout:hover { color: #1a1a1a; }
+    .nav-user { font-size: 0.8rem; color: var(--color-text-secondary); }
+    .btn-logout { font-size: 0.8rem; color: var(--color-text-secondary); background: none; border: none; cursor: pointer; }
+    .btn-logout:hover { color: var(--color-text); }
 
     /* ── LAYOUT ─────────────────────────────────────────── */
     main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
@@ -41,78 +83,84 @@
 
     /* ── CAMPOS DE FORMULÁRIO ──────────────────────────── */
     .field { margin-bottom: 1rem; }
-    .field label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
-    .field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; outline: none; background: white; }
-    .field input:focus, .field select:focus { border-color: #1a1a1a; }
+    .field label { display: block; font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; outline: none; background: var(--color-white); }
+    .field input:focus, .field select:focus { border-color: var(--color-text); }
+    .field-com-toggle { position: relative; }
+    .field-com-toggle input { padding-right: 2.5rem; }
+    .field .ajuda { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 4px; display: none; }
+    .toggle-password { position: absolute; right: 0.6rem; top: 30px; background: none; border: none; cursor: pointer; padding: 0.5px; display: flex; align-items: center; justify-content: center;color: var(--color-text-secondary); }
 
     /* ── BOTÕES ─────────────────────────────────────────── */
-    .btn-primary { padding: 0.6rem 1.25rem; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
-    .btn-primary:hover { background: #333; }
-    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-primary { padding: 0.6rem 1.25rem; background: var(--color-primary); color: var(--color-white); border: none; border-radius: var(--radius-sm); font-size: 0.875rem; cursor: pointer; }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-primary:disabled { background: var(--color-disabled); cursor: not-allowed; }
     .btn-primary.full { width: 100%; }
-    .btn-secondary { padding: 0.5rem 1rem; background: none; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
-    .btn-secondary:hover { background: #f5f5f5; }
-    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid #e5e5e5; border-radius: 6px; cursor: pointer; }
-    .btn-sm:hover { background: #f5f5f5; }
-    .btn-danger { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid #fca5a5; border-radius: 6px; cursor: pointer; color: #c0392b; }
-    .btn-danger:hover { background: #fef2f2; }
+    .btn-secondary { padding: 0.5rem 1rem; background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; cursor: pointer; }
+    .btn-secondary:hover { background: var(--color-border-light); }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; }
+    .btn-sm:hover { background: var(--color-border-light); }
+    .btn-danger { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid var(--color-negativo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-negativo); }
+    .btn-danger:hover { background: var(--color-negativo-bg); }
 
     /* ── CARDS ──────────────────────────────────────────── */
     .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
-    .card .label { font-size: 0.75rem; color: #888; margin-bottom: 0.4rem; }
+    .card { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; }
+    .card .label { font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 0.4rem; }
     .card .valor { font-size: 1.5rem; font-weight: 500; }
-    .card .sub { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
-    .card.destaque { border-color: #1a7a4a; }
+    .card .sub { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.25rem; }
+    .card.destaque { border-color: var(--color-positivo); }
 
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    .summary-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1rem 1.25rem; }
-    .summary-card .label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .summary-card { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1rem 1.25rem; }
+    .summary-card .label { font-size: 0.7rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
     .summary-card .valor { font-size: 1.3rem; font-weight: 500; }
-    .summary-card .sub { font-size: 0.7rem; color: #888; margin-top: 0.3rem; }
+    .summary-card .sub { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 0.3rem; }
 
     /* ── SECÇÕES E TABELAS ──────────────────────────────── */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-    .section-title { font-size: 0.75rem; font-weight: 600; color: #888; letter-spacing: 0.05em; text-transform: uppercase; }
+    .section-title { font-size: 0.75rem; font-weight: 600; color: var(--color-text-secondary); letter-spacing: 0.05em; text-transform: uppercase; }
 
-    .table-wrap { background: white; border-radius: 10px; border: 1px solid #e5e5e5; overflow-x: auto; overflow-y: hidden; margin-bottom: 1.5rem; }
+    .table-wrap { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); overflow-x: auto; overflow-y: hidden; margin-bottom: 1.5rem; }
     table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; font-size: 0.7rem; font-weight: 600; color: #888; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e5e5; background: #fafafa; text-transform: uppercase; letter-spacing: 0.04em; }
-    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #f5f5f5; }
+    th { text-align: left; font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); background: var(--color-surface); text-transform: uppercase; letter-spacing: 0.04em; user-select: none; }
+    th .icone-ordenacao { display: inline-flex; vertical-align: middle; margin-left: 3px; opacity: 0.35; }
+    th.ordenado .icone-ordenacao { opacity: 1; color: var(--color-text); }
+    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--color-border-light); }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #fafafa; }
+    tr:hover td { background: var(--color-surface); }
 
-    .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: #f0f0f0; color: #555; }
-    
+    .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: var(--color-badge-bg); color: var(--color-badge-text); }
+
     .badge-pendentes {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 18px; height: 18px; padding: 0 5px;
-    background: #c0392b; color: white; border-radius: 999px;
-    font-size: 0.65rem; font-weight: 600; margin-left: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      background: var(--color-negativo); color: var(--color-white); border-radius: 999px;
+      font-size: 0.65rem; font-weight: 600; margin-left: 6px;
     }
     .banner-pendentes {
-      background: #fff7e6; border: 1px solid #f0c36d; border-radius: 10px;
+      background: var(--color-aviso-bg); border: 1px solid var(--color-aviso-border); border-radius: var(--radius-lg);
       padding: 0.9rem 1.1rem; margin-bottom: 1rem;
       display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
     }
-    .banner-pendentes .texto { font-size: 0.875rem; color: #5c4a1a; display: flex; align-items: center; gap: 6px; }
+    .banner-pendentes .texto { font-size: 0.875rem; color: var(--color-aviso-text); display: flex; align-items: center; gap: 6px; }
     .banner-pendentes .acoes { display: flex; gap: 0.5rem; flex-shrink: 0; }
     .icone-auto { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
-    .icone-auto.llm svg { color: #b45309; }
-    .icone-auto.sem-match svg { color: #c0392b; }
-    .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: #888; cursor: help; }
-    .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; cursor: pointer; color: #166534; }
-    .btn-confirmar:hover { background: #dcfce7; }
+    .icone-auto.llm svg { color: var(--color-aviso-icone); }
+    .icone-auto.sem-match svg { color: var(--color-negativo); }
+    .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--color-text-secondary); cursor: help; }
+    .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: var(--color-positivo-bg); border: 1px solid var(--color-positivo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-positivo-text); }
+    .btn-confirmar:hover { background: var(--color-positivo-bg-hover); }
 
-    .positivo { color: #1a7a4a; }
-    .negativo { color: #c0392b; }
+    .positivo { color: var(--color-positivo); }
+    .negativo { color: var(--color-negativo); }
 
     /* ── GRÁFICOS ───────────────────────────────────────── */
     .charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-    .chart-card { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; }
-    .chart-card h3 { font-size: 0.7rem; font-weight: 600; color: #888; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    .chart-full { background: white; border-radius: 10px; border: 1px solid #e5e5e5; padding: 1.25rem; margin-bottom: 1.5rem; }
-    .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: #888; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .chart-card { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; }
+    .chart-card h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .chart-full { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
 
     /* ── FILTROS ────────────────────────────────────────── */
     .filtros { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; flex-wrap: wrap; align-items: flex-end; }
@@ -120,54 +168,95 @@
     .filtros select, .filtros input { padding: 0.5rem 0.75rem; }
     .filtros-limpar-linha { margin-bottom: 0.5rem; min-height: 1.2rem; }
     .filtros-limpar-linha.escondido { visibility: hidden; }
-    .filtros-limpar { font-size: 0.8rem; color: #888; cursor: pointer; }
-    .filtros-limpar:hover { color: #1a1a1a; text-decoration: underline; }
+    .filtros-limpar { font-size: 0.8rem; color: var(--color-text-secondary); cursor: pointer; }
+    .filtros-limpar:hover { color: var(--color-text); text-decoration: underline; }
 
     /* ── TOGGLE ENTRADAS/SAÍDAS ─────────────────────────── */
-    .toggle-tipo { display: inline-flex; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; }
-    .toggle-tipo button { padding: 0.4rem 1rem; border: none; background: white; font-size: 0.8rem; cursor: pointer; color: #888; }
-    .toggle-tipo button.active.out { background: #fef2f2; color: #c0392b; font-weight: 500; }
-    .toggle-tipo button.active.in  { background: #f0fdf4; color: #166534; font-weight: 500; }
+    .toggle-tipo { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+    .toggle-tipo button { padding: 0.4rem 1rem; border: none; background: var(--color-white); font-size: 0.8rem; cursor: pointer; color: var(--color-text-secondary); }
+    .toggle-tipo button.active.out { background: var(--color-negativo-bg); color: var(--color-negativo); font-weight: 500; }
+    .toggle-tipo button.active.in  { background: var(--color-positivo-bg); color: var(--color-positivo-text); font-weight: 500; }
 
     /* ── GRUPOS COM BARRA DE PERCENTAGEM ────────────────── */
-    .grupo-bar-row { padding: 0.85rem 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+    .grupo-bar-row { padding: 0.85rem 0; border-bottom: 1px solid var(--color-border-light); cursor: pointer; }
     .grupo-bar-row:last-child { border-bottom: none; }
     .linha-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
     .linha-topo .nome { font-size: 0.9rem; font-weight: 500; }
     .linha-topo .valores { font-size: 0.85rem; }
-    .linha-topo .valores .pct { color: #888; margin-right: 0.5rem; font-size: 0.75rem; }
-    .barra-fundo { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+    .linha-topo .valores .pct { color: var(--color-text-secondary); margin-right: 0.5rem; font-size: 0.75rem; }
+    .barra-fundo { height: 8px; background: var(--color-badge-bg); border-radius: 4px; overflow: hidden; }
     .barra-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
     .sub-grupo { display: none; padding: 0.6rem 0 0.2rem 1.25rem; }
     .sub-grupo.visible { display: block; }
-    .sub-grupo .sub-item { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.8rem; color: #555; }
-    .sub-grupo .sub-item .pct { color: #aaa; margin-right: 0.5rem; font-size: 0.7rem; }
+    .sub-grupo .sub-item { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.8rem; color: var(--color-text-tertiary); }
+    .sub-grupo .sub-item .pct { color: var(--color-text-faint); margin-right: 0.5rem; font-size: 0.7rem; }
 
     /* ── MODAL ──────────────────────────────────────────── */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: var(--color-overlay); align-items: center; justify-content: center; z-index: 100; }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 440px; }
+    .modal { background: var(--color-white); border-radius: var(--radius-xl); padding: 1.5rem; width: 100%; max-width: 440px; }
     .modal h2 { font-size: 1rem; font-weight: 500; margin-bottom: 1.25rem; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
 
+    /* ── TOASTS ─────────────────────────────────────────── */
+    #toast-container {
+      position: fixed; top: 1rem; right: 1rem; z-index: 200;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      max-width: 360px;
+    }
+    .toast {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 0.75rem 1rem;
+      font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      animation: toast-entrada 0.2s ease-out;
+    }
+    .toast.sucesso { border-color: var(--color-positivo-border); }
+    .toast.erro { border-color: var(--color-negativo-border); }
+    .toast .icone { flex-shrink: 0; margin-top: 1px; }
+    .toast.sucesso .icone { color: var(--color-positivo); }
+    .toast.erro .icone { color: var(--color-negativo); }
+    .toast .texto { flex: 1; color: var(--color-text); }
+    .toast .fechar { cursor: pointer; color: var(--color-text-secondary); background: none; border: none; padding: 0; flex-shrink: 0; }
+    @keyframes toast-entrada { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
     /* ── PERFIL E GESTÃO DE CATEGORIAS ──────────────────── */
-    .grupo-gestao { border-bottom: 1px solid #f0f0f0; padding: 0.75rem 0; }
+    .grupo-gestao { border-bottom: 1px solid var(--color-border-light); padding: 0.75rem 0; }
     .grupo-gestao:last-child { border-bottom: none; }
     .grupo-gestao-header { display: flex; justify-content: space-between; align-items: center; }
     .grupo-gestao-header .nome { font-weight: 500; font-size: 0.9rem; }
     .acoes { display: flex; gap: 4px; }
     .categorias-gestao-lista { margin-top: 0.5rem; padding-left: 1.25rem; }
-    .categoria-gestao-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; font-size: 0.85rem; color: #555; }
-    .danger-zone-text { font-size: 0.875rem; color: #555; margin-bottom: 0.75rem; }
+    .categoria-gestao-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; font-size: 0.85rem; color: var(--color-text-tertiary); }
+    .danger-zone-text { font-size: 0.875rem; color: var(--color-text-tertiary); margin-bottom: 0.75rem; }
+
+    /* ── PERFIL: LAYOUT COM BARRA LATERAL ───────────────── */
+    .perfil-layout { display: flex; gap: 1.5rem; align-items: flex-start; }
+    .perfil-sidebar { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }
+    .perfil-sidebar-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.55rem 0.75rem; border-radius: var(--radius-sm);
+      font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer;
+    }
+    .perfil-sidebar-item .icone { display: flex; flex-shrink: 0; }
+    .perfil-sidebar-item:hover { background: var(--color-surface); }
+    .perfil-sidebar-item.active { background: var(--color-badge-bg); color: var(--color-text); font-weight: 500; }
+    .perfil-conteudo { flex: 1; min-width: 0; }
+    .perfil-secao { display: none; }
+    .perfil-secao.active { display: block; }
+    .perfil-secao-titulo { font-size: 1.1rem; font-weight: 600; }
+    .perfil-secao-subtitulo { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.2rem; }
 
     @media (max-width: 768px) {
-      .charts-grid-2, .summary-grid { grid-template-columns: 1fr; }
-      nav { padding: 0 1rem; }
-      main { padding: 1rem; }
+      .perfil-layout { flex-direction: column; }
+      .perfil-sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
     }
   </style>
 </head>
+<datalist id="lista-bancos"></datalist>
 <body>
+
+<div id="toast-container"></div>
 
 <!-- ═══════════════════ AUTH ═══════════════════ -->
 <div id="auth-screen">
@@ -178,30 +267,38 @@
       <div class="auth-tab" onclick="trocarTab('registo')">Criar conta</div>
     </div>
     <div id="tab-login">
-      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="email@exemplo.com"></div>
-      <div class="field"><label>Password</label><input type="password" id="login-password"></div>
-      <button class="btn-primary full" onclick="fazerLogin()">Entrar</button>
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="email@exemplo.com" required></div>
+      <div class="field field-com-toggle"><label>Password</label><input type="password" id="login-password" required>
+        <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('login-password', this)"></button>
+      </div>
+      <button class="btn-primary full" id="btn-login" onclick="fazerLogin()">Entrar</button>
       <div style="text-align:center;margin-top:0.75rem">
         <a href="#" onclick="abrirEsqueciPassword(); return false" style="font-size:0.8rem;color:#888">Esqueci a password</a>
       </div>
     </div>
     <div id="tab-esqueci" style="display:none">
-      <div class="field"><label>Email</label><input type="email" id="esqueci-email"></div>
-      <button class="btn-primary full" onclick="enviarEsqueciPassword()">Enviar instruções</button>
+      <div class="field"><label>Email</label><input type="email" id="esqueci-email" required></div>
+      <button class="btn-primary full" id="btn-esqueci" onclick="enviarEsqueciPassword()">Enviar instruções</button>
       <div style="text-align:center;margin-top:0.75rem">
         <a href="#" onclick="trocarTab('login'); return false" style="font-size:0.8rem;color:#888">Voltar a entrar</a>
       </div>
     </div>
     <div id="tab-registo" style="display:none">
-      <div class="field"><label>Nome</label><input type="text" id="reg-nome"></div>
-      <div class="field"><label>Email</label><input type="email" id="reg-email"></div>
-      <div class="field"><label>Password</label><input type="password" id="reg-password"></div>
-      <button class="btn-primary full" onclick="fazerRegisto()">Criar conta</button>
+      <div class="field"><label>Nome</label><input type="text" id="reg-nome" required></div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email" required></div>
+      <div class="field field-com-toggle"><label>Password</label><input type="password" id="reg-password" required minlength="8">
+        <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('reg-password', this)"></button>
+        <p class="ajuda" id="ajuda-reg-password">Mínimo de 8 caracteres.</p>
+      </div>
+      <button class="btn-primary full" id="btn-registo" onclick="fazerRegisto()">Criar conta</button>
     </div>
     <div class="auth-error" id="auth-erro"></div>
     <div id="reset-screen" style="display:none">
-      <div class="field"><label>Nova password</label><input type="password" id="reset-password-nova"></div>
-      <button class="btn-primary full" onclick="submeterRedefinicao()">Guardar nova password</button>
+      <div class="field field-com-toggle"><label>Nova password</label><input type="password" id="reset-password-nova" required minlength="8">
+        <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('reset-password-nova', this)"></button>
+        <p class="ajuda" id="ajuda-reset-password-nova">Mínimo de 8 caracteres.</p>
+      </div>
+      <button class="btn-primary full" id="btn-reset" onclick="submeterRedefinicao()">Guardar nova password</button>
       <div class="auth-error" id="reset-erro"></div>
     </div>
   </div>
@@ -245,7 +342,7 @@
         </div>
         <div class="field"><label>Período</label><input type="text" id="ct-periodo" placeholder="Selecionar datas"></div>
         <button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>
-      </div>
+       </div>
       <div class="filtros-limpar-linha" id="ct-filtros-limpar-linha"><span class="filtros-limpar" onclick="limparFiltrosContas()">Limpar filtros</span></div>
 
       <div class="cards-grid" id="ct-card-total"></div>
@@ -257,12 +354,12 @@
 
       <div class="table-wrap">
         <table>
-          <thead><tr>
-            <th onclick="ordenarContas('nome')" style="cursor:pointer">Nome ⇕</th>
-            <th onclick="ordenarContas('banco')" style="cursor:pointer">Banco ⇕</th>
-            <th onclick="ordenarContas('tipo')" style="cursor:pointer">Tipo ⇕</th>
-            <th onclick="ordenarContas('iban')" style="cursor:pointer">IBAN ⇕</th>
-            <th onclick="ordenarContas('saldo')" style="text-align:right;cursor:pointer">Saldo ⇕</th>
+          <thead><tr id="cabecalho-contas">
+            <th onclick="ordenarContas('nome')" data-campo="nome" style="cursor:pointer">Nome <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('banco')" data-campo="banco" style="cursor:pointer">Banco <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('tipo')" data-campo="tipo" style="cursor:pointer">Tipo <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('iban')" data-campo="iban" style="cursor:pointer">IBAN <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('saldo')" data-campo="saldo" style="text-align:right;cursor:pointer">Saldo <span class="icone-ordenacao"></span></th>
             <th></th>
           </tr></thead>
           <tbody id="tabela-contas"></tbody>
@@ -302,14 +399,13 @@
       <div class="chart-full">
         <div class="section-header">
           <h3 style="margin:0">Detalhe por Grupo</h3>
-          <div style="display:flex;gap:0.5rem;align-items:center">
-            <button class="btn-sm" onclick="expandirTodosGrupos()">▼</button>
-            <button class="btn-sm" onclick="recolherTodosGrupos()">▲</button>
-            <div class="toggle-tipo">
-              <button id="btn-tipo-in" class="active in" onclick="trocarTipo('in')">Entradas</button>
-              <button id="btn-tipo-out" class="out" onclick="trocarTipo('out')">Saídas</button>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <button class="btn-sm" id="btn-expandir-recolher" onclick="alternarExpandirTodos()"></button>
+              <div class="toggle-tipo">
+                <button id="btn-tipo-in" class="active in" onclick="trocarTipo('in')">Entradas</button>
+                <button id="btn-tipo-out" class="out" onclick="trocarTipo('out')">Saídas</button>
+              </div>
             </div>
-          </div>
         </div>
         <div id="lista-grupos"></div>
         <div style="display:flex;justify-content:space-between;padding-top:0.75rem;border-top:1px solid #e5e5e5;margin-top:0.5rem;font-size:0.85rem;color:#888">
@@ -333,12 +429,12 @@
         <h3>Saídas Recorrentes</h3>
         <div class="table-wrap" style="margin-bottom:0">
           <table>
-            <thead><tr>
-              <th onclick="ordenarRecorrentes('descricao')" style="cursor:pointer">Descrição ⇕</th>
-              <th onclick="ordenarRecorrentes('categoria')" style="cursor:pointer">Categoria ⇕</th>
-              <th onclick="ordenarRecorrentes('valor_medio')" style="text-align:right;cursor:pointer">Valor Médio ⇕</th>
-              <th onclick="ordenarRecorrentes('intervalo_medio_dias')" style="cursor:pointer">Frequência ⇕</th>
-              <th onclick="ordenarRecorrentes('proxima_data_estimada')" style="cursor:pointer">Próxima Data Estimada ⇕</th>
+            <thead><tr id="cabecalho-recorrentes">
+              <th onclick="ordenarRecorrentes('descricao')" data-campo="descricao" style="cursor:pointer">Descrição <span class="icone-ordenacao"></span></th>
+              <th onclick="ordenarRecorrentes('categoria')" data-campo="categoria" style="cursor:pointer">Categoria <span class="icone-ordenacao"></span></th>
+              <th onclick="ordenarRecorrentes('valor_medio')" data-campo="valor_medio" style="text-align:right;cursor:pointer">Valor Médio <span class="icone-ordenacao"></span></th>
+              <th onclick="ordenarRecorrentes('intervalo_medio_dias')" data-campo="intervalo_medio_dias" style="cursor:pointer">Frequência <span class="icone-ordenacao"></span></th>
+              <th onclick="ordenarRecorrentes('proxima_data_estimada')" data-campo="proxima_data_estimada" style="cursor:pointer">Próxima Data Estimada <span class="icone-ordenacao"></span></th>
             </tr></thead>
             <tbody id="tabela-recorrentes"></tbody>
           </table>
@@ -374,12 +470,12 @@
 
       <div class="table-wrap">
         <table>
-          <thead><tr>
-            <th onclick="ordenarMovimentos('data')" style="cursor:pointer">Data ⇕</th>
-            <th onclick="ordenarMovimentos('descricao')" style="cursor:pointer">Descrição ⇕</th>
-            <th onclick="ordenarMovimentos('conta')" style="cursor:pointer">Conta ⇕</th>
-            <th onclick="ordenarMovimentos('categoria')" style="cursor:pointer">Categoria ⇕</th>
-            <th onclick="ordenarMovimentos('valor')" style="text-align:right;cursor:pointer">Valor ⇕</th>
+          <thead><tr id="cabecalho-movimentos">
+            <th onclick="ordenarMovimentos('data')" data-campo="data" style="cursor:pointer">Data <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarMovimentos('descricao')" data-campo="descricao" style="cursor:pointer">Descrição <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarMovimentos('conta')" data-campo="conta" style="cursor:pointer">Conta <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarMovimentos('categoria')" data-campo="categoria" style="cursor:pointer">Categoria <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarMovimentos('valor')" data-campo="valor" style="text-align:right;cursor:pointer">Valor <span class="icone-ordenacao"></span></th>
             <th></th>
           </tr></thead>
           <tbody id="tabela-movimentos"></tbody>
@@ -395,36 +491,64 @@
 
     <!-- ── PERFIL ───────────────────────────────────── -->
     <div class="page" id="page-perfil">
-      <div class="section-header"><div class="section-title">Perfil</div></div>
-      <div class="table-wrap" style="padding:1.25rem">
-        <div class="field"><label>Nome</label><input type="text" id="perfil-nome"></div>
-        <div class="field"><label>Email</label><input type="email" id="perfil-email"></div>
-        <button class="btn-primary" onclick="guardarPerfil()">Guardar</button>
-      </div>
-
-      <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Alterar Password</div></div>
-      <div class="table-wrap" style="padding:1.25rem">
-        <div class="field"><label>Password Atual</label><input type="password" id="perfil-pw-atual"></div>
-        <div class="field"><label>Nova Password</label><input type="password" id="perfil-pw-nova"></div>
-        <button class="btn-primary" onclick="guardarPassword()">Atualizar Password</button>
-      </div>
-
-      <div class="section-header" style="margin-top:1.5rem">
-        <div class="section-title">Gestão de Categorias</div>
-        <div class="toggle-tipo">
-          <button id="cat-tipo-in" class="active in" onclick="trocarTipoCategorias('in')">Entradas</button>
-          <button id="cat-tipo-out" class="out" onclick="trocarTipoCategorias('out')">Saídas</button>
+      <div class="perfil-layout">
+        <div class="perfil-sidebar">
+          <div class="perfil-sidebar-item active" data-secao="geral" onclick="trocarSecaoPerfil('geral')">
+            <span class="icone" id="icone-sidebar-geral"></span> Geral
+          </div>
+          <div class="perfil-sidebar-item" data-secao="categorias" onclick="trocarSecaoPerfil('categorias')">
+            <span class="icone" id="icone-sidebar-categorias"></span> Categorias
+          </div>
         </div>
-      </div>
-      <div class="table-wrap" style="padding:1.25rem">
-        <div id="lista-categorias-gestao"></div>
-        <button class="btn-sm" style="margin-top:0.75rem" onclick="abrirModalGrupo()">+ Adicionar Grupo</button>
-      </div>
 
-      <div class="section-header" style="margin-top:1.5rem"><div class="section-title" style="color:#c0392b">Zona de Perigo</div></div>
-      <div class="table-wrap" style="padding:1.25rem">
-        <p class="danger-zone-text">Eliminar a conta remove permanentemente todos os teus dados — contas, movimentos e categorias. Não há forma de recuperar isto depois.</p>
-        <button class="btn-danger" onclick="eliminarContaUtilizador()">Eliminar a minha conta</button>
+        <div class="perfil-conteudo">
+          <div class="perfil-secao active" id="perfil-secao-geral">
+            <h2 class="perfil-secao-titulo">Geral</h2>
+            <p class="perfil-secao-subtitulo">Gere os dados do teu perfil.</p>
+
+            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Perfil</div></div>
+            <div class="table-wrap" style="padding:1.25rem">
+              <div class="field"><label>Nome</label><input type="text" id="perfil-nome" required></div>
+              <div class="field"><label>Email</label><input type="email" id="perfil-email" required></div>
+              <button class="btn-primary" id="btn-guardar-perfil" onclick="guardarPerfil()">Guardar</button>
+            </div>
+
+            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Alterar Password</div></div>
+            <div class="table-wrap" style="padding:1.25rem">
+              <div class="field field-com-toggle"><label>Password Atual</label><input type="password" id="perfil-pw-atual" required>
+                <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('perfil-pw-atual', this)"></button>
+              </div>
+              <div class="field field-com-toggle"><label>Nova Password</label><input type="password" id="perfil-pw-nova" required minlength="8">
+                <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('perfil-pw-nova', this)"></button>
+                <p class="ajuda" id="ajuda-perfil-pw-nova">Mínimo de 8 caracteres.</p>
+              </div>
+              <button class="btn-primary" id="btn-guardar-password" onclick="guardarPassword()">Atualizar Password</button>
+            </div>
+
+            <div class="section-header" style="margin-top:1.5rem"><div class="section-title" style="color:var(--color-negativo)">Zona de Perigo</div></div>
+            <div class="table-wrap" style="padding:1.25rem">
+              <p class="danger-zone-text">Eliminar a conta remove permanentemente todos os teus dados — contas, movimentos e categorias. Não há forma de recuperar isto depois.</p>
+              <button class="btn-danger" onclick="eliminarContaUtilizador()">Eliminar a minha conta</button>
+            </div>
+          </div>
+
+          <div class="perfil-secao" id="perfil-secao-categorias">
+            <h2 class="perfil-secao-titulo">Categorias</h2>
+            <p class="perfil-secao-subtitulo">Organiza os grupos e categorias usados nos teus movimentos.</p>
+
+            <div class="section-header" style="margin-top:1.5rem">
+              <div class="section-title">Gestão de Categorias</div>
+              <div class="toggle-tipo">
+                <button id="cat-tipo-in" class="active in" onclick="trocarTipoCategorias('in')">Entradas</button>
+                <button id="cat-tipo-out" class="out" onclick="trocarTipoCategorias('out')">Saídas</button>
+              </div>
+            </div>
+            <div class="table-wrap" style="padding:1.25rem">
+              <div id="lista-categorias-gestao"></div>
+              <button class="btn-sm" style="margin-top:0.75rem" onclick="abrirModalGrupo()">+ Adicionar Grupo</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -459,7 +583,7 @@
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
     <input type="hidden" id="conta-id">
     <div class="field"><label>Nome da Conta</label><input type="text" id="conta-nome" required></div>
-    <div class="field"><label>Banco</label><input type="text" id="conta-banco" required></div>
+    <div class="field"><label>Banco</label><input type="text" id="conta-banco" list="lista-bancos" required></div>
     <div class="field"><label>Tipo</label>
       <select id="conta-tipo">
         <option value="corrente">Conta Corrente</option>
@@ -566,6 +690,16 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <p id="confirm-modal-texto" style="font-size:0.9rem;color:var(--color-text);margin-bottom:1.25rem"></p>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="confirm-modal-btn-cancelar">Cancelar</button>
+      <button class="btn-primary" id="confirm-modal-btn-confirmar">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 // CONFIGURAÇÃO E ESTADO GLOBAL
@@ -605,11 +739,29 @@ let elimAtual = null
 let pickerMovData = null
 let pickerReconc  = null
 
+let timerInatividade = null
+
 const ICONE_OLHO_ABERTO  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
 const ICONE_OLHO_FECHADO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
 const ICONE_SUGESTAO_LLM = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg>`
 const ICONE_SEM_MATCH = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.1 9a3 3 0 1 1 4.4 2.6c-.8.5-1.5 1-1.5 2.4"></path><path d="M12 17h.01"></path></svg>`
 const ICONE_PROTEGIDA = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+const ICONE_TOAST_SUCESSO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
+const ICONE_TOAST_ERRO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
+const ICONE_ORDENAR_NEUTRO = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"></path><path d="M16 15l-4 4-4-4"></path></svg>`
+const ICONE_ORDENAR_ASC = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>`
+const ICONE_ORDENAR_DESC = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M19 12l-7 7-7-7"></path></svg>`
+const TEMPO_INATIVIDADE_MS = 15 * 60 * 1000 // 15 minutos
+const EVENTOS_ATIVIDADE = ["mousemove", "keydown", "click", "scroll", "touchstart"]
+const ICONE_PERFIL_GERAL = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`
+const ICONE_PERFIL_CATEGORIAS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83Z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg>`
+const BANCOS_PT_COMUNS = [
+  "Caixa Geral de Depósitos", "Millennium BCP", "Novo Banco", "Santander Totta",
+  "BPI", "Crédito Agrícola", "ActivoBank", "Bankinter", "Banco CTT",
+  "Banco Best", "Revolut", "N26",
+]
+const ICONE_SETA_BAIXO = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`
+const ICONE_SETA_CIMA = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>`
 
 // ═══════════════════════════════════════════════════════════
 // UTILS
@@ -677,6 +829,102 @@ function fecharModal() {
   document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
 }
 
+function mostrarToast(mensagem, tipo = "info") {
+  const container = document.getElementById("toast-container")
+  const toast = document.createElement("div")
+  toast.className = `toast ${tipo}`
+  const icone = tipo === "sucesso" ? ICONE_TOAST_SUCESSO : tipo === "erro" ? ICONE_TOAST_ERRO : ""
+  toast.innerHTML = `
+    ${icone ? `<span class="icone">${icone}</span>` : ""}
+    <span class="texto">${mensagem}</span>
+    <button class="fechar" onclick="this.parentElement.remove()">✕</button>`
+  container.appendChild(toast)
+  setTimeout(() => toast.remove(), 4000)
+}
+
+function mensagemDeErro(d) {
+  if (typeof d.detail === "string") return d.detail
+  if (Array.isArray(d.detail) && d.detail[0]?.msg) return d.detail[0].msg
+  return "Ocorreu um erro inesperado."
+}
+
+function confirmarAcao(mensagem, { textoConfirmar = "Confirmar", perigo = false } = {}) {
+  return new Promise(resolve => {
+    document.getElementById("confirm-modal-texto").textContent = mensagem
+    const btnConfirmar = document.getElementById("confirm-modal-btn-confirmar")
+    const btnCancelar  = document.getElementById("confirm-modal-btn-cancelar")
+    btnConfirmar.textContent = textoConfirmar
+    btnConfirmar.className = perigo ? "btn-danger" : "btn-primary"
+    document.getElementById("confirm-modal").classList.add("open")
+
+    function limpar() {
+      document.getElementById("confirm-modal").classList.remove("open")
+      btnConfirmar.removeEventListener("click", onConfirmar)
+      btnCancelar.removeEventListener("click", onCancelar)
+    }
+    function onConfirmar() { limpar(); resolve(true) }
+    function onCancelar() { limpar(); resolve(false) }
+    btnConfirmar.addEventListener("click", onConfirmar)
+    btnCancelar.addEventListener("click", onCancelar)
+  })
+}
+function atualizarIconesOrdenacao(idCabecalho, estado) {
+  document.querySelectorAll(`#${idCabecalho} th[data-campo]`).forEach(th => {
+    const icone = th.querySelector(".icone-ordenacao")
+    if (!icone) return
+    if (th.dataset.campo === estado.campo) {
+      th.classList.add("ordenado")
+      icone.innerHTML = estado.direcao === 1 ? ICONE_ORDENAR_ASC : ICONE_ORDENAR_DESC
+    } else {
+      th.classList.remove("ordenado")
+      icone.innerHTML = ICONE_ORDENAR_NEUTRO
+    }
+  })
+}
+function alternarVisibilidadePassword(idCampo, botao) {
+  const input = document.getElementById(idCampo)
+  const aRevelar = input.type === "password"
+  input.type = aRevelar ? "text" : "password"
+  botao.innerHTML = aRevelar ? ICONE_OLHO_ABERTO : ICONE_OLHO_FECHADO
+}
+
+function reiniciarTimerInatividade() {
+  clearTimeout(timerInatividade)
+  timerInatividade = setTimeout(logoutPorInatividade, TEMPO_INATIVIDADE_MS)
+}
+
+function iniciarDetecaoInatividade() {
+  EVENTOS_ATIVIDADE.forEach(evento => document.addEventListener(evento, reiniciarTimerInatividade))
+  reiniciarTimerInatividade()
+}
+
+function pararDetecaoInatividade() {
+  clearTimeout(timerInatividade)
+  EVENTOS_ATIVIDADE.forEach(evento => document.removeEventListener(evento, reiniciarTimerInatividade))
+}
+
+function logoutPorInatividade() {
+  logout()
+  mostrarToast("Sessão terminada por inatividade.", "info")
+}
+
+function trocarSecaoPerfil(secao) {
+  document.querySelectorAll(".perfil-sidebar-item").forEach(item => item.classList.toggle("active", item.dataset.secao === secao))
+  document.querySelectorAll(".perfil-secao").forEach(el => el.classList.toggle("active", el.id === `perfil-secao-${secao}`))
+}
+
+function mostrarAjudaAoEscrever(idInput, idAjuda) {
+  const input = document.getElementById(idInput)
+  const ajuda = document.getElementById(idAjuda)
+  input.addEventListener("input", () => {
+    ajuda.style.display = input.value.length > 0 ? "block" : "none"
+  })
+}
+function atualizarListaBancos() {
+  const usados = contasCache.map(c => c.banco)
+  const todos = [...new Set([...BANCOS_PT_COMUNS, ...usados])].sort()
+  document.getElementById("lista-bancos").innerHTML = todos.map(b => `<option value="${b}"></option>`).join("")
+}
 
 // ═══════════════════════════════════════════════════════════
 // VALIDAÇÃO DE FORMULÁRIOS (usado por todos os modais)
@@ -850,6 +1098,7 @@ function guardarSessao(token, nome) {
   iniciarApp()
 }
 function logout() {
+  pararDetecaoInatividade()
   localStorage.clear(); TOKEN = null; NOME = null
   document.getElementById("login-email").value = ""
   document.getElementById("login-password").value = ""
@@ -866,7 +1115,7 @@ async function enviarEsqueciPassword() {
   const email = document.getElementById("esqueci-email").value
   const r = await apiPost("/esqueci-password", { email })
   const d = await r.json()
-  alert(d.mensagem)
+  mostrarToast(d.mensagem, "info")
   trocarTab("login")
 }
 function verificarTokenReset() {
@@ -876,6 +1125,7 @@ function verificarTokenReset() {
   window.RESET_TOKEN = token
   document.querySelectorAll(".auth-card > *:not(#reset-screen)").forEach(el => el.style.display = "none")
   document.getElementById("reset-screen").style.display = "block"
+  ligarValidacaoFormulario(["reset-password-nova"], "btn-reset")   // ← nova linha
   return true
 }
 async function submeterRedefinicao() {
@@ -883,11 +1133,11 @@ async function submeterRedefinicao() {
   const r = await apiPost("/redefinir-password", { token: window.RESET_TOKEN, password_nova })
   if (!r.ok) {
     const d = await r.json()
-    document.getElementById("reset-erro").textContent = d.detail
+    document.getElementById("reset-erro").textContent = mensagemDeErro(d)
     return
   }
-  alert("Password redefinida com sucesso. Já podes entrar.")
-  window.location.href = "/static/index.html"
+  mostrarToast("Password redefinida com sucesso. Já podes entrar.", "sucesso")
+  setTimeout(() => { window.location.href = "/static/index.html" }, 1200)
 }
 
 
@@ -904,6 +1154,7 @@ async function iniciarApp() {
   document.getElementById("app-screen").style.display = "block"
 
   contasCache     = await api("/contas")
+  atualizarListaBancos()
   categoriasCache = await api("/categorias")
 
   const optionsContas = construirOptionsContas()
@@ -922,6 +1173,7 @@ async function iniciarApp() {
 
   carregarPagina(pagina)
   atualizarBadgePendentes()
+  iniciarDetecaoInatividade()
 }
 
 function restaurarFiltros() {
@@ -1165,6 +1417,7 @@ async function carregarContas() {
   atualizarVisibilidadeLimparContas()
 
   contasCache = await api("/contas")
+  atualizarListaBancos()  
   atualizarFiltrosDeConta()
 
   const params = new URLSearchParams()
@@ -1262,6 +1515,7 @@ function renderizarTabelaContas() {
       return 0
     })
   }
+  atualizarIconesOrdenacao("cabecalho-contas", ordenacaoContas)   // ← nova linha
 
   const tipos = { corrente: "Conta Corrente", poupanca: "Conta Poupança", prazo: "Conta a Prazo", numerario: "Numerário", outro: "Outro" }
   const tb = document.getElementById("tabela-contas")
@@ -1336,7 +1590,7 @@ async function guardarConta() {
 }
 
 async function eliminarConta(id) {
-  if (!confirm("Eliminar esta conta?")) return
+  if (!(await confirmarAcao("Eliminar esta conta?", { perigo: true }))) return
 
   let r = await apiDelete("/contas/" + id)
   if (r.ok) {
@@ -1345,17 +1599,16 @@ async function eliminarConta(id) {
   }
 
   const d = await r.json()
-  if (!confirm(d.detail + " Continuar e eliminar tudo permanentemente?")) return
+  if (!(await confirmarAcao(d.detail + " Continuar e eliminar tudo permanentemente?", { textoConfirmar: "Eliminar tudo", perigo: true }))) return
 
   r = await apiDelete("/contas/" + id + "?forcar=true")
   if (!r.ok) {
     const erro = await r.json()
-    alert(erro.detail)
+    mostrarToast(erro.detail, "erro")
     return
   }
   carregarContas()
 }
-
 
 // ═══════════════════════════════════════════════════════════
 // RECONCILIAÇÕES DE SALDO
@@ -1428,7 +1681,7 @@ async function guardarReconciliacao() {
     : await apiPost("/contas/" + contaId + "/ajustes-saldo", body)
   if (!r.ok) {
     const d = await r.json()
-    alert(d.detail)
+    mostrarToast(mensagemDeErro(d), "erro")
     return
   }
   esconderFormReconciliacao()
@@ -1437,12 +1690,12 @@ async function guardarReconciliacao() {
 }
 
 async function eliminarReconciliacao(id) {
-  if (!confirm("Eliminar esta reconciliação?")) return
+  if (!(await confirmarAcao("Eliminar esta reconciliação?", { perigo: true }))) return
   const contaId = document.getElementById("reconc-conta-id").value
   const r = await apiDelete("/ajustes-saldo/" + id)
   if (!r.ok) {
     const d = await r.json()
-    alert(d.detail)
+    mostrarToast(mensagemDeErro(d), "erro")
     return
   }
   await carregarReconciliacoes(contaId)
@@ -1586,11 +1839,16 @@ function renderizarGrupos() {
 function toggleGrupo(gi) {
   document.getElementById("sub-grupo-" + gi).classList.toggle("visible")
 }
-function expandirTodosGrupos() {
-  document.querySelectorAll('.sub-grupo').forEach(el => el.classList.add('visible'))
+let gruposExpandidos = false
+
+function alternarExpandirTodos() {
+  gruposExpandidos = !gruposExpandidos
+  document.querySelectorAll('.sub-grupo').forEach(el => el.classList.toggle('visible', gruposExpandidos))
+  atualizarIconeExpandirRecolher()
 }
-function recolherTodosGrupos() {
-  document.querySelectorAll('.sub-grupo').forEach(el => el.classList.remove('visible'))
+
+function atualizarIconeExpandirRecolher() {
+  document.getElementById("btn-expandir-recolher").innerHTML = gruposExpandidos ? ICONE_SETA_CIMA : ICONE_SETA_BAIXO
 }
 
 function ordenarRecorrentes(campo) {
@@ -1620,6 +1878,7 @@ function renderizarTabelaRecorrentes() {
       return 0
     })
   }
+  atualizarIconesOrdenacao("cabecalho-recorrentes", ordenacaoRecorrentes)
 
   const tb = document.getElementById("tabela-recorrentes")
   tb.innerHTML = ""
@@ -1684,6 +1943,7 @@ function renderizarTabelaMovimentos() {
   if (pesquisa) {
     lista = lista.filter(m => m.descricao.toLowerCase().includes(pesquisa))
   }
+  atualizarIconesOrdenacao("cabecalho-movimentos", ordenacaoMovimentos)  
 
   const { campo, direcao } = ordenacaoMovimentos
   if (campo) {
@@ -1779,7 +2039,7 @@ async function guardarMovimento() {
 
   if (!r.ok) {
     const d = await r.json()
-    alert(d.detail)
+    mostrarToast(mensagemDeErro(d), "erro")
     return
   }
 
@@ -1788,10 +2048,11 @@ async function guardarMovimento() {
 }
 
 async function eliminarMovimento(id) {
-  if (!confirm("Eliminar este movimento?")) return
+  if (!(await confirmarAcao("Eliminar este movimento?", { perigo: true }))) return
   await apiDelete("/movimentos/" + id)
   carregarMovimentos()
 }
+
 
 async function atualizarBadgePendentes() {
   const r = await api("/movimentos/pendentes/contagem")
@@ -1841,14 +2102,14 @@ async function confirmarMovimento(id) {
   const r = await apiPost(`/movimentos/${id}/confirmar`, {})
   if (!r.ok) {
     const d = await r.json()
-    alert(d.detail)
+    mostrarToast(mensagemDeErro(d), "erro")
     return
   }
   carregarMovimentos()
 }
 
 async function confirmarTodosPendentes() {
-  if (!confirm("Confirmar todos os movimentos categorizados automaticamente?")) return
+  if (!(await confirmarAcao("Confirmar todos os movimentos categorizados automaticamente?"))) return
   await apiPost("/movimentos/confirmar-todos", {})
   pendentesAtivo = false
   carregarMovimentos()
@@ -1861,6 +2122,8 @@ async function carregarPerfil() {
   const dados = await api("/me")
   document.getElementById("perfil-nome").value  = dados.nome
   document.getElementById("perfil-email").value = dados.email
+  ligarValidacaoFormulario(["perfil-nome", "perfil-email"], "btn-guardar-perfil")
+  ligarValidacaoFormulario(["perfil-pw-atual", "perfil-pw-nova"], "btn-guardar-password")
   await carregarArvoreCategorias()
 }
 
@@ -1869,10 +2132,14 @@ async function guardarPerfil() {
   const email = document.getElementById("perfil-email").value
   const r = await apiPut("/me", { nome, email })
   const d = await r.json()
+  if (!r.ok) {
+    mostrarToast(mensagemDeErro(d), "erro")
+    return
+  }
   NOME = d.nome
   localStorage.setItem("nome", NOME)
   document.getElementById("nav-nome").textContent = NOME
-  alert("Perfil atualizado.")
+  mostrarToast("Perfil atualizado.", "sucesso")
 }
 
 async function guardarPassword() {
@@ -1881,17 +2148,18 @@ async function guardarPassword() {
   const r = await apiPut("/me/password", { password_atual, password_nova })
   if (!r.ok) {
     const d = await r.json()
-    alert(d.detail)
+    mostrarToast(mensagemDeErro(d), "erro")
     return
   }
   document.getElementById("perfil-pw-atual").value = ""
   document.getElementById("perfil-pw-nova").value = ""
-  alert("Password atualizada.")
+  ligarValidacaoFormulario(["perfil-pw-atual", "perfil-pw-nova"], "btn-guardar-password")   // ← nova linha
+  mostrarToast("Password atualizada.", "sucesso")
 }
 
 async function eliminarContaUtilizador() {
-  if (!confirm("Isto elimina PERMANENTEMENTE a tua conta e todos os dados. Tens a certeza?")) return
-  if (!confirm("Última confirmação — não há forma de recuperar isto depois. Continuar?")) return
+  if (!(await confirmarAcao("Isto elimina PERMANENTEMENTE a tua conta e todos os dados. Tens a certeza?", { perigo: true }))) return
+  if (!(await confirmarAcao("Última confirmação — não há forma de recuperar isto depois. Continuar?", { textoConfirmar: "Eliminar definitivamente", perigo: true }))) return
   await apiDelete("/me")
   logout()
 }
@@ -2087,17 +2355,26 @@ async function confirmarEliminacaoForcada() {
   aposMudarCategorias()
 }
 
-async function confirmarEliminacaoComMigracao() {
-  const destino = document.getElementById("elim-migrar-para").value
-  await apiDelete("/categorias/" + elimAtual + "?migrar_para_id=" + destino)
+async function confirmarEliminacaoForcada() {
+  if (!(await confirmarAcao("Isto vai eliminar também os movimentos associados, de forma permanente. Continuar?", { perigo: true }))) return
+  await apiDelete("/categorias/" + elimAtual + "?forcar=true")
   fecharModal()
   aposMudarCategorias()
 }
 
-
 // ═══════════════════════════════════════════════════════════
 // INÍCIO
 // ═══════════════════════════════════════════════════════════
+document.querySelectorAll(".toggle-password").forEach(btn => btn.innerHTML = ICONE_OLHO_FECHADO)
+document.getElementById("icone-sidebar-geral").innerHTML = ICONE_PERFIL_GERAL
+document.getElementById("icone-sidebar-categorias").innerHTML = ICONE_PERFIL_CATEGORIAS
+mostrarAjudaAoEscrever("reg-password", "ajuda-reg-password")
+mostrarAjudaAoEscrever("perfil-pw-nova", "ajuda-perfil-pw-nova")
+mostrarAjudaAoEscrever("reset-password-nova", "ajuda-reset-password-nova")
+ligarValidacaoFormulario(["login-email", "login-password"], "btn-login")
+ligarValidacaoFormulario(["reg-nome", "reg-email", "reg-password"], "btn-registo")
+ligarValidacaoFormulario(["esqueci-email"], "btn-esqueci")
+atualizarIconeExpandirRecolher()
 if (!verificarTokenReset() && TOKEN) { iniciarApp() }
 </script>
 </body>

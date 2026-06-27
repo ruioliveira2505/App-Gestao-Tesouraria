@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from app.core.config import settings
 from app.core.limiter import limiter
@@ -63,7 +63,7 @@ def login(request: Request, dados: LoginInput):
 
 @router.post("/esqueci-password")
 @limiter.limit("3/hour")
-def esqueci_password(request: Request, dados: EsqueciPasswordInput):
+def esqueci_password(request: Request, dados: EsqueciPasswordInput, background_tasks: BackgroundTasks):
     conn = get_connection()
     cursor = conn.cursor()
     try:
@@ -76,7 +76,8 @@ def esqueci_password(request: Request, dados: EsqueciPasswordInput):
     if row:
         token = criar_token({"sub": str(row[0]), "tipo": "reset"}, timedelta(hours=1))
         link = f"{settings.BASE_URL}/static/index.html?token={token}"
-        enviar_email(
+        background_tasks.add_task(
+            enviar_email,
             dados.email,
             "Recuperar password — Tesouraria",
             f"Clica neste link para definires uma password nova (válido por 1 hora):\n\n{link}"

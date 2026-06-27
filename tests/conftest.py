@@ -1,16 +1,40 @@
 import os
-os.environ["DB_NAME"] = "tesouraria_test"
+import subprocess
+from pathlib import Path
 
-from datetime import date, timedelta
+os.environ["DB_NAME"] = "tesouraria_test"
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.db.database import get_connection
 from app.main import app
 
 
+CAMINHO_SCHEMA = Path(__file__).resolve().parent.parent / "scripts" / "schema.sql"
+
+
+def _psql(*args):
+    ambiente = {**os.environ, "PGPASSWORD": settings.DB_PASSWORD}
+    subprocess.run(
+        ["psql", "-h", settings.DB_HOST, "-p", settings.DB_PORT, "-U", settings.DB_USER, *args],
+        check=True, env=ambiente, capture_output=True, text=True,
+    )
+
+
 # ─── fixtures ─────────────────────────────────────────────────────────────────
+
+@pytest.fixture(scope="session", autouse=True)
+def recriar_estrutura_bd_teste():
+    """Corre uma vez por sessão de pytest: apaga e recria a BD de testes a
+    partir de scripts/schema.sql. Assim, qualquer ALTER TABLE/CREATE INDEX
+    que apliques à BD de produção só precisa de ser refletido em schema.sql
+    — a BD de testes sincroniza-se sozinha na próxima vez que correres pytest."""
+    assert settings.DB_NAME == "tesouraria_test", "Isto só pode correr contra a BD de teste!"
+    _psql("-d", settings.DB_NAME, "-c", "DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+    _psql("-d", settings.DB_NAME, "-f", str(CAMINHO_SCHEMA))
+
 
 @pytest.fixture(autouse=True)
 def limpar_bd():
@@ -53,34 +77,12 @@ def conta_id(client, headers_autenticado):
 
 @pytest.fixture
 def categoria_id(client, headers_autenticado):
-    return client.get("/categorias", headers=headers_autenticado).json()[0]["id"]
+    categorias = client.get("/categorias", headers=headers_autenticado).json()
+    return next(c["id"] for c in categorias if not c["eh_recebimento"])
 
 
-# ─── helpers partilhados (funções normais, não fixtures) ──────────────────────
-
-def hoje():
-    return str(date.today())
-
-
-def dias_atras(n):
-    return str(date.today() - timedelta(days=n))
-
-
-def id_categoria(client, headers, nome_grupo, nome_categoria):
-    arvore = client.get("/categorias/arvore", headers=headers).json()
-    grupo = next(g for g in arvore if g["nome"] == nome_grupo)
-    return next(c["id"] for c in grupo["categorias"] if c["nome"] == nome_categoria)
-
-
-def criar_movimento(client, headers, conta_id, categoria_id, valor=-50.0, data=None, descricao="Teste"):
-    r = client.post("/movimentos", json={
-        "conta_id": conta_id, "data": data or hoje(), "descricao": descricao,
-        "valor": valor, "categoria_id": categoria_id,
-    }, headers=headers)
-    assert r.status_code == 200, r.json()
-    movimentos = client.get("/movimentos", headers=headers).json()
-    return next(m for m in movimentos if m["descricao"] == descricao)["id"]
-
+# gerar novo schema.sql semper que altero base de dados de desenvolvimento
+# pg_dump --schema-only --no-owner -d tesouraria > scripts/schema.sql
 
 # correr testes
 # python -m pytest tests/ -v

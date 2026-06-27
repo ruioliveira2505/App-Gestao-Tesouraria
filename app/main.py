@@ -1,12 +1,19 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
 from app.core.limiter import limiter
+from app.core.errors import validation_exception_handler
+from app.db.database import get_connection
 from app.routers import auth, perfil, contas, categorias, movimentos, stats
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 app = FastAPI()
 
@@ -19,6 +26,7 @@ app.add_middleware(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -33,6 +41,16 @@ app.include_router(stats.router)
 @app.get("/")
 def raiz():
     return {"status": "ok", "projeto": "tesouraria"}
+
+
+@app.get("/health")
+def health():
+    try:
+        conn = get_connection()
+        conn.close()
+        return {"status": "ok", "database": "ok"}
+    except Exception:
+        return {"status": "degraded", "database": "unreachable"}
 
 # arrancar servidor
 # uvicorn app.main:app --reload

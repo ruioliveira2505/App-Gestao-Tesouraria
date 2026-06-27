@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict lNAPobhyJpO6YWjwcgzUOiURXX8rRGjzcDDxL49RO4m1SOdFprEabDbBvg6tIrh
+\restrict 5iQJRYQpXZxlHMZ6CNpoCafRhdrWRAXbwaQZkTaPUHQTuDA6amDrGe3WuOIlOPS
 
 -- Dumped from database version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
@@ -335,6 +335,13 @@ CREATE INDEX idx_movimentos_data ON public.movimentos USING btree (data);
 
 
 --
+-- Name: idx_movimentos_utilizador_data; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_movimentos_utilizador_data ON public.movimentos USING btree (utilizador_id, data DESC);
+
+
+--
 -- Name: ajustes_saldo ajustes_saldo_conta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -410,5 +417,5 @@ ALTER TABLE ONLY public.movimentos
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lNAPobhyJpO6YWjwcgzUOiURXX8rRGjzcDDxL49RO4m1SOdFprEabDbBvg6tIrh
+\unrestrict 5iQJRYQpXZxlHMZ6CNpoCafRhdrWRAXbwaQZkTaPUHQTuDA6amDrGe3WuOIlOPS
 

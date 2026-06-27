@@ -1,5 +1,5 @@
 from app.db.database import get_connection
-from conftest import hoje
+from tests.helpers import hoje
 
 
 # ═══════════════════════════════════════════════════════════
@@ -56,20 +56,20 @@ def test_atualizar_email_para_email_ja_existente_falha_graciosamente(client, hea
 # ═══════════════════════════════════════════════════════════
 def test_atualizar_password_com_sucesso(client, headers_autenticado):
     r = client.put("/me/password", json={
-        "password_atual": "senha123", "password_nova": "nova456"
+        "password_atual": "senha123", "password_nova": "nova45678"
     }, headers=headers_autenticado)
     assert r.status_code == 200
 
     r_velha = client.post("/login", json={"email": "ana@exemplo.com", "password": "senha123"})
     assert r_velha.status_code == 401
 
-    r_nova = client.post("/login", json={"email": "ana@exemplo.com", "password": "nova456"})
+    r_nova = client.post("/login", json={"email": "ana@exemplo.com", "password": "nova45678"})
     assert r_nova.status_code == 200
 
 
 def test_atualizar_password_atual_incorreta_falha(client, headers_autenticado):
     r = client.put("/me/password", json={
-        "password_atual": "errada", "password_nova": "nova456"
+        "password_atual": "errada", "password_nova": "nova45678"
     }, headers=headers_autenticado)
     assert r.status_code == 401
 
@@ -140,4 +140,11 @@ def test_eliminar_conta_permite_reutilizar_o_email(client, headers_autenticado):
 # ---
 def test_atualizar_perfil_com_email_invalido_deveria_falhar(client, headers_autenticado):
     r = client.put("/me", json={"nome": "Ana", "email": "nao-e-email"}, headers=headers_autenticado)
+    assert r.status_code == 422
+
+
+def test_atualizar_password_curta_falha(client, headers_autenticado):
+    r = client.put("/me/password", json={
+        "password_atual": "senha123", "password_nova": "abc"
+    }, headers=headers_autenticado)
     assert r.status_code == 422

@@ -1,7 +1,7 @@
 from app.services import categorizacao
 import requests
 from app.db.database import get_connection
-from conftest import id_categoria
+from tests.helpers import id_categoria
 
 
 def uid_de(client, headers):

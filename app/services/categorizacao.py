@@ -1,8 +1,12 @@
+import logging
 import re
+
 import requests
 
 from app.core.config import settings
 from app.db.database import get_connection
+
+logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = settings.GROQ_API_KEY
 GROQ_MODEL   = settings.GROQ_MODEL
@@ -89,7 +93,7 @@ def escolher_por_llm(descricao, valor, opcoes, contexto=""):
     )
 
     if not GROQ_API_KEY:
-        print("GROQ_API_KEY não está definida — a saltar categorização por LLM.")
+        logger.warning("GROQ_API_KEY não está definida — a saltar categorização por LLM.")
         return None
 
     try:
@@ -114,7 +118,7 @@ def escolher_por_llm(descricao, valor, opcoes, contexto=""):
             return opcoes[indice][0]
         return None
     except Exception as e:
-        print(f"Erro ao chamar a API da Groq: {e}")
+        logger.error("Erro ao chamar a API da Groq: %s", e)
         return None
 
 

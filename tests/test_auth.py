@@ -69,3 +69,8 @@ def test_registo_com_email_invalido_deveria_falhar(client):
         "nome": "Mal Formado", "email": "isto-nao-e-um-email", "password": "senha123"
     })
     assert r.status_code == 422
+
+
+def test_registo_com_password_curta_falha(client):
+    r = client.post("/registro", json={"nome": "X", "email": "x@exemplo.com", "password": "123"})
+    assert r.status_code == 422

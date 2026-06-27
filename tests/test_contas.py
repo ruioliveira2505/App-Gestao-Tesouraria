@@ -1,4 +1,4 @@
-from conftest import hoje
+from tests.helpers import hoje
 
 
 def conta_exemplo(**overrides):
@@ -46,30 +46,24 @@ def test_eliminar_conta_sem_movimentos(client, headers_autenticado):
     assert client.get("/contas", headers=headers_autenticado).json() == []
 
 
-def test_eliminar_conta_com_movimentos_pede_confirmacao(client, headers_autenticado):
+def test_eliminar_conta_com_movimentos_pede_confirmacao(client, headers_autenticado, categoria_id):
     client.post("/contas", json=conta_exemplo(), headers=headers_autenticado)
     conta_id = client.get("/contas", headers=headers_autenticado).json()[0]["id"]
-    categoria_id = client.get("/categorias", headers=headers_autenticado).json()[0]["id"]
-
     client.post("/movimentos", json={
         "conta_id": conta_id, "data": hoje(), "descricao": "Teste",
         "valor": -50.0, "categoria_id": categoria_id,
     }, headers=headers_autenticado)
-
     r = client.delete(f"/contas/{conta_id}", headers=headers_autenticado)
-    assert r.status_code == 400  # sem ?forcar=true deve ser bloqueado
+    assert r.status_code == 400
 
 
-def test_eliminar_conta_com_forcar_remove_tudo(client, headers_autenticado):
+def test_eliminar_conta_com_forcar_remove_tudo(client, headers_autenticado, categoria_id):
     client.post("/contas", json=conta_exemplo(), headers=headers_autenticado)
     conta_id = client.get("/contas", headers=headers_autenticado).json()[0]["id"]
-    categoria_id = client.get("/categorias", headers=headers_autenticado).json()[0]["id"]
-
     client.post("/movimentos", json={
         "conta_id": conta_id, "data": hoje(), "descricao": "Teste",
         "valor": -50.0, "categoria_id": categoria_id,
     }, headers=headers_autenticado)
-
     r = client.delete(f"/contas/{conta_id}?forcar=true", headers=headers_autenticado)
     assert r.status_code == 200
     assert client.get("/movimentos", headers=headers_autenticado).json() == []

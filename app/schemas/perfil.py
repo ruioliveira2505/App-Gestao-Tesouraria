@@ -1,5 +1,4 @@
-from pydantic import BaseModel, EmailStr
-
+from pydantic import BaseModel, EmailStr, Field
 
 class PerfilUpdateInput(BaseModel):
     nome:  str
@@ -7,4 +6,4 @@ class PerfilUpdateInput(BaseModel):
 
 class PasswordUpdateInput(BaseModel):
     password_atual: str
-    password_nova:  str
+    password_nova:  str = Field(min_length=8)

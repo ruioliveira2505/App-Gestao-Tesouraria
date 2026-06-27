@@ -10,8 +10,6 @@ from app.schemas.movimentos import MovimentoInput
 router = APIRouter()
 
 
-# ─── helpers internos ────────────────────────────────────────────────────────
-
 def _validar_data_movimento(cursor, conta_id, data, acao):
     rec = reconciliacao_mais_antiga_data(cursor, conta_id)
     if rec and data < rec:
@@ -21,7 +19,15 @@ def _validar_data_movimento(cursor, conta_id, data, acao):
         )
 
 
-# ─── listagem ─────────────────────────────────────────────────────────────────
+def _validar_categoria_direcao(cursor, categoria_id, valor, uid):
+    cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+    row = cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Categoria não encontrada")
+    if (valor > 0) != row[0]:
+        direcao = "uma categoria de Entrada" if valor > 0 else "uma categoria de Saída"
+        raise HTTPException(status_code=400, detail=f"Este movimento precisa de {direcao}.")
+
 
 @router.get("/movimentos")
 def listar_movimentos(
@@ -96,14 +102,13 @@ def contar_movimentos_pendentes(utilizador: dict = Depends(utilizador_atual)):
     return {"contagem": contagem}
 
 
-# ─── escrita ──────────────────────────────────────────────────────────────────
-
 @router.post("/movimentos")
 def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
     try:
+        _validar_categoria_direcao(cursor, dados.categoria_id, dados.valor, uid)
         _validar_data_movimento(cursor, dados.conta_id, dados.data, "adicionar este movimento")
         cursor.execute("""
             INSERT INTO movimentos (id, conta_id, data, descricao, valor, categoria_id, origem_cat, utilizador_id)
@@ -123,6 +128,7 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
     cursor = conn.cursor()
     uid = utilizador["sub"]
     try:
+        _validar_categoria_direcao(cursor, dados.categoria_id, dados.valor, uid)
         _validar_data_movimento(cursor, dados.conta_id, dados.data, "mover este movimento para essa data")
         cursor.execute("""
             UPDATE movimentos
@@ -142,15 +148,16 @@ def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("DELETE FROM movimentos WHERE id = %s AND utilizador_id = %s", (movimento_id, utilizador["sub"]))
+        cursor.execute(
+            "DELETE FROM movimentos WHERE id = %s AND utilizador_id = %s",
+            (movimento_id, utilizador["sub"])
+        )
         conn.commit()
     finally:
         cursor.close()
         conn.close()
     return {"ok": True}
 
-
-# ─── confirmação ──────────────────────────────────────────────────────────────
 
 @router.post("/movimentos/{movimento_id}/confirmar")
 def confirmar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):

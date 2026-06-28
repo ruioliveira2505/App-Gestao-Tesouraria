@@ -15,7 +15,6 @@ router = APIRouter()
 # ─── contas ───────────────────────────────────────────────────────────────────
 
 @router.get("/contas")
-@router.get("/contas")
 def listar_contas(utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
     cursor = conn.cursor()

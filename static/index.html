@@ -191,7 +191,19 @@
     .filtros-limpar-linha.escondido { visibility: hidden; }
     .filtros-limpar { font-size: 0.8rem; color: var(--color-text-secondary); cursor: pointer; }
     .filtros-limpar:hover { color: var(--color-text); text-decoration: underline; }
+    
+    .campo-com-icone { position: relative; display: inline-flex; align-items: center; }
+    .campo-com-icone .icone-calendario { position: absolute; left: 0.7rem; color: var(--color-text-secondary); pointer-events: none; }
 
+    .seletor-periodo {
+      width: 200px;
+      padding: 0.45rem 0.8rem 0.45rem 2.1rem; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      background: var(--color-white); font-size: 0.8rem; color: var(--color-text); cursor: pointer;
+      caret-color: transparent; white-space: nowrap;
+      transition: background-color 0.15s, border-color 0.15s;
+    }
+    .seletor-periodo:hover { background: var(--color-surface); border-color: var(--color-text-secondary); }
+    .seletor-periodo:focus { outline: 2px solid var(--color-text); outline-offset: 1px; background: var(--color-surface); }
     /* ═══════════════════════════════════════════════════════
        TOGGLE ENTRADAS/SAÍDAS
     ═══════════════════════════════════════════════════════ */
@@ -342,12 +354,27 @@
       }
       .table-wrap.cards-mobile td.td-acoes::before { content: none; }
     }
+
+    /* ── CAMPO COM SUGESTÕES (autocomplete próprio) ─────── */
+    .campo-sugestoes { position: relative; }
+    .sugestoes-lista {
+      display: none;
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm); margin-top: 4px;
+      max-height: 220px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      z-index: 60;
+    }
+    .sugestoes-lista.aberta { display: block; }
+    .sugestoes-lista .item { padding: 0.5rem 0.75rem; font-size: 0.875rem; cursor: pointer; }
+    .sugestoes-lista .item:hover, .sugestoes-lista .item.destacado { background: var(--color-surface); }
+    .sugestoes-lista .vazio { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--color-text-secondary); }
   </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
-<datalist id="lista-bancos"></datalist>
 
 <!-- ═══════════════════ AUTH ═══════════════════ -->
 <div id="auth-screen">
@@ -424,14 +451,8 @@
         <div class="field"><label>Tipo</label>
           <select id="ct-filtro-tipo" onchange="atualizarFiltroContasPorTipo('ct'); carregarContas()">
             <option value="">Todos</option>
-            <option value="corrente">Conta Corrente</option>
-            <option value="poupanca">Conta Poupança</option>
-            <option value="prazo">Conta a Prazo</option>
-            <option value="numerario">Numerário</option>
-            <option value="outro">Outro</option>
           </select>
         </div>
-        <div class="field"><label>Período</label><input type="text" id="ct-periodo" placeholder="Selecionar datas"></div>
         <button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>
       </div>
       <div class="filtros-limpar-linha" id="ct-filtros-limpar-linha"><span class="filtros-limpar" onclick="limparFiltrosContas()">Limpar filtros</span></div>
@@ -439,7 +460,13 @@
       <div class="cards-grid" id="ct-card-total"></div>
 
       <div class="chart-full">
-        <h3>Evolução do Saldo</h3>
+        <div class="section-header">
+          <h3 style="margin:0">Evolução do Saldo</h3>
+          <div class="campo-com-icone">
+            <svg class="icone-calendario" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <input type="text" id="ct-periodo-btn" class="seletor-periodo" readonly>
+          </div>
+        </div>
         <canvas id="grafico-saldo-mensal"></canvas>
       </div>
 
@@ -469,11 +496,6 @@
         <div class="field"><label>Tipo</label>
           <select id="an-filtro-tipo" onchange="atualizarFiltroContasPorTipo('an'); carregarAnalise()">
             <option value="">Todos</option>
-            <option value="corrente">Conta Corrente</option>
-            <option value="poupanca">Conta Poupança</option>
-            <option value="prazo">Conta a Prazo</option>
-            <option value="numerario">Numerário</option>
-            <option value="outro">Outro</option>
           </select>
         </div>
         <div class="field"><label>Período</label><input type="text" id="an-periodo" placeholder="Selecionar datas"></div>
@@ -673,19 +695,19 @@
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
     <input type="hidden" id="conta-id">
     <div class="field"><label>Nome da Conta</label><input type="text" id="conta-nome" required></div>
-    <div class="field"><label>Banco</label><input type="text" id="conta-banco" list="lista-bancos" required></div>
-    <div class="field"><label>Tipo</label>
-      <select id="conta-tipo">
-        <option value="corrente">Conta Corrente</option>
-        <option value="poupanca">Conta Poupança</option>
-        <option value="prazo">Conta a Prazo</option>
-        <option value="numerario">Numerário</option>
-        <option value="outro">Outro</option>
-      </select>
+    <div class="field campo-sugestoes">
+      <label>Banco</label>
+      <input type="text" id="conta-banco" autocomplete="off" required>
+      <div class="sugestoes-lista" id="conta-banco-sugestoes"></div>
+    </div>
+    <div class="field campo-sugestoes">
+      <label>Tipo</label>
+      <input type="text" id="conta-tipo" autocomplete="off" required>
+      <div class="sugestoes-lista" id="conta-tipo-sugestoes"></div>
     </div>
     <div class="field">
       <label>Identificador <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
-      <input type="text" id="conta-iban" placeholder="IBAN, número de conta, ou outro">
+      <input type="text" id="conta-iban" placeholder="IBAN, Número de Conta, ou Outro">
     </div>
     <div class="field"><label>Moeda</label>
       <select id="conta-moeda">
@@ -832,6 +854,7 @@ let elimAtual = null
 
 let pickerMovData = null
 let pickerReconc  = null
+let pickerContas = null
 
 let timerInatividade = null
 const TEMPO_INATIVIDADE_MS = 15 * 60 * 1000 // 15 minutos
@@ -839,8 +862,10 @@ const EVENTOS_ATIVIDADE = ["mousemove", "keydown", "click", "scroll", "touchstar
 
 const BANCOS_PT_COMUNS = [
   "Caixa Geral de Depósitos", "Millennium BCP", "Novo Banco", "Santander Totta",
-  "BPI", "Crédito Agrícola", "ActivoBank", "Bankinter", "Banco CTT",
-  "Banco Best", "Revolut", "N26",
+  "BPI", "Crédito Agrícola", "ActivoBank", "Bankinter", "Banco CTT", "Revolut",
+]
+const TIPOS_CONTA_COMUNS = [
+  "Conta Corrente", "Conta Poupança", "Conta a Prazo", "Numerário",
 ]
 
 // ── ÍCONES (SVG inline) ───────────────────────────────────────
@@ -1087,8 +1112,8 @@ function rangesPadrao() {
 }
 
 function iniciarPickerContas() {
-  new Litepicker({
-    element: document.getElementById('ct-periodo'),
+  pickerContas = new Litepicker({
+    element: document.getElementById('ct-periodo-btn'),
     singleMode: false,
     format: 'YYYY-MM-DD',
     maxDays: 365,
@@ -1285,7 +1310,7 @@ async function iniciarApp() {
   document.getElementById("app-screen").style.display = "block"
 
   contasCache = await api("/contas")
-  atualizarListaBancos()
+  atualizarFiltrosDeTipo()
   categoriasCache = await api("/categorias")
 
   const optionsContas = construirOptionsContas()
@@ -1441,12 +1466,6 @@ function construirOptionsContas(selecionado, tipoFiltro) {
   return html
 }
 
-function atualizarListaBancos() {
-  const usados = contasCache.map(c => c.banco)
-  const todos = [...new Set([...BANCOS_PT_COMUNS, ...usados])].sort()
-  document.getElementById("lista-bancos").innerHTML = todos.map(b => `<option value="${b}"></option>`).join("")
-}
-
 function atualizarFiltrosDeConta() {
   const selConta   = document.getElementById("filtro-conta")
   const selContaAn = document.getElementById("an-filtro-conta")
@@ -1474,6 +1493,62 @@ function atualizarFiltroTipoPorConta(prefixo) {
     const conta = contasCache.find(c => c.id === contaId)
     if (conta) document.getElementById(prefixo + "-filtro-tipo").value = conta.tipo
   }
+}
+
+function construirOptionsTipos(selecionado) {
+  const tipos = [...new Set(contasCache.map(c => c.tipo))].sort()
+  return tipos.map(t => `<option value="${t}" ${t === selecionado ? "selected" : ""}>${t}</option>`).join("")
+}
+
+function atualizarFiltrosDeTipo() {
+  const selCt = document.getElementById("ct-filtro-tipo")
+  const selAn = document.getElementById("an-filtro-tipo")
+  selCt.innerHTML = '<option value="">Todos</option>' + construirOptionsTipos(selCt.value)
+  selAn.innerHTML = '<option value="">Todos</option>' + construirOptionsTipos(selAn.value)
+}
+
+function opcoesBancos() {
+  return [...new Set([...BANCOS_PT_COMUNS, ...contasCache.map(c => c.banco)])].sort()
+}
+function opcoesTipos() {
+  return [...new Set([...TIPOS_CONTA_COMUNS, ...contasCache.map(c => c.tipo)])].sort()
+}
+
+function ligarCampoComSugestoes(idInput, getOpcoes) {
+  const input = document.getElementById(idInput)
+  const lista = document.getElementById(idInput + "-sugestoes")
+  let indiceAtivo = -1
+
+  function renderizar() {
+    const termo = input.value.trim().toLowerCase()
+    const opcoes = getOpcoes().filter(o => o.toLowerCase().includes(termo))
+    indiceAtivo = -1
+    lista.innerHTML = opcoes.length
+      ? opcoes.map(o => `<div class="item">${o}</div>`).join("")
+      : `<div class="vazio">Sem sugestões — o texto escrito será usado.</div>`
+    lista.classList.add("aberta")
+  }
+  function esconder() { lista.classList.remove("aberta") }
+  function selecionar(texto) { input.value = texto; esconder() }
+
+  input.addEventListener("focus", renderizar)
+  input.addEventListener("input", renderizar)
+  input.addEventListener("keydown", (e) => {
+    const itens = lista.querySelectorAll(".item")
+    if (e.key === "ArrowDown") { e.preventDefault(); indiceAtivo = Math.min(indiceAtivo + 1, itens.length - 1) }
+    else if (e.key === "ArrowUp") { e.preventDefault(); indiceAtivo = Math.max(indiceAtivo - 1, 0) }
+    else if (e.key === "Enter") { if (indiceAtivo >= 0 && itens[indiceAtivo]) { e.preventDefault(); selecionar(itens[indiceAtivo].textContent) }; return }
+    else if (e.key === "Escape") { esconder(); return }
+    else return
+    itens.forEach((el, i) => el.classList.toggle("destacado", i === indiceAtivo))
+  })
+  lista.addEventListener("mousedown", (e) => {
+    const item = e.target.closest(".item")
+    if (item) selecionar(item.textContent)
+  })
+  document.addEventListener("click", (e) => {
+    if (e.target !== input && !lista.contains(e.target)) esconder()
+  })
 }
 
 function construirOptionsCategorias(selecionado, direcao) {
@@ -1576,7 +1651,7 @@ async function carregarContas() {
   atualizarVisibilidadeLimparContas()
 
   contasCache = await api("/contas")
-  atualizarListaBancos()
+  atualizarFiltrosDeTipo()
   atualizarFiltrosDeConta()
 
   const params = new URLSearchParams()
@@ -1686,14 +1761,13 @@ function renderizarTabelaContas() {
     return
   }
 
-  const tipos = { corrente: "Conta Corrente", poupanca: "Conta Poupança", prazo: "Conta a Prazo", numerario: "Numerário", outro: "Outro" }
   tb.innerHTML = ""
   lista.forEach(c => {
     tb.innerHTML += `
       <tr>
         <td data-label="Nome">${c.nome}</td>
         <td data-label="Banco">${c.banco}</td>
-        <td data-label="Tipo"><span class="badge">${tipos[c.tipo] || c.tipo}</span></td>
+        <td data-label="Tipo"><span class="badge">${c.tipo}</span></td>
         <td data-label="Identificador">${c.iban}</td>
         <td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td>
         <td class="td-acoes" style="white-space:nowrap">
@@ -1709,7 +1783,7 @@ function abrirModalConta() {
   document.getElementById("conta-id").value = ""
   document.getElementById("conta-nome").value = ""
   document.getElementById("conta-banco").value = ""
-  document.getElementById("conta-tipo").value = "corrente"
+  document.getElementById("conta-tipo").value = ""
   document.getElementById("conta-iban").value = ""
   document.getElementById("conta-moeda").value = "EUR"
   document.getElementById("conta-saldo").value = ""
@@ -1717,7 +1791,8 @@ function abrirModalConta() {
   document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"
   document.getElementById("conta-saldo-ajustar").style.display = "none"
   document.getElementById("modal-conta").classList.add("open")
-  ligarValidacaoFormulario(["conta-nome", "conta-banco", "conta-saldo"], "btn-guardar-conta")
+  ligarCampoComSugestoes("conta-banco", opcoesBancos)
+  ligarCampoComSugestoes("conta-tipo", opcoesTipos)
 }
 
 function abrirEditarConta(id) {
@@ -1903,7 +1978,7 @@ async function carregarAnalise() {
     api("/stats/mensal" + qs),
     api("/stats/categorias" + qs),
     api("/stats/grupos" + qs),
-    api("/stats/recorrentes")
+    api("/stats/recorrentes" + qs)
   ])
 
   renderizarResumoAnalise(mensal)
@@ -2332,6 +2407,7 @@ function trocarSecaoPerfil(secao) {
 }
 
 async function carregarPerfil() {
+  trocarSecaoPerfil('geral')
   const dados = await api("/me")
   document.getElementById("perfil-nome").value  = dados.nome
   document.getElementById("perfil-email").value = dados.email

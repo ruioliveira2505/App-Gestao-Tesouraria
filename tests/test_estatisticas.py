@@ -210,3 +210,23 @@ def test_recorrentes_de_outro_utilizador_nao_aparecem(client, headers_autenticad
 
     r = client.get("/stats/recorrentes", headers=headers_outro).json()
     assert r == []
+
+
+def test_recorrentes_respeita_filtro_de_conta(client, headers_autenticado, conta_id):
+    recuar_reconciliacao(client, headers_autenticado, conta_id, dias_atras(35))
+    netflix = id_categoria(client, headers_autenticado, "Entretenimento", "Subscrições")
+    criar_movimento(client, headers_autenticado, conta_id, netflix, -17.99, data=dias_atras(30), descricao="Netflix")
+    criar_movimento(client, headers_autenticado, conta_id, netflix, -17.99, data=hoje(), descricao="Netflix")
+
+    client.post("/contas", json={
+        "nome": "Conta B", "banco": "BPI", "tipo": "corrente",
+        "iban": "PT5022222222222222222222222", "moeda": "EUR", "saldo": 500.0,
+    }, headers=headers_autenticado)
+    conta_b_id = next(c["id"] for c in client.get("/contas", headers=headers_autenticado).json() if c["nome"] == "Conta B")
+    recuar_reconciliacao(client, headers_autenticado, conta_b_id, dias_atras(35))
+    criar_movimento(client, headers_autenticado, conta_b_id, netflix, -9.99, data=dias_atras(30), descricao="Spotify")
+    criar_movimento(client, headers_autenticado, conta_b_id, netflix, -9.99, data=hoje(), descricao="Spotify")
+
+    r = client.get(f"/stats/recorrentes?conta_id={conta_id}", headers=headers_autenticado).json()
+    assert any(x["descricao"] == "Netflix" for x in r)
+    assert not any(x["descricao"] == "Spotify" for x in r)

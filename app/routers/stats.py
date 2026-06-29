@@ -197,18 +197,24 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
 
 
 @router.get("/stats/recorrentes")
-def stats_recorrentes(utilizador: dict = Depends(utilizador_atual)):
+def stats_recorrentes(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
     conn = get_connection()
     cursor = conn.cursor()
+    uid = utilizador["sub"]
     try:
         cursor.execute("""
             SELECT m.descricao, c.nome AS categoria, g.nome AS grupo, m.data, m.valor
             FROM movimentos m
             JOIN categorias c ON m.categoria_id = c.id
             JOIN categorias g ON c.parent_id = g.id
+            JOIN contas ct ON m.conta_id = ct.id
             WHERE m.utilizador_id = %s AND m.valor < 0
+              AND (%s IS NULL OR m.conta_id = %s)
+              AND (%s IS NULL OR ct.tipo = %s)
+              AND (%s IS NULL OR m.data >= %s)
+              AND (%s IS NULL OR m.data <= %s)
             ORDER BY m.descricao, c.nome, m.data
-        """, (utilizador["sub"],))
+        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
         rows = cursor.fetchall()
     finally:
         cursor.close()

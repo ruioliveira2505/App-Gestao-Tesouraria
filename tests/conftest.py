@@ -69,7 +69,7 @@ def headers_autenticado(client):
 @pytest.fixture
 def conta_id(client, headers_autenticado):
     client.post("/contas", json={
-        "nome": "Conta Principal", "banco": "CGD", "tipo": "corrente",
+        "nome": "Conta Principal", "banco": "CGD", "tipo": "Conta Corrente",
         "iban": "PT50000000000000000000000", "moeda": "EUR", "saldo": 1000.0,
     }, headers=headers_autenticado)
     return client.get("/contas", headers=headers_autenticado).json()[0]["id"]

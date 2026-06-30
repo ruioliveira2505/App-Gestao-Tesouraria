@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5iQJRYQpXZxlHMZ6CNpoCafRhdrWRAXbwaQZkTaPUHQTuDA6amDrGe3WuOIlOPS
+\restrict anQWiRB58v25ux1vXvmvrTjVVsT1uRfs1RMEnFz3QV5EcvaPAWvaingsPgtGyZe
 
 -- Dumped from database version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
@@ -29,7 +29,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.ajustes_saldo (
     id integer NOT NULL,
-    conta_id text,
+    conta_id text NOT NULL,
     data date NOT NULL,
     saldo_real numeric NOT NULL,
     criado_em timestamp without time zone DEFAULT now()
@@ -88,7 +88,8 @@ CREATE TABLE public.categorias_aprendidas (
     categoria_id integer NOT NULL,
     utilizador_id integer NOT NULL,
     criado_em timestamp without time zone DEFAULT now(),
-    confirmado boolean DEFAULT false NOT NULL
+    confirmado boolean DEFAULT false NOT NULL,
+    eh_recebimento boolean NOT NULL
 );
 
 
@@ -258,11 +259,11 @@ ALTER TABLE ONLY public.ajustes_saldo
 
 
 --
--- Name: categorias_aprendidas categorias_aprendidas_descricao_utilizador_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: categorias_aprendidas categorias_aprendidas_descricao_dir_utilizador_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.categorias_aprendidas
-    ADD CONSTRAINT categorias_aprendidas_descricao_utilizador_id_key UNIQUE (descricao, utilizador_id);
+    ADD CONSTRAINT categorias_aprendidas_descricao_dir_utilizador_key UNIQUE (descricao, utilizador_id, eh_recebimento);
 
 
 --
@@ -417,5 +418,5 @@ ALTER TABLE ONLY public.movimentos
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5iQJRYQpXZxlHMZ6CNpoCafRhdrWRAXbwaQZkTaPUHQTuDA6amDrGe3WuOIlOPS
+\unrestrict anQWiRB58v25ux1vXvmvrTjVVsT1uRfs1RMEnFz3QV5EcvaPAWvaingsPgtGyZe
 

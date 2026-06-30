@@ -1,6 +1,6 @@
 from app.services import categorizacao
 import requests
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from tests.helpers import id_categoria
 
 
@@ -14,8 +14,8 @@ def uid_de(client, headers):
 def test_buscar_em_cache_sem_entrada_devolve_none(client, headers_autenticado):
     uid = uid_de(client, headers_autenticado)
     conn = get_connection()
-    resultado = categorizacao.buscar_em_cache(conn, "DESCRICAO NUNCA VISTA", uid)
-    conn.close()
+    resultado = categorizacao.buscar_em_cache(conn, "DESCRICAO NUNCA VISTA", uid, False)
+    release_connection(conn)
     assert resultado is None
 
 
@@ -24,9 +24,9 @@ def test_guardar_e_buscar_em_cache(client, headers_autenticado):
     categoria_id = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
 
     conn = get_connection()
-    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id, uid)
-    resultado = categorizacao.buscar_em_cache(conn, "LOJA GADGETS LDA", uid)
-    conn.close()
+    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id, uid, False)
+    resultado = categorizacao.buscar_em_cache(conn, "LOJA GADGETS LDA", uid, False)
+    release_connection(conn)
 
     assert resultado == (categoria_id, False)   # não confirmado por defeito
 
@@ -37,10 +37,10 @@ def test_guardar_em_cache_atualiza_entrada_existente(client, headers_autenticado
     software = id_categoria(client, headers_autenticado, "Tecnologia", "Software")
 
     conn = get_connection()
-    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", hardware, uid)
-    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", software, uid)
-    resultado = categorizacao.buscar_em_cache(conn, "LOJA GADGETS LDA", uid)
-    conn.close()
+    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", hardware, uid, False)
+    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", software, uid, False)
+    resultado = categorizacao.buscar_em_cache(conn, "LOJA GADGETS LDA", uid, False)
+    release_connection(conn)
 
     assert resultado == (software, False)
 
@@ -53,9 +53,9 @@ def test_cache_e_isolado_por_utilizador(client, headers_autenticado):
     categoria_id = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
 
     conn = get_connection()
-    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id, uid_ana)
-    resultado_outro = categorizacao.buscar_em_cache(conn, "LOJA GADGETS LDA", uid_outro)
-    conn.close()
+    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id, uid_ana, False)
+    resultado_outro = categorizacao.buscar_em_cache(conn, "LOJA GADGETS LDA", uid_outro, False)
+    release_connection(conn)
 
     assert resultado_outro is None
 
@@ -68,8 +68,8 @@ def test_categorizar_usa_cache_confirmada_sem_chamar_llm(client, headers_autenti
     categoria_id_esperada = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
 
     conn = get_connection()
-    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id_esperada, uid, confirmado=True)
-    conn.close()
+    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id_esperada, uid, False, confirmado=True)
+    release_connection(conn)
 
     chamou_llm = []
     monkeypatch.setattr(categorizacao, "escolher_por_llm", lambda *a, **k: chamou_llm.append(1))
@@ -86,8 +86,8 @@ def test_categorizar_usa_cache_nao_confirmada_mas_continua_pendente(client, head
     categoria_id_esperada = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
 
     conn = get_connection()
-    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id_esperada, uid, confirmado=False)
-    conn.close()
+    categorizacao.guardar_em_cache(conn, "LOJA GADGETS LDA", categoria_id_esperada, uid, False, confirmado=False)
+    release_connection(conn)
 
     chamou_llm = []
     monkeypatch.setattr(categorizacao, "escolher_por_llm", lambda *a, **k: chamou_llm.append(1))
@@ -110,8 +110,8 @@ def test_categorizar_recorre_ao_llm_quando_nao_ha_regra_nem_cache(client, header
     assert categoria_id == categoria_id_llm
 
     conn = get_connection()
-    em_cache = categorizacao.buscar_em_cache(conn, "DESCRICAO MUITO ESTRANHA 123", uid)
-    conn.close()
+    em_cache = categorizacao.buscar_em_cache(conn, "DESCRICAO MUITO ESTRANHA 123", uid, False)
+    release_connection(conn)
     assert em_cache == (categoria_id_llm, False) # gravado, mas ainda não confirmado
 
 
@@ -120,7 +120,7 @@ def test_resolver_categoria_fallback_funciona_mesmo_com_nomes_repetidos(client, 
     conn = get_connection()
     fallback_saida = categorizacao.resolver_categoria_fallback(conn, False, uid)
     fallback_entrada = categorizacao.resolver_categoria_fallback(conn, True, uid)
-    conn.close()
+    release_connection(conn)
 
     assert fallback_saida != fallback_entrada
     assert fallback_saida is not None and fallback_entrada is not None
@@ -137,7 +137,7 @@ def test_categorizar_com_conn_externa_nao_fecha_a_ligacao_do_chamador(client, he
     cursor.execute("SELECT 1")
     assert cursor.fetchone() == (1,)  # se categorizar() tivesse fechado a ligação, isto falhava
     cursor.close()
-    conn.close()
+    release_connection(conn)
 
 
 def test_categorizar_sem_conn_nao_deixa_ligacoes_penduradas(client, headers_autenticado, monkeypatch):
@@ -156,7 +156,7 @@ def test_categorizar_por_llm_sem_categorias_disponiveis_devolve_none(client, hea
 
     conn = get_connection()
     resultado = categorizacao.categorizar_por_llm("X", -10.0, conn, uid)
-    conn.close()
+    release_connection(conn)
 
     assert resultado is None
     assert chamou_llm == []
@@ -242,8 +242,8 @@ def test_categorizar_cai_em_fallback_quando_llm_nao_decide(client, headers_auten
     assert categoria_id == outros_pagamentos
 
     conn = get_connection()
-    em_cache = categorizacao.buscar_em_cache(conn, "DESCRICAO TOTALMENTE DESCONHECIDA", uid)
-    conn.close()
+    em_cache = categorizacao.buscar_em_cache(conn, "DESCRICAO TOTALMENTE DESCONHECIDA", uid, False)
+    release_connection(conn)
     assert em_cache == (outros_pagamentos, False)
 
 
@@ -265,7 +265,7 @@ def test_categorizar_com_categorias_quase_todas_eliminadas_ainda_resolve(client,
     cursor.execute("DELETE FROM categorias WHERE utilizador_id=%s AND NOT protegida AND parent_id IS NOT NULL", (uid,))
     conn.commit()
     cursor.close()
-    conn.close()
+    release_connection(conn)
 
     monkeypatch.setattr(categorizacao, "escolher_por_llm", lambda descricao, valor, opcoes, contexto="": opcoes[0][0])
 
@@ -275,7 +275,7 @@ def test_categorizar_com_categorias_quase_todas_eliminadas_ainda_resolve(client,
     cursor = conn.cursor()
     cursor.execute("SELECT protegida FROM categorias WHERE id=%s", (categoria_id,))
     protegida = cursor.fetchone()[0]
-    conn.close()
+    release_connection(conn)
     assert protegida is True
 
 
@@ -296,3 +296,20 @@ def test_resolver_categoria_fallback_e_imune_a_renomeacao(client, headers_autent
     categoria_id, origem = categorizacao.categorizar("DESCRICAO QUALQUER", -10.0, uid)
     assert origem == "sem_match"
     assert categoria_id is not None
+
+
+def test_cache_nao_mistura_direcoes_diferentes(client, headers_autenticado):
+    uid = uid_de(client, headers_autenticado)
+    saida_id   = id_categoria(client, headers_autenticado, "Tecnologia", "Hardware")
+    entrada_id = id_categoria(client, headers_autenticado, "Trabalho", "Salário")
+
+    conn = get_connection()
+    categorizacao.guardar_em_cache(conn, "TRANSFERENCIA", saida_id, uid, False, confirmado=True)
+    categorizacao.guardar_em_cache(conn, "TRANSFERENCIA", entrada_id, uid, True, confirmado=True)
+
+    cache_saida   = categorizacao.buscar_em_cache(conn, "TRANSFERENCIA", uid, False)
+    cache_entrada = categorizacao.buscar_em_cache(conn, "TRANSFERENCIA", uid, True)
+    release_connection(conn)
+
+    assert cache_saida == (saida_id, True)
+    assert cache_entrada == (entrada_id, True)

@@ -1,4 +1,4 @@
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from tests.helpers import criar_movimento
 
 
@@ -8,7 +8,7 @@ def forcar_origem(movimento_id, origem):
     cursor.execute("UPDATE movimentos SET origem_cat=%s WHERE id=%s", (origem, movimento_id))
     conn.commit()
     cursor.close()
-    conn.close()
+    release_connection(conn)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -137,8 +137,8 @@ def test_confirmar_movimento_alimenta_o_cache_de_categorizacao(client, headers_a
     from app.services.categorizacao import buscar_em_cache
     uid = client.get("/me", headers=headers_autenticado).json()["id"]
     conn = get_connection()
-    categoria_em_cache = buscar_em_cache(conn, "LOJA NOVA LDA", uid)
-    conn.close()
+    categoria_em_cache = buscar_em_cache(conn, "LOJA NOVA LDA", uid, False)
+    release_connection(conn)
     assert categoria_em_cache == (categoria_id, True)
 
 

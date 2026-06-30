@@ -1,5 +1,5 @@
 import json
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.services.categorizacao import categorizar
 
 with open("scripts/dados_mock.json", "r", encoding="utf-8") as f:
@@ -37,5 +37,5 @@ for m in dados["movimentos"]:
 
 conn.commit()
 cursor.close()
-conn.close()
+release_connection(conn)
 print("\nImportação concluída.")

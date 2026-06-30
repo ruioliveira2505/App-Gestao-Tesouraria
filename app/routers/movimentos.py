@@ -1,12 +1,15 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.core.deps import utilizador_atual
 from app.services.reconciliacoes import reconciliacao_mais_antiga_data
 from app.services.categorizacao import guardar_em_cache
 from app.schemas.movimentos import MovimentoInput
 
+import logging
+
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -27,6 +30,13 @@ def _validar_categoria_direcao(cursor, categoria_id, valor, uid):
     if (valor > 0) != row[0]:
         direcao = "uma categoria de Entrada" if valor > 0 else "uma categoria de Saída"
         raise HTTPException(status_code=400, detail=f"Este movimento precisa de {direcao}.")
+
+
+def _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, eh_recebimento, confirmado):
+    try:
+        guardar_em_cache(conn, descricao, categoria_id, uid, eh_recebimento, confirmado=confirmado)
+    except Exception:
+        logger.exception("Falha ao gravar cache de categorização (não crítico — movimento já foi guardado)")
 
 
 @router.get("/movimentos")
@@ -73,7 +83,7 @@ def listar_movimentos(
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     return [
         {
@@ -98,7 +108,7 @@ def contar_movimentos_pendentes(utilizador: dict = Depends(utilizador_atual)):
         contagem = cursor.fetchone()[0]
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"contagem": contagem}
 
 
@@ -115,10 +125,10 @@ def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (str(uuid.uuid4()), dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, "manual", uid))
         conn.commit()
-        guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
+        _guardar_em_cache_seguro(conn, dados.descricao, dados.categoria_id, uid, dados.valor > 0, confirmado=True)
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -136,10 +146,10 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
             WHERE id=%s AND utilizador_id=%s
         """, (dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, movimento_id, uid))
         conn.commit()
-        guardar_em_cache(conn, dados.descricao, dados.categoria_id, uid, confirmado=True)
+        _guardar_em_cache_seguro(conn, dados.descricao, dados.categoria_id, uid, dados.valor > 0, confirmado=True)
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -155,7 +165,7 @@ def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -166,20 +176,20 @@ def confirmar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador
     uid = utilizador["sub"]
     try:
         cursor.execute(
-            "SELECT descricao, categoria_id FROM movimentos WHERE id=%s AND utilizador_id=%s",
+            "SELECT descricao, categoria_id, valor FROM movimentos WHERE id=%s AND utilizador_id=%s",
             (movimento_id, uid)
         )
         row = cursor.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Movimento não encontrado")
-        descricao, categoria_id = row
+        descricao, categoria_id, valor = row
 
         cursor.execute("UPDATE movimentos SET origem_cat='manual' WHERE id=%s", (movimento_id,))
         conn.commit()
-        guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
+        _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, valor > 0, confirmado=True)
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -190,7 +200,7 @@ def confirmar_todos_os_pendentes(utilizador: dict = Depends(utilizador_atual)):
     uid = utilizador["sub"]
     try:
         cursor.execute("""
-            SELECT DISTINCT descricao, categoria_id FROM movimentos
+            SELECT DISTINCT descricao, categoria_id, valor FROM movimentos
             WHERE utilizador_id=%s AND origem_cat IN ('llm', 'sem_match')
         """, (uid,))
         pendentes = cursor.fetchall()
@@ -201,9 +211,9 @@ def confirmar_todos_os_pendentes(utilizador: dict = Depends(utilizador_atual)):
         """, (uid,))
         conn.commit()
 
-        for descricao, categoria_id in pendentes:
-            guardar_em_cache(conn, descricao, categoria_id, uid, confirmado=True)
+        for descricao, categoria_id, valor in pendentes:
+            _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, valor > 0, confirmado=True)
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True, "confirmados": len(pendentes)}

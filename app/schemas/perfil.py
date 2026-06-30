@@ -6,4 +6,4 @@ class PerfilUpdateInput(BaseModel):
 
 class PasswordUpdateInput(BaseModel):
     password_atual: str
-    password_nova:  str = Field(min_length=8)
+    password_nova: str = Field(min_length=8, max_length=72)

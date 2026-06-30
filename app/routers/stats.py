@@ -4,7 +4,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends
 
 from app.core.deps import utilizador_atual
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 
 router = APIRouter()
 
@@ -33,7 +33,7 @@ def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     return [
         {"mes": r[0], "entradas": float(r[1]), "saidas": float(r[2]), "liquido": float(r[1]) - float(r[2])}
@@ -76,7 +76,7 @@ def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     total_out = sum(float(r[4]) for r in rows if not r[2])
     total_in  = sum(float(r[4]) for r in rows if r[2])
@@ -124,7 +124,7 @@ def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     grupos = defaultdict(lambda: {"eh_recebimento": None, "total": 0.0, "subcategorias": []})
     for r in rows:
@@ -183,7 +183,7 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     if not rows:
         return []
@@ -218,7 +218,7 @@ def stats_recorrentes(utilizador: dict = Depends(utilizador_atual), conta_id: st
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     grupos = defaultdict(list)
     for descricao, categoria, grupo, data_mov, valor in rows:

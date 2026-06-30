@@ -1,4 +1,4 @@
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection, release_connection, release_connection, release_connection, release_connection
 from tests.helpers import hoje
 
 
@@ -121,7 +121,7 @@ def test_eliminar_conta_utilizador_remove_tudo_em_cascata(client, headers_autent
     assert cursor.fetchone()[0] == 0
 
     cursor.close()
-    conn.close()
+    release_connection(conn)
 
 
 def test_login_falha_apos_eliminar_conta(client, headers_autenticado):

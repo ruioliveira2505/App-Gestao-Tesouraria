@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 import bcrypt
 
 from app.core.config import settings
@@ -23,5 +24,5 @@ def criar_token(dados: dict, validade: timedelta = None) -> str:
 def verificar_token(token: str) -> dict | None:
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITMO_JWT])
-    except JWTError:
+    except PyJWTError:
         return None

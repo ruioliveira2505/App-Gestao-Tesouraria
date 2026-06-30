@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.main import app
 
 
@@ -48,7 +48,7 @@ def limpar_bd():
     """)
     conn.commit()
     cursor.close()
-    conn.close()
+    release_connection(conn)
     yield
 
 

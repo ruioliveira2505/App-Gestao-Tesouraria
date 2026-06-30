@@ -370,6 +370,13 @@
     .sugestoes-lista .item { padding: 0.5rem 0.75rem; font-size: 0.875rem; cursor: pointer; }
     .sugestoes-lista .item:hover, .sugestoes-lista .item.destacado { background: var(--color-surface); }
     .sugestoes-lista .vazio { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--color-text-secondary); }
+
+    /* ── ANÁLISE: ABAS ──────────────────────────────────── */
+    .analise-tabs { display: flex; border-bottom: 1px solid var(--color-border); margin-bottom: 1.5rem; }
+    .analise-tab { padding: 0.6rem 0.25rem; margin-right: 1.5rem; font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
+    .analise-tab.active { color: var(--color-text); border-bottom-color: var(--color-text); font-weight: 500; }
+    .analise-secao { display: none; }
+    .analise-secao.active { display: block; }
   </style>
 </head>
 <body>
@@ -502,55 +509,71 @@
       </div>
       <div class="filtros-limpar-linha" id="an-filtros-limpar-linha"><span class="filtros-limpar" onclick="limparFiltrosAnalise()">Limpar filtros</span></div>
 
-      <div class="summary-grid" id="summary-mes"></div>
-
-      <div class="chart-full">
-        <h3>Cash-In vs Cash-Out por Mês</h3>
-        <canvas id="grafico-mensal"></canvas>
+      <div class="analise-tabs">
+        <div class="analise-tab active" data-aba="global" onclick="trocarAbaAnalise('global')">Visão Global</div>
+        <div class="analise-tab" data-aba="especifica" onclick="trocarAbaAnalise('especifica')">Visão Específica</div>
+        <div class="analise-tab" data-aba="padroes" onclick="trocarAbaAnalise('padroes')">Padrões</div>
       </div>
 
-      <div class="chart-full">
-        <div class="section-header">
-          <h3 style="margin:0">Detalhe por Grupo</h3>
-          <div style="display:flex;gap:0.5rem;align-items:center">
-            <button class="btn-sm" id="btn-expandir-recolher" onclick="alternarExpandirTodos()"></button>
-            <div class="toggle-tipo">
-              <button id="btn-tipo-in" class="active in" onclick="trocarTipo('in')">Entradas</button>
-              <button id="btn-tipo-out" class="out" onclick="trocarTipo('out')">Saídas</button>
+      <!-- ── VISÃO GLOBAL ─────────────────────────────── -->
+      <div class="analise-secao active" id="analise-secao-global">
+        <div class="summary-grid" id="summary-mes"></div>
+
+        <div class="chart-full">
+          <h3>Cash-In vs Cash-Out por Mês</h3>
+          <canvas id="grafico-mensal"></canvas>
+        </div>
+      </div>
+
+      <!-- ── VISÃO ESPECÍFICA ─────────────────────────── -->
+      <div class="analise-secao" id="analise-secao-especifica">
+        <div class="chart-full">
+          <div class="section-header">
+            <h3 style="margin:0">Detalhe por Grupo</h3>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <button class="btn-sm" id="btn-expandir-recolher" onclick="alternarExpandirTodos()"></button>
+              <div class="toggle-tipo">
+                <button id="btn-tipo-in" class="active in" onclick="trocarTipo('in')">Entradas</button>
+                <button id="btn-tipo-out" class="out" onclick="trocarTipo('out')">Saídas</button>
+              </div>
             </div>
           </div>
+          <div id="lista-grupos"></div>
+          <div style="display:flex;justify-content:space-between;padding-top:0.75rem;border-top:1px solid #e5e5e5;margin-top:0.5rem;font-size:0.85rem;color:#888">
+            <span id="label-tipo">Entradas</span>
+            <strong id="total-tipo" style="color:#1a1a1a"></strong>
+          </div>
         </div>
-        <div id="lista-grupos"></div>
-        <div style="display:flex;justify-content:space-between;padding-top:0.75rem;border-top:1px solid #e5e5e5;margin-top:0.5rem;font-size:0.85rem;color:#888">
-          <span id="label-tipo">Entradas</span>
-          <strong id="total-tipo" style="color:#1a1a1a"></strong>
+
+        <div class="charts-grid-2">
+          <div class="chart-card">
+            <h3>Cash-In por Categoria</h3>
+            <canvas id="grafico-in"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Cash-Out por Categoria</h3>
+            <canvas id="grafico-out"></canvas>
+          </div>
         </div>
+
       </div>
 
-      <div class="charts-grid-2">
-        <div class="chart-card">
-          <h3>Cash-In por Categoria</h3>
-          <canvas id="grafico-in"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Cash-Out por Categoria</h3>
-          <canvas id="grafico-out"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-full">
-        <h3>Saídas Recorrentes</h3>
-        <div class="table-wrap cards-mobile" style="margin-bottom:0">
-          <table>
-            <thead><tr id="cabecalho-recorrentes">
-              <th onclick="ordenarRecorrentes('descricao')" data-campo="descricao" style="cursor:pointer">Descrição <span class="icone-ordenacao"></span></th>
-              <th onclick="ordenarRecorrentes('categoria')" data-campo="categoria" style="cursor:pointer">Categoria <span class="icone-ordenacao"></span></th>
-              <th onclick="ordenarRecorrentes('valor_medio')" data-campo="valor_medio" style="text-align:right;cursor:pointer">Valor Médio <span class="icone-ordenacao"></span></th>
-              <th onclick="ordenarRecorrentes('intervalo_medio_dias')" data-campo="intervalo_medio_dias" style="cursor:pointer">Frequência <span class="icone-ordenacao"></span></th>
-              <th onclick="ordenarRecorrentes('proxima_data_estimada')" data-campo="proxima_data_estimada" style="cursor:pointer">Próxima Data Estimada <span class="icone-ordenacao"></span></th>
-            </tr></thead>
-            <tbody id="tabela-recorrentes"></tbody>
-          </table>
+      <!-- ── PADRÕES ──────────────────────────────────── -->
+      <div class="analise-secao" id="analise-secao-padroes">
+        <div class="chart-full">
+          <h3>Saídas Recorrentes</h3>
+          <div class="table-wrap cards-mobile" style="margin-bottom:0">
+            <table>
+              <thead><tr id="cabecalho-recorrentes">
+                <th onclick="ordenarRecorrentes('descricao')" data-campo="descricao" style="cursor:pointer">Descrição <span class="icone-ordenacao"></span></th>
+                <th onclick="ordenarRecorrentes('categoria')" data-campo="categoria" style="cursor:pointer">Categoria <span class="icone-ordenacao"></span></th>
+                <th onclick="ordenarRecorrentes('valor_medio')" data-campo="valor_medio" style="text-align:right;cursor:pointer">Valor Médio <span class="icone-ordenacao"></span></th>
+                <th onclick="ordenarRecorrentes('intervalo_medio_dias')" data-campo="intervalo_medio_dias" style="cursor:pointer">Frequência <span class="icone-ordenacao"></span></th>
+                <th onclick="ordenarRecorrentes('proxima_data_estimada')" data-campo="proxima_data_estimada" style="cursor:pointer">Próxima Data Estimada <span class="icone-ordenacao"></span></th>
+              </tr></thead>
+              <tbody id="tabela-recorrentes"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -819,7 +842,7 @@
 // ═══════════════════════════════════════════════════════════
 // CONFIGURAÇÃO E ESTADO GLOBAL
 // ═══════════════════════════════════════════════════════════
-const API = "http://localhost:8000"
+const API = ""
 let TOKEN = localStorage.getItem("token")
 let NOME  = localStorage.getItem("nome")
 
@@ -838,6 +861,7 @@ let gruposExpandidos     = false
 let pendentesAtivo       = false
 
 let graficos = {}
+let analiseCache = { mensal: null, categorias: null }
 
 let anDataDe, anDataAte
 let movDataDe = null, movDataAte = null
@@ -1411,7 +1435,7 @@ function ativarPagina(pagina) {
 
 function carregarPagina(pagina) {
   if (pagina === "contas")     carregarContas()
-  if (pagina === "analise")    carregarAnalise()
+  if (pagina === "analise")    carregarAnalise(true)
   if (pagina === "movimentos") carregarMovimentos()
   if (pagina === "perfil")     carregarPerfil()
 }
@@ -1822,11 +1846,17 @@ async function guardarConta() {
     iban:  document.getElementById("conta-iban").value,
     moeda: document.getElementById("conta-moeda").value,
   }
+  let r
   if (id) {
-    await apiPut("/contas/" + id, body)
+    r = await apiPut("/contas/" + id, body)
   } else {
     body.saldo = parseFloat(document.getElementById("conta-saldo").value)
-    await apiPost("/contas", body)
+    r = await apiPost("/contas", body)
+  }
+  if (!r.ok) {
+    const d = await r.json()
+    mostrarToast(mensagemDeErro(d), "erro")
+    return
   }
   fecharModal()
   carregarContas()
@@ -1950,7 +1980,24 @@ async function eliminarReconciliacao(id) {
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: ANÁLISE
 // ═══════════════════════════════════════════════════════════
-async function carregarAnalise() {
+function trocarAbaAnalise(aba) {
+  document.querySelectorAll(".analise-tab").forEach(t => t.classList.toggle("active", t.dataset.aba === aba))
+  document.querySelectorAll(".analise-secao").forEach(el => el.classList.toggle("active", el.id === `analise-secao-${aba}`))
+  requestAnimationFrame(() => {
+    if (aba === "global" && analiseCache.mensal !== null) {
+      destruirGrafico("mensal")
+      renderizarGraficoMensal(analiseCache.mensal)
+    }
+    if (aba === "especifica" && analiseCache.categorias !== null) {
+      destruirGrafico("in")
+      destruirGrafico("out")
+      renderizarDonutsCategoria(analiseCache.categorias)
+    }
+  })
+}
+
+async function carregarAnalise(resetarAba = false) {
+  if (resetarAba) trocarAbaAnalise('global')
   document.getElementById("tabela-recorrentes").innerHTML = linhasEsqueleto(5, 3)
   document.getElementById("lista-grupos").innerHTML = `<div class="estado-vazio"><div class="subtitulo">A carregar...</div></div>`
 
@@ -1980,12 +2027,14 @@ async function carregarAnalise() {
     api("/stats/grupos" + qs),
     api("/stats/recorrentes" + qs)
   ])
+  analiseCache.mensal = mensal
+  analiseCache.categorias = categorias
 
   renderizarResumoAnalise(mensal)
   renderizarGraficoMensal(mensal)
   renderizarDonutsCategoria(categorias)
   renderizarRecorrentes(recorrentes)
-
+  
   gruposCache = grupos
   renderizarGrupos()
 }
@@ -2023,7 +2072,28 @@ function renderizarGraficoMensal(mensal) {
           { label: "Cash-Out", data: mensal.map(m => m.saidas),   backgroundColor: "#c0392b" }
         ]
       },
-      options: { plugins: { legend: { labels: { font: { size: 11 } } } }, scales: { x: { grid: { display: false } } } }
+      options: {
+        plugins: {
+          legend: { labels: { font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const campo = ctx.datasetIndex === 0 ? 'entradas' : 'saidas'
+                let linha = `${ctx.dataset.label}: ${fmt(ctx.raw, moedaAnaliseGlobal)}`
+                if (ctx.dataIndex > 0) {
+                  const anterior = mensal[ctx.dataIndex - 1][campo]
+                  if (anterior > 0) {
+                    const variacao = ((ctx.raw - anterior) / anterior) * 100
+                    linha += ` (${variacao >= 0 ? '+' : ''}${variacao.toFixed(0)}% mês anterior)`
+                  }
+                }
+                return linha
+              }
+            }
+          }
+        },
+        scales: { x: { grid: { display: false } } }
+      }
     })
   })
 }
@@ -2037,7 +2107,10 @@ function renderizarDonutsCategoria(categorias) {
     graficos.out = new Chart(document.getElementById("grafico-out"), {
       type: "doughnut",
       data: { labels: out.map(c => c.categoria), datasets: [{ data: out.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
-      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${out[ctx.dataIndex].percentagem}%)` } } } }
+      options: {
+        animation: { animateRotate: false, animateScale: true },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${out[ctx.dataIndex].percentagem}%)` } } }
+      }
     })
   })
 
@@ -2047,7 +2120,10 @@ function renderizarDonutsCategoria(categorias) {
     graficos.in = new Chart(document.getElementById("grafico-in"), {
       type: "doughnut",
       data: { labels: inp.map(c => c.categoria), datasets: [{ data: inp.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
-      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${inp[ctx.dataIndex].percentagem}%)` } } } }
+      options: {
+        animation: { animateRotate: false, animateScale: true },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${inp[ctx.dataIndex].percentagem}%)` } } }
+      }
     })
   })
 }
@@ -2332,7 +2408,12 @@ async function guardarMovimento() {
 
 async function eliminarMovimento(id) {
   if (!(await confirmarAcao("Eliminar este movimento?", { perigo: true }))) return
-  await apiDelete("/movimentos/" + id)
+  const r = await apiDelete("/movimentos/" + id)
+  if (!r.ok) {
+    const d = await r.json()
+    mostrarToast(mensagemDeErro(d), "erro")
+    return
+  }
   carregarMovimentos()
 }
 
@@ -2552,11 +2633,17 @@ async function guardarGrupo() {
   if (!camposValidos("grupo-nome")) return
   const id   = document.getElementById("grupo-id").value
   const nome = document.getElementById("grupo-nome").value
+  let r
   if (id) {
-    await apiPut("/categorias/" + id, { nome })
+    r = await apiPut("/categorias/" + id, { nome })
   } else {
     const tipo = document.getElementById("grupo-tipo").value
-    await apiPost("/categorias", { nome, eh_recebimento: tipo === "in" })
+    r = await apiPost("/categorias", { nome, eh_recebimento: tipo === "in" })
+  }
+  if (!r.ok) {
+    const d = await r.json()
+    mostrarToast(mensagemDeErro(d), "erro")
+    return
   }
   fecharModal()
   aposMudarCategorias()
@@ -2595,17 +2682,28 @@ async function guardarCategoriaGestao() {
   const id      = document.getElementById("categoria-gestao-id").value
   const nome    = document.getElementById("categoria-gestao-nome").value
   const grupoId = parseInt(document.getElementById("categoria-gestao-grupo").value)
+  let r
   if (id) {
-    await apiPut("/categorias/" + id, { nome, parent_id: grupoId })
+    r = await apiPut("/categorias/" + id, { nome, parent_id: grupoId })
   } else {
-    await apiPost("/categorias", { nome, parent_id: grupoId })
+    r = await apiPost("/categorias", { nome, parent_id: grupoId })
+  }
+  if (!r.ok) {
+    const d = await r.json()
+    mostrarToast(mensagemDeErro(d), "erro")
+    return
   }
   fecharModal()
   aposMudarCategorias()
 }
 
 async function moverCategoria(id, direcao) {
-  await apiPost("/categorias/" + id + "/mover?direcao=" + direcao, {})
+  const r = await apiPost("/categorias/" + id + "/mover?direcao=" + direcao, {})
+  if (!r.ok) {
+    const d = await r.json()
+    mostrarToast(mensagemDeErro(d), "erro")
+    return
+  }
   carregarArvoreCategorias()
 }
 

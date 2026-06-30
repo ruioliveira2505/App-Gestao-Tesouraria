@@ -5,7 +5,7 @@ import psycopg2
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.schemas.contas import AjusteSaldoInput, ContaEditInput, ContaInput
 from app.services.reconciliacoes import atualizar_saldo_atual, primeiro_movimento_data
 
@@ -37,7 +37,7 @@ def listar_contas(utilizador: dict = Depends(utilizador_atual)):
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return [
         {"id": r[0], "nome": r[1], "banco": r[2], "iban": r[3], "moeda": r[4], "tipo": r[5], "saldo": float(r[6])}
         for r in rows
@@ -60,7 +60,7 @@ def criar_conta(dados: ContaInput, utilizador: dict = Depends(utilizador_atual))
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -76,7 +76,7 @@ def editar_conta(conta_id: str, dados: ContaEditInput, utilizador: dict = Depend
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -100,7 +100,7 @@ def eliminar_conta(conta_id: str, forcar: bool = False, utilizador: dict = Depen
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -120,7 +120,7 @@ def listar_ajustes_saldo(conta_id: str, utilizador: dict = Depends(utilizador_at
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return [{"id": r[0], "data": str(r[1]), "saldo_real": float(r[2])} for r in rows]
 
 
@@ -149,7 +149,7 @@ def criar_ajuste_saldo(conta_id: str, dados: AjusteSaldoInput, utilizador: dict 
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -194,7 +194,7 @@ def editar_ajuste_saldo(ajuste_id: int, dados: AjusteSaldoInput, utilizador: dic
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -234,5 +234,5 @@ def eliminar_ajuste_saldo(ajuste_id: int, utilizador: dict = Depends(utilizador_
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}

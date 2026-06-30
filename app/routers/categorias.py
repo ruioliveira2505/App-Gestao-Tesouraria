@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.schemas.categorias import CategoriaGestaoInput
 
 router = APIRouter()
@@ -11,6 +11,11 @@ router = APIRouter()
 
 def _pertence(cursor, categoria_id, uid):
     cursor.execute("SELECT id FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+    return cursor.fetchone() is not None
+
+
+def _eh_grupo(cursor, categoria_id, uid):
+    cursor.execute("SELECT id FROM categorias WHERE id=%s AND utilizador_id=%s AND parent_id IS NULL", (categoria_id, uid))
     return cursor.fetchone() is not None
 
 
@@ -73,7 +78,7 @@ def listar_categorias(utilizador: dict = Depends(utilizador_atual)):
         rows = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return [{"id": r[0], "nome": r[1], "grupo": r[2], "eh_recebimento": r[3]} for r in rows]
 
 
@@ -98,7 +103,7 @@ def arvore_categorias(utilizador: dict = Depends(utilizador_atual)):
         categorias = cursor.fetchall()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     return [
         {
@@ -118,7 +123,7 @@ def criar_categoria(dados: CategoriaGestaoInput, utilizador: dict = Depends(util
         if dados.parent_id is None and dados.eh_recebimento is None:
             raise HTTPException(status_code=400, detail="Um grupo novo precisa de indicar se é Entrada ou Saída.")
 
-        if dados.parent_id is not None and not _pertence(cursor, dados.parent_id, uid):
+        if dados.parent_id is not None and not _eh_grupo(cursor, dados.parent_id, uid):
             raise HTTPException(status_code=404, detail="Grupo não encontrado")
 
         if dados.parent_id is None:
@@ -137,7 +142,7 @@ def criar_categoria(dados: CategoriaGestaoInput, utilizador: dict = Depends(util
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -159,7 +164,7 @@ def editar_categoria(categoria_id: int, dados: CategoriaGestaoInput, utilizador:
         if dados.parent_id is not None:
             if parent_id is None:
                 raise HTTPException(status_code=400, detail="Um grupo não pode ser movido para dentro de outro grupo.")
-            if not _pertence(cursor, dados.parent_id, uid):
+            if not _eh_grupo(cursor, dados.parent_id, uid):
                 raise HTTPException(status_code=404, detail="Grupo de destino não encontrado")
             cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s", (dados.parent_id,))
             eh_recebimento = cursor.fetchone()[0]
@@ -173,7 +178,7 @@ def editar_categoria(categoria_id: int, dados: CategoriaGestaoInput, utilizador:
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -183,17 +188,26 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
     cursor = conn.cursor()
     uid = utilizador["sub"]
     try:
-        cursor.execute("SELECT parent_id, protegida FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+        cursor.execute("SELECT parent_id, protegida, eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
         row = cursor.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Categoria não encontrada")
-        parent_id, protegida = row
+        parent_id, protegida, eh_recebimento = row
 
         if protegida:
             raise HTTPException(status_code=400, detail="Esta categoria é necessária para o sistema funcionar e não pode ser eliminada.")
 
-        if migrar_para_id and not _pertence(cursor, migrar_para_id, uid):
-            raise HTTPException(status_code=404, detail="Categoria de destino não encontrada")
+        if migrar_para_id:
+            cursor.execute("SELECT parent_id, eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (migrar_para_id, uid))
+            destino = cursor.fetchone()
+            if not destino:
+                raise HTTPException(status_code=404, detail="Categoria de destino não encontrada")
+            destino_parent_id, destino_eh_recebimento = destino
+
+            if (parent_id is None) != (destino_parent_id is None):
+                raise HTTPException(status_code=400, detail="O destino tem de ser do mesmo tipo (grupo ou categoria).")
+            if destino_eh_recebimento != eh_recebimento:
+                raise HTTPException(status_code=400, detail="O destino tem de ser da mesma direção (Entrada ou Saída).")
 
         if parent_id is None:
             _eliminar_grupo(cursor, categoria_id, migrar_para_id, forcar)
@@ -203,7 +217,7 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -243,5 +257,5 @@ def mover_categoria(categoria_id: int, direcao: str, utilizador: dict = Depends(
             conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}

@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.security import encriptar_password, verificar_password, criar_token, verificar_token
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.schemas.auth import RegistoInput, LoginInput, EsqueciPasswordInput, RedefinirPasswordInput
 from app.services.categorias_seed import seed_categorias_padrao
 from app.services.email import enviar_email
@@ -33,7 +33,7 @@ def registar(request: Request, dados: RegistoInput):
         seed_categorias_padrao(conn, utilizador_id)
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     token = criar_token({"sub": str(utilizador_id), "email": dados.email})
     return {"token": token, "nome": dados.nome}
@@ -52,7 +52,7 @@ def login(request: Request, dados: LoginInput):
         row = cursor.fetchone()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     if not row or not verificar_password(dados.password, row[2]):
         raise HTTPException(status_code=401, detail="Email ou password incorretos")
@@ -71,7 +71,7 @@ def esqueci_password(request: Request, dados: EsqueciPasswordInput, background_t
         row = cursor.fetchone()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     if row:
         token = criar_token({"sub": str(row[0]), "tipo": "reset"}, timedelta(hours=1))
@@ -102,6 +102,6 @@ def redefinir_password(dados: RedefinirPasswordInput):
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
 
     return {"ok": True}

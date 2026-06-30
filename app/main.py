@@ -10,7 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.errors import validation_exception_handler
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.routers import auth, perfil, contas, categorias, movimentos, stats
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -47,7 +47,7 @@ def raiz():
 def health():
     try:
         conn = get_connection()
-        conn.close()
+        release_connection(conn)
         return {"status": "ok", "database": "ok"}
     except Exception:
         return {"status": "degraded", "database": "unreachable"}

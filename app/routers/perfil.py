@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
 from app.core.security import encriptar_password, verificar_password
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection, release_connection
 from app.schemas.perfil import PasswordUpdateInput, PerfilUpdateInput
 
 router = APIRouter()
@@ -17,7 +17,7 @@ def perfil(utilizador: dict = Depends(utilizador_atual)):
         nome, email = cursor.fetchone()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"email": email, "id": utilizador["sub"], "nome": nome}
 
 
@@ -34,7 +34,7 @@ def atualizar_perfil(dados: PerfilUpdateInput, utilizador: dict = Depends(utiliz
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True, "nome": dados.nome}
 
 
@@ -52,7 +52,7 @@ def atualizar_password(dados: PasswordUpdateInput, utilizador: dict = Depends(ut
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}
 
 
@@ -70,5 +70,5 @@ def eliminar_conta_utilizador(utilizador: dict = Depends(utilizador_atual)):
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        release_connection(conn)
     return {"ok": True}

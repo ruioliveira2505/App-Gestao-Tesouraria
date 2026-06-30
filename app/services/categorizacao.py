@@ -4,7 +4,7 @@ import re
 import requests
 
 from app.core.config import settings
-from app.db.database import get_connection
+from app.db.database import get_connection, release_connection, release_connection
 
 logger = logging.getLogger(__name__)
 
@@ -26,25 +26,25 @@ def resolver_categoria_fallback(conn, eh_recebimento, utilizador_id):
     return row[0] if row else None
 
 
-def buscar_em_cache(conn, descricao, utilizador_id):
+def buscar_em_cache(conn, descricao, utilizador_id, eh_recebimento):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT categoria_id, confirmado FROM categorias_aprendidas
-        WHERE descricao = %s AND utilizador_id = %s
-    """, (descricao, utilizador_id))
+        WHERE descricao = %s AND utilizador_id = %s AND eh_recebimento = %s
+    """, (descricao, utilizador_id, eh_recebimento))
     row = cursor.fetchone()
     cursor.close()
     return row if row else None
 
 
-def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False):
+def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, eh_recebimento, confirmado=False):
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO categorias_aprendidas (descricao, categoria_id, utilizador_id, confirmado)
-        VALUES (%s, %s, %s, %s)
-        ON CONFLICT (descricao, utilizador_id)
+        INSERT INTO categorias_aprendidas (descricao, categoria_id, utilizador_id, eh_recebimento, confirmado)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (descricao, utilizador_id, eh_recebimento)
         DO UPDATE SET categoria_id = EXCLUDED.categoria_id, confirmado = EXCLUDED.confirmado
-    """, (descricao, categoria_id, utilizador_id, confirmado))
+    """, (descricao, categoria_id, utilizador_id, eh_recebimento, confirmado))
     conn.commit()
     cursor.close()
 
@@ -137,21 +137,23 @@ def categorizar(descricao, valor, utilizador_id, conn=None):
     if proprio_conn:
         conn = get_connection()
 
+    eh_recebimento = valor > 0
+
     try:
-        em_cache = buscar_em_cache(conn, descricao, utilizador_id)
+        em_cache = buscar_em_cache(conn, descricao, utilizador_id, eh_recebimento)
         if em_cache:
             categoria_id, confirmado = em_cache
             return categoria_id, ("cache" if confirmado else "llm")
 
         categoria_id = categorizar_por_llm(descricao, valor, conn, utilizador_id)
         if categoria_id:
-            guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False)
+            guardar_em_cache(conn, descricao, categoria_id, utilizador_id, eh_recebimento, confirmado=False)
             return categoria_id, "llm"
 
-        categoria_id = resolver_categoria_fallback(conn, valor > 0, utilizador_id)
+        categoria_id = resolver_categoria_fallback(conn, eh_recebimento, utilizador_id)
         if categoria_id:
-            guardar_em_cache(conn, descricao, categoria_id, utilizador_id, confirmado=False)
+            guardar_em_cache(conn, descricao, categoria_id, utilizador_id, eh_recebimento, confirmado=False)
         return categoria_id, "sem_match"
     finally:
         if proprio_conn:
-            conn.close()
+            release_connection(conn)

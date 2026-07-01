@@ -1,19 +1,35 @@
 from collections import defaultdict
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
-from app.db.database import get_connection, release_connection, release_connection
+from app.db.database import get_connection, release_connection
 
 router = APIRouter()
 
 
+def _excluir_sql(excluir_categorias: str):
+    if not excluir_categorias:
+        return "", []
+    ids = [int(x) for x in excluir_categorias.split(',') if x.strip()]
+    if not ids:
+        return "", []
+    placeholders = ','.join(['%s'] * len(ids))
+    return f"AND m.categoria_id NOT IN ({placeholders})", ids
+
+
 @router.get("/stats/mensal")
-def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
+def stats_mensal(
+    utilizador: dict = Depends(utilizador_atual),
+    conta_id: str = None, tipo: str = None,
+    data_de: str = None, data_ate: str = None,
+    excluir_categorias: str = None,
+):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
             SELECT
@@ -27,9 +43,10 @@ def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
               AND (%s IS NULL OR ct.tipo = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
+        """ + excluir_cond + """
             GROUP BY DATE_TRUNC('month', m.data)
             ORDER BY DATE_TRUNC('month', m.data)
-        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
+        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
@@ -42,24 +59,32 @@ def stats_mensal(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
 
 
 @router.get("/stats/categorias")
-def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
+def stats_categorias(
+    utilizador: dict = Depends(utilizador_atual),
+    conta_id: str = None, tipo: str = None,
+    data_de: str = None, data_ate: str = None,
+    excluir_categorias: str = None,
+):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
             WITH RECURSIVE arvore AS (
-                SELECT id, parent_id, nome AS caminho, nome AS grupo_raiz, eh_recebimento
+                SELECT id, parent_id, nome AS caminho, nome AS grupo_raiz,
+                       nome AS categoria_nome, eh_recebimento
                 FROM categorias
                 WHERE utilizador_id = %s AND parent_id IS NULL
                 UNION ALL
                 SELECT c.id, c.parent_id,
                        a.caminho || ' > ' || c.nome,
-                       a.grupo_raiz, a.eh_recebimento
+                       a.grupo_raiz, c.nome AS categoria_nome, a.eh_recebimento
                 FROM categorias c
                 JOIN arvore a ON c.parent_id = a.id
             )
             SELECT a.grupo_raiz, a.caminho, a.eh_recebimento,
+                   a.id AS categoria_id, a.categoria_nome,
                    COUNT(*) AS n, SUM(ABS(m.valor)) AS total
             FROM movimentos m
             JOIN contas ct ON m.conta_id = ct.id
@@ -70,44 +95,56 @@ def stats_categorias(utilizador: dict = Depends(utilizador_atual), conta_id: str
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
               AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
-            GROUP BY a.grupo_raiz, a.caminho, a.eh_recebimento
+        """ + excluir_cond + """
+            GROUP BY a.grupo_raiz, a.caminho, a.eh_recebimento, a.id, a.categoria_nome
             ORDER BY a.eh_recebimento DESC, total DESC
-        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
+        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
         release_connection(conn)
 
-    total_out = sum(float(r[4]) for r in rows if not r[2])
-    total_in  = sum(float(r[4]) for r in rows if r[2])
+    total_out = sum(float(r[6]) for r in rows if not r[2])
+    total_in  = sum(float(r[6]) for r in rows if r[2])
 
     return [
         {
-            "grupo": r[0], "categoria": r[1], "eh_recebimento": r[2], "n": r[3],
-            "total": float(r[4]),
-            "percentagem": round(float(r[4]) / (total_in if r[2] else total_out) * 100, 1) if (total_in if r[2] else total_out) else 0,
+            "grupo": r[0], "categoria": r[1], "categoria_nome": r[4],
+            "categoria_id": r[3], "eh_recebimento": r[2],
+            "n": r[5], "total": float(r[6]),
+            "percentagem": round(float(r[6]) / (total_in if r[2] else total_out) * 100, 1)
+                           if (total_in if r[2] else total_out) else 0,
         }
         for r in rows
     ]
 
 
 @router.get("/stats/grupos")
-def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
+def stats_grupos(
+    utilizador: dict = Depends(utilizador_atual),
+    conta_id: str = None, tipo: str = None,
+    data_de: str = None, data_ate: str = None,
+    excluir_categorias: str = None,
+):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
             WITH RECURSIVE arvore AS (
-                SELECT id, parent_id, nome, nome AS grupo_raiz, eh_recebimento, 0 AS nivel
+                SELECT id, parent_id, nome, nome AS grupo_raiz, id AS grupo_raiz_id,
+                       eh_recebimento, 0 AS nivel
                 FROM categorias
                 WHERE utilizador_id = %s AND parent_id IS NULL
                 UNION ALL
-                SELECT c.id, c.parent_id, c.nome, a.grupo_raiz, a.eh_recebimento, a.nivel + 1
+                SELECT c.id, c.parent_id, c.nome, a.grupo_raiz, a.grupo_raiz_id,
+                       a.eh_recebimento, a.nivel + 1
                 FROM categorias c
                 JOIN arvore a ON c.parent_id = a.id
             )
-            SELECT a.grupo_raiz, a.eh_recebimento, a.nome AS categoria,
+            SELECT a.grupo_raiz, a.grupo_raiz_id, a.eh_recebimento,
+                   a.nome AS categoria, a.id AS categoria_id,
                    a.nivel, COUNT(*) AS n, SUM(ABS(m.valor)) AS total
             FROM movimentos m
             JOIN contas ct ON m.conta_id = ct.id
@@ -118,23 +155,28 @@ def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
               AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
-            GROUP BY a.grupo_raiz, a.eh_recebimento, a.nome, a.nivel
+        """ + excluir_cond + """
+            GROUP BY a.grupo_raiz, a.grupo_raiz_id, a.eh_recebimento, a.nome, a.id, a.nivel
             ORDER BY a.eh_recebimento DESC, a.grupo_raiz, total DESC
-        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
+        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
         release_connection(conn)
 
-    grupos = defaultdict(lambda: {"eh_recebimento": None, "total": 0.0, "subcategorias": []})
+    grupos = defaultdict(lambda: {"eh_recebimento": None, "grupo_id": None, "total": 0.0, "subcategorias": []})
     for r in rows:
-        grupos[r[0]]["eh_recebimento"] = r[1]
-        grupos[r[0]]["total"] += float(r[5])
-        grupos[r[0]]["subcategorias"].append({"categoria": r[2], "total": float(r[5]), "n": r[4]})
+        grupos[r[0]]["eh_recebimento"] = r[2]
+        grupos[r[0]]["grupo_id"] = r[1]
+        grupos[r[0]]["total"] += float(r[7])
+        grupos[r[0]]["subcategorias"].append({
+            "categoria": r[3], "categoria_id": r[4], "total": float(r[7]), "n": r[6]
+        })
 
     return [
         {
-            "grupo": grupo, "eh_recebimento": dados["eh_recebimento"],
+            "grupo": grupo, "grupo_id": dados["grupo_id"],
+            "eh_recebimento": dados["eh_recebimento"],
             "total": round(dados["total"], 2),
             "subcategorias": sorted(dados["subcategorias"], key=lambda x: x["total"], reverse=True),
         }
@@ -142,8 +184,102 @@ def stats_grupos(utilizador: dict = Depends(utilizador_atual), conta_id: str = N
     ]
 
 
+@router.get("/stats/mensal-detalhe")
+def stats_mensal_detalhe(
+    utilizador: dict = Depends(utilizador_atual),
+    grupo_id: int = None, categoria_id: int = None,
+    conta_id: str = None, tipo: str = None,
+    data_de: str = None, data_ate: str = None,
+    excluir_categorias: str = None,
+):
+    if not grupo_id and not categoria_id:
+        raise HTTPException(status_code=400, detail="Indica grupo_id ou categoria_id.")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+    excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
+    try:
+        if categoria_id:
+            cursor.execute(
+                "SELECT id FROM categorias WHERE id=%s AND utilizador_id=%s",
+                (categoria_id, uid)
+            )
+            if not cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Categoria não encontrada")
+
+            cursor.execute("""
+                SELECT TO_CHAR(DATE_TRUNC('month', m.data), 'YYYY-MM') AS mes,
+                       SUM(ABS(m.valor)) AS total
+                FROM movimentos m
+                JOIN contas ct ON m.conta_id = ct.id
+                WHERE m.utilizador_id = %s
+                  AND m.categoria_id = %s
+                  AND (%s IS NULL OR m.conta_id = %s)
+                  AND (%s IS NULL OR ct.tipo = %s)
+                  AND (%s IS NULL OR m.data >= %s)
+                  AND (%s IS NULL OR m.data <= %s)
+            """ + excluir_cond + """
+                GROUP BY DATE_TRUNC('month', m.data)
+                ORDER BY DATE_TRUNC('month', m.data)
+            """, [uid, categoria_id, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+            rows = cursor.fetchall()
+            return [{"mes": r[0], "total": float(r[1])} for r in rows]
+
+        else:
+            cursor.execute(
+                "SELECT id FROM categorias WHERE id=%s AND utilizador_id=%s AND parent_id IS NULL",
+                (grupo_id, uid)
+            )
+            if not cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Grupo não encontrado")
+
+            cursor.execute("""
+                SELECT TO_CHAR(DATE_TRUNC('month', m.data), 'YYYY-MM') AS mes,
+                       c.nome AS categoria,
+                       SUM(ABS(m.valor)) AS total
+                FROM movimentos m
+                JOIN contas ct ON m.conta_id = ct.id
+                JOIN categorias c ON m.categoria_id = c.id
+                WHERE m.utilizador_id = %s
+                  AND c.parent_id = %s
+                  AND (%s IS NULL OR m.conta_id = %s)
+                  AND (%s IS NULL OR ct.tipo = %s)
+                  AND (%s IS NULL OR m.data >= %s)
+                  AND (%s IS NULL OR m.data <= %s)
+            """ + excluir_cond + """
+                GROUP BY DATE_TRUNC('month', m.data), c.nome
+                ORDER BY DATE_TRUNC('month', m.data), c.nome
+            """, [uid, grupo_id, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+            rows = cursor.fetchall()
+
+            meses_dict = {}
+            cat_totais = {}
+            for mes, cat, total in rows:
+                if mes not in meses_dict:
+                    meses_dict[mes] = {}
+                meses_dict[mes][cat] = float(total)
+                cat_totais[cat] = cat_totais.get(cat, 0) + float(total)
+
+            categorias = sorted(cat_totais.keys(), key=lambda c: cat_totais[c], reverse=True)
+            return {
+                "meses": [
+                    {"mes": mes, "categorias": {cat: meses_dict[mes].get(cat, 0.0) for cat in categorias}}
+                    for mes in sorted(meses_dict.keys())
+                ],
+                "categorias": categorias
+            }
+    finally:
+        cursor.close()
+        release_connection(conn)
+
+
 @router.get("/stats/saldo-diario")
-def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
+def stats_saldo_diario(
+    utilizador: dict = Depends(utilizador_atual),
+    conta_id: str = None, tipo: str = None,
+    data_de: str = None, data_ate: str = None,
+):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
@@ -197,10 +333,16 @@ def stats_saldo_diario(utilizador: dict = Depends(utilizador_atual), conta_id: s
 
 
 @router.get("/stats/recorrentes")
-def stats_recorrentes(utilizador: dict = Depends(utilizador_atual), conta_id: str = None, tipo: str = None, data_de: str = None, data_ate: str = None):
+def stats_recorrentes(
+    utilizador: dict = Depends(utilizador_atual),
+    conta_id: str = None, tipo: str = None,
+    data_de: str = None, data_ate: str = None,
+    excluir_categorias: str = None,
+):
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
             SELECT m.descricao, c.nome AS categoria, g.nome AS grupo, m.data, m.valor
@@ -213,8 +355,9 @@ def stats_recorrentes(utilizador: dict = Depends(utilizador_atual), conta_id: st
               AND (%s IS NULL OR ct.tipo = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
+        """ + excluir_cond + """
             ORDER BY m.descricao, c.nome, m.data
-        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate])
+        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
@@ -229,22 +372,20 @@ def stats_recorrentes(utilizador: dict = Depends(utilizador_atual), conta_id: st
         if len(ocorrencias) < 2:
             continue
 
-        datas = [o[0] for o in ocorrencias]
-        valores = [o[1] for o in ocorrencias]
+        datas    = [o[0] for o in ocorrencias]
+        valores  = [o[1] for o in ocorrencias]
         intervalos = [(datas[i] - datas[i-1]).days for i in range(1, len(datas))]
 
         intervalo_medio = sum(intervalos) / len(intervalos)
         if intervalo_medio == 0:
             continue
 
-        desvio = (sum((i - intervalo_medio) ** 2 for i in intervalos) / len(intervalos)) ** 0.5
+        desvio  = (sum((i - intervalo_medio) ** 2 for i in intervalos) / len(intervalos)) ** 0.5
         regular = (desvio / intervalo_medio) < 0.4
         proxima_data = datas[-1] + timedelta(days=round(intervalo_medio))
 
         resultado.append({
-            "descricao": descricao,
-            "categoria": categoria,
-            "grupo": grupo,
+            "descricao": descricao, "categoria": categoria, "grupo": grupo,
             "ocorrencias": len(ocorrencias),
             "valor_medio": round(sum(valores) / len(valores), 2),
             "ultima_vez": str(datas[-1]),

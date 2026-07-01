@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
@@ -61,7 +60,6 @@
        AUTH
     ═══════════════════════════════════════════════════════ */
     #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    #reset-screen.visible { display: block; }
     .auth-card { background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid var(--color-border); padding: 2rem; width: 100%; max-width: 380px; }
     .auth-card h1 { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
     .auth-tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); }
@@ -148,7 +146,12 @@
     tr:hover td { background: var(--color-surface); }
 
     .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: var(--color-badge-bg); color: var(--color-badge-text); }
+    .positivo { color: var(--color-positivo); }
+    .negativo { color: var(--color-negativo); }
 
+    /* ═══════════════════════════════════════════════════════
+       MOVIMENTOS — PENDENTES
+    ═══════════════════════════════════════════════════════ */
     .badge-pendentes {
       display: inline-flex; align-items: center; justify-content: center;
       min-width: 18px; height: 18px; padding: 0 5px;
@@ -169,15 +172,9 @@
     .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: var(--color-positivo-bg); border: 1px solid var(--color-positivo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-positivo-text); }
     .btn-confirmar:hover { background: var(--color-positivo-bg-hover); }
 
-    .positivo { color: var(--color-positivo); }
-    .negativo { color: var(--color-negativo); }
-
     /* ═══════════════════════════════════════════════════════
        GRÁFICOS
     ═══════════════════════════════════════════════════════ */
-    .charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-    .chart-card { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; }
-    .chart-card h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
     .chart-full { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; margin-bottom: 1.5rem; }
     .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
 
@@ -191,19 +188,69 @@
     .filtros-limpar-linha.escondido { visibility: hidden; }
     .filtros-limpar { font-size: 0.8rem; color: var(--color-text-secondary); cursor: pointer; }
     .filtros-limpar:hover { color: var(--color-text); text-decoration: underline; }
-    
+
+    /* ── Filtro de categorias (análise) ── */
+    .filtro-cat-wrapper {
+      display: flex; flex-direction: column; gap: 4px;
+      position: relative; min-width: 140px;
+    }
+    .filtro-cat-wrapper label {
+      font-size: 0.75rem; color: var(--color-text-secondary);
+    }
+    .filtro-cat-btn {
+      width: 100%; display: inline-flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 0.5rem 0.75rem; border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm); background: var(--color-white);
+      font-size: 0.875rem; cursor: pointer; color: var(--color-text);
+    }
+    .filtro-cat-btn:hover { border-color: var(--color-text-secondary); }
+    .filtro-cat-btn.ativo { border-color: var(--color-text); background: var(--color-badge-bg); }
+    .filtro-cat-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      background: var(--color-negativo); color: white;
+      border-radius: 999px; font-size: 0.65rem; font-weight: 600; flex-shrink: 0;
+    }
+    .filtro-cat-panel {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0;
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      z-index: 60; min-width: 260px; max-height: 360px; overflow-y: auto; padding: 0.5rem 0;
+    }
+    .filtro-cat-panel.aberto { display: block; }
+    .filtro-cat-acoes {
+      display: flex; gap: 0.75rem; padding: 0.5rem 0.75rem 0.4rem;
+      border-bottom: 1px solid var(--color-border); margin-bottom: 0.25rem;
+    }
+    .filtro-cat-acoes span { font-size: 0.75rem; color: var(--color-text-secondary); cursor: pointer; text-decoration: underline; }
+    .filtro-cat-acoes span:hover { color: var(--color-text); }
+    .filtro-cat-separador { font-size: 0.65rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 0.75rem 0.2rem; }
+    .filtro-cat-grupo-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 500;
+    }
+    .filtro-cat-grupo-row:hover { background: var(--color-surface); }
+    .filtro-cat-item-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0.3rem 0.75rem 0.3rem 1.75rem;
+      font-size: 0.82rem; color: var(--color-text-tertiary);
+    }
+    .filtro-cat-item-row:hover { background: var(--color-surface); }
+    .filtro-cat-item-row input, .filtro-cat-grupo-row input { cursor: pointer; flex-shrink: 0; }
+
+    /* ── Seletor de período (contas) ── */
     .campo-com-icone { position: relative; display: inline-flex; align-items: center; }
     .campo-com-icone .icone-calendario { position: absolute; left: 0.7rem; color: var(--color-text-secondary); pointer-events: none; }
-
     .seletor-periodo {
-      width: 200px;
-      padding: 0.45rem 0.8rem 0.45rem 2.1rem; border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      background: var(--color-white); font-size: 0.8rem; color: var(--color-text); cursor: pointer;
-      caret-color: transparent; white-space: nowrap;
+      width: 200px; padding: 0.45rem 0.8rem 0.45rem 2.1rem;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      background: var(--color-white); font-size: 0.8rem; color: var(--color-text);
+      cursor: pointer; caret-color: transparent; white-space: nowrap;
       transition: background-color 0.15s, border-color 0.15s;
     }
     .seletor-periodo:hover { background: var(--color-surface); border-color: var(--color-text-secondary); }
     .seletor-periodo:focus { outline: 2px solid var(--color-text); outline-offset: 1px; background: var(--color-surface); }
+
     /* ═══════════════════════════════════════════════════════
        TOGGLE ENTRADAS/SAÍDAS
     ═══════════════════════════════════════════════════════ */
@@ -213,9 +260,9 @@
     .toggle-tipo button.active.in  { background: var(--color-positivo-bg); color: var(--color-positivo-text); font-weight: 500; }
 
     /* ═══════════════════════════════════════════════════════
-       GRUPOS COM BARRA DE PERCENTAGEM
+       DETALHE POR GRUPO (barras + subcategorias)
     ═══════════════════════════════════════════════════════ */
-    .grupo-bar-row { padding: 0.85rem 0; border-bottom: 1px solid var(--color-border-light); cursor: pointer; }
+    .grupo-bar-row { padding: 0.85rem 0; border-bottom: 1px solid var(--color-border-light); }
     .grupo-bar-row:last-child { border-bottom: none; }
     .linha-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
     .linha-topo .nome { font-size: 0.9rem; font-weight: 500; }
@@ -227,9 +274,18 @@
     .sub-grupo.visible { display: block; }
     .sub-grupo .sub-item { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.8rem; color: var(--color-text-tertiary); }
     .sub-grupo .sub-item .pct { color: var(--color-text-faint); margin-right: 0.5rem; font-size: 0.7rem; }
+    .sub-barra-fundo { height: 5px; background: var(--color-badge-bg); border-radius: 4px; overflow: hidden; margin: 3px 0 8px 0; }
+
+    /* ── Botão de drill-down ── */
+    .btn-drilldown {
+      background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+      cursor: pointer; padding: 2px 6px; color: var(--color-text-secondary);
+      display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; flex-shrink: 0;
+    }
+    .btn-drilldown:hover { background: var(--color-surface); color: var(--color-text); border-color: var(--color-text-secondary); }
 
     /* ═══════════════════════════════════════════════════════
-       MODAL
+       MODAL (genérico)
     ═══════════════════════════════════════════════════════ */
     .modal-overlay { display: none; position: fixed; inset: 0; background: var(--color-overlay); align-items: center; justify-content: center; z-index: 100; }
     .modal-overlay.open { display: flex; }
@@ -237,14 +293,16 @@
     .modal h2 { font-size: 1rem; font-weight: 500; margin-bottom: 1.25rem; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
 
+    /* ── Modal drill-down ── */
+    .modal-drilldown { background: var(--color-white); border-radius: var(--radius-xl); padding: 1.5rem; width: 100%; max-width: 780px; }
+    .modal-drilldown-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; }
+    .modal-drilldown-header-texto { display: flex; flex-direction: column; gap: 2px; }
+    .drilldown-titulo-label { font-size: 0.65rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+
     /* ═══════════════════════════════════════════════════════
        TOASTS
     ═══════════════════════════════════════════════════════ */
-    #toast-container {
-      position: fixed; top: 1rem; right: 1rem; z-index: 200;
-      display: flex; flex-direction: column; gap: 0.5rem;
-      max-width: 360px;
-    }
+    #toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; max-width: 360px; }
     .toast {
       background: var(--color-white); border: 1px solid var(--color-border);
       border-radius: var(--radius-md); padding: 0.75rem 1rem;
@@ -273,16 +331,9 @@
     .categoria-gestao-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; font-size: 0.85rem; color: var(--color-text-tertiary); }
     .danger-zone-text { font-size: 0.875rem; color: var(--color-text-tertiary); margin-bottom: 0.75rem; }
 
-    /* ═══════════════════════════════════════════════════════
-       PERFIL: LAYOUT COM BARRA LATERAL
-    ═══════════════════════════════════════════════════════ */
     .perfil-layout { display: flex; gap: 1.5rem; align-items: flex-start; }
     .perfil-sidebar { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }
-    .perfil-sidebar-item {
-      display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.55rem 0.75rem; border-radius: var(--radius-sm);
-      font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer;
-    }
+    .perfil-sidebar-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer; }
     .perfil-sidebar-item .icone { display: flex; flex-shrink: 0; }
     .perfil-sidebar-item:hover { background: var(--color-surface); }
     .perfil-sidebar-item.active { background: var(--color-badge-bg); color: var(--color-text); font-weight: 500; }
@@ -293,7 +344,7 @@
     .perfil-secao-subtitulo { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.2rem; }
 
     /* ═══════════════════════════════════════════════════════
-       ESTADOS DE CARREGAMENTO E VAZIO
+       ESTADOS VAZIOS E SKELETONS
     ═══════════════════════════════════════════════════════ */
     .estado-vazio { padding: 2.5rem 1rem; text-align: center; color: var(--color-text-secondary); }
     .estado-vazio .titulo { font-size: 0.9rem; color: var(--color-text); font-weight: 500; margin-bottom: 0.25rem; }
@@ -305,85 +356,52 @@
     @keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     /* ═══════════════════════════════════════════════════════
-       RESPONSIVO (MOBILE)
+       AUTOCOMPLETE (sugestões)
     ═══════════════════════════════════════════════════════ */
-    @media (max-width: 768px) {
-      .charts-grid-2, .summary-grid { grid-template-columns: 1fr; }
-      nav { padding: 0 1rem; }
-      main { padding: 1rem; }
-
-      .perfil-layout { flex-direction: column; }
-      .perfil-sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
-
-      .table-wrap.cards-mobile table { display: block; }
-      .table-wrap.cards-mobile thead { display: none; }
-      .table-wrap.cards-mobile tbody { display: block; }
-      .table-wrap.cards-mobile tr {
-        display: block;
-        background: var(--color-white);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
-        margin: 0.75rem;
-        padding: 0.75rem 1rem;
-      }
-      .table-wrap.cards-mobile tr:hover td { background: none; }
-      .table-wrap.cards-mobile td {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        border-bottom: none;
-        padding: 0.35rem 0;
-        text-align: right;
-      }
-      .table-wrap.cards-mobile td::before {
-        content: attr(data-label);
-        font-size: 0.7rem;
-        color: var(--color-text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        font-weight: 600;
-        text-align: left;
-        flex-shrink: 0;
-      }
-      .table-wrap.cards-mobile td.td-acoes {
-        justify-content: flex-end;
-        padding-top: 0.6rem;
-        margin-top: 0.25rem;
-        border-top: 1px solid var(--color-border-light);
-      }
-      .table-wrap.cards-mobile td.td-acoes::before { content: none; }
-    }
-
-    /* ── CAMPO COM SUGESTÕES (autocomplete próprio) ─────── */
     .campo-sugestoes { position: relative; }
-    .sugestoes-lista {
-      display: none;
-      position: absolute; top: 100%; left: 0; right: 0;
-      background: var(--color-white); border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm); margin-top: 4px;
-      max-height: 220px; overflow-y: auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      z-index: 60;
-    }
+    .sugestoes-lista { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-top: 4px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08); z-index: 60; }
     .sugestoes-lista.aberta { display: block; }
     .sugestoes-lista .item { padding: 0.5rem 0.75rem; font-size: 0.875rem; cursor: pointer; }
     .sugestoes-lista .item:hover, .sugestoes-lista .item.destacado { background: var(--color-surface); }
     .sugestoes-lista .vazio { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--color-text-secondary); }
 
-    /* ── ANÁLISE: ABAS ──────────────────────────────────── */
+    /* ═══════════════════════════════════════════════════════
+       ANÁLISE — ABAS
+    ═══════════════════════════════════════════════════════ */
     .analise-tabs { display: flex; border-bottom: 1px solid var(--color-border); margin-bottom: 1.5rem; }
     .analise-tab { padding: 0.6rem 0.25rem; margin-right: 1.5rem; font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
     .analise-tab.active { color: var(--color-text); border-bottom-color: var(--color-text); font-weight: 500; }
     .analise-secao { display: none; }
     .analise-secao.active { display: block; }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVO (MOBILE)
+    ═══════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      nav { padding: 0 1rem; }
+      main { padding: 1rem; }
+      .perfil-layout { flex-direction: column; }
+      .perfil-sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+      .table-wrap.cards-mobile table { display: block; }
+      .table-wrap.cards-mobile thead { display: none; }
+      .table-wrap.cards-mobile tbody { display: block; }
+      .table-wrap.cards-mobile tr { display: block; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin: 0.75rem; padding: 0.75rem 1rem; }
+      .table-wrap.cards-mobile tr:hover td { background: none; }
+      .table-wrap.cards-mobile td { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: none; padding: 0.35rem 0; text-align: right; }
+      .table-wrap.cards-mobile td::before { content: attr(data-label); font-size: 0.7rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; text-align: left; flex-shrink: 0; }
+      .table-wrap.cards-mobile td.td-acoes { justify-content: flex-end; padding-top: 0.6rem; margin-top: 0.25rem; border-top: 1px solid var(--color-border-light); }
+      .table-wrap.cards-mobile td.td-acoes::before { content: none; }
+    }
   </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
 
-<!-- ═══════════════════ AUTH ═══════════════════ -->
+<!-- ═══════════════════════════════════════════════════════
+     AUTH
+═══════════════════════════════════════════════════════ -->
 <div id="auth-screen">
   <div class="auth-card">
     <h1>Tesouraria</h1>
@@ -391,9 +409,12 @@
       <div class="auth-tab active" onclick="trocarTab('login')">Entrar</div>
       <div class="auth-tab" onclick="trocarTab('registo')">Criar conta</div>
     </div>
+
     <div id="tab-login">
       <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="email@exemplo.com" required></div>
-      <div class="field field-com-toggle"><label>Password</label><input type="password" id="login-password" required>
+      <div class="field field-com-toggle">
+        <label>Password</label>
+        <input type="password" id="login-password" required>
         <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('login-password', this)"></button>
       </div>
       <button class="btn-primary full" id="btn-login" onclick="fazerLogin()">Entrar</button>
@@ -401,6 +422,7 @@
         <a href="#" onclick="abrirEsqueciPassword(); return false" style="font-size:0.8rem;color:#888">Esqueci a password</a>
       </div>
     </div>
+
     <div id="tab-esqueci" style="display:none">
       <div class="field"><label>Email</label><input type="email" id="esqueci-email" required></div>
       <button class="btn-primary full" id="btn-esqueci" onclick="enviarEsqueciPassword()">Enviar instruções</button>
@@ -408,18 +430,25 @@
         <a href="#" onclick="trocarTab('login'); return false" style="font-size:0.8rem;color:#888">Voltar a entrar</a>
       </div>
     </div>
+
     <div id="tab-registo" style="display:none">
       <div class="field"><label>Nome</label><input type="text" id="reg-nome" required></div>
       <div class="field"><label>Email</label><input type="email" id="reg-email" required></div>
-      <div class="field field-com-toggle"><label>Password</label><input type="password" id="reg-password" required minlength="8">
+      <div class="field field-com-toggle">
+        <label>Password</label>
+        <input type="password" id="reg-password" required minlength="8">
         <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('reg-password', this)"></button>
         <p class="ajuda" id="ajuda-reg-password">Mínimo de 8 caracteres.</p>
       </div>
       <button class="btn-primary full" id="btn-registo" onclick="fazerRegisto()">Criar conta</button>
     </div>
+
     <div class="auth-error" id="auth-erro"></div>
+
     <div id="reset-screen" style="display:none">
-      <div class="field field-com-toggle"><label>Nova password</label><input type="password" id="reset-password-nova" required minlength="8">
+      <div class="field field-com-toggle">
+        <label>Nova password</label>
+        <input type="password" id="reset-password-nova" required minlength="8">
         <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('reset-password-nova', this)"></button>
         <p class="ajuda" id="ajuda-reset-password-nova">Mínimo de 8 caracteres.</p>
       </div>
@@ -429,7 +458,9 @@
   </div>
 </div>
 
-<!-- ═══════════════════ APP ═══════════════════ -->
+<!-- ═══════════════════════════════════════════════════════
+     APP
+═══════════════════════════════════════════════════════ -->
 <div id="app-screen">
   <nav>
     <span class="nav-brand">Tesouraria</span>
@@ -447,22 +478,28 @@
 
   <main>
 
-    <!-- ── CONTAS ───────────────────────────────────── -->
+    <!-- ──────────────────────────────────────────────
+         PÁGINA: CONTAS
+    ────────────────────────────────────────────── -->
     <div class="page active" id="page-contas">
       <div class="filtros">
-        <div class="field"><label>Conta</label>
+        <div class="field">
+          <label>Conta</label>
           <select id="ct-filtro-conta" onchange="atualizarFiltroTipoPorConta('ct'); carregarContas()">
             <option value="">Todas</option>
           </select>
         </div>
-        <div class="field"><label>Tipo</label>
+        <div class="field">
+          <label>Tipo</label>
           <select id="ct-filtro-tipo" onchange="atualizarFiltroContasPorTipo('ct'); carregarContas()">
             <option value="">Todos</option>
           </select>
         </div>
         <button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>
       </div>
-      <div class="filtros-limpar-linha" id="ct-filtros-limpar-linha"><span class="filtros-limpar" onclick="limparFiltrosContas()">Limpar filtros</span></div>
+      <div class="filtros-limpar-linha" id="ct-filtros-limpar-linha">
+        <span class="filtros-limpar" onclick="limparFiltrosContas()">Limpar filtros</span>
+      </div>
 
       <div class="cards-grid" id="ct-card-total"></div>
 
@@ -492,22 +529,45 @@
       </div>
     </div>
 
-    <!-- ── ANÁLISE ──────────────────────────────────── -->
+    <!-- ──────────────────────────────────────────────
+         PÁGINA: ANÁLISE
+    ────────────────────────────────────────────── -->
     <div class="page" id="page-analise">
       <div class="filtros">
-        <div class="field"><label>Conta</label>
+        <div class="field">
+          <label>Conta</label>
           <select id="an-filtro-conta" onchange="atualizarFiltroTipoPorConta('an'); carregarAnalise()">
             <option value="">Todas</option>
           </select>
         </div>
-        <div class="field"><label>Tipo</label>
+        <div class="field">
+          <label>Tipo</label>
           <select id="an-filtro-tipo" onchange="atualizarFiltroContasPorTipo('an'); carregarAnalise()">
             <option value="">Todos</option>
           </select>
         </div>
-        <div class="field"><label>Período</label><input type="text" id="an-periodo" placeholder="Selecionar datas"></div>
+        <div class="filtro-cat-wrapper">
+          <label>Categorias</label>
+          <button class="filtro-cat-btn" id="filtro-cat-btn" onclick="toggleFiltroCat(event)">
+            <span id="filtro-cat-label">Todas as categorias</span>
+            <span class="filtro-cat-badge" id="filtro-cat-badge" style="display:none"></span>
+          </button>
+          <div class="filtro-cat-panel" id="filtro-cat-panel">
+            <div class="filtro-cat-acoes">
+              <span onclick="selecionarTodasCat()">Selecionar todas</span>
+              <span onclick="limparTodasCat()">Limpar seleção</span>
+            </div>
+            <div id="filtro-cat-lista"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Período</label>
+          <input type="text" id="an-periodo" placeholder="Selecionar datas">
+        </div>
       </div>
-      <div class="filtros-limpar-linha" id="an-filtros-limpar-linha"><span class="filtros-limpar" onclick="limparFiltrosAnalise()">Limpar filtros</span></div>
+      <div class="filtros-limpar-linha" id="an-filtros-limpar-linha">
+        <span class="filtros-limpar" onclick="limparFiltrosAnalise()">Limpar filtros</span>
+      </div>
 
       <div class="analise-tabs">
         <div class="analise-tab active" data-aba="global" onclick="trocarAbaAnalise('global')">Visão Global</div>
@@ -515,17 +575,16 @@
         <div class="analise-tab" data-aba="padroes" onclick="trocarAbaAnalise('padroes')">Padrões</div>
       </div>
 
-      <!-- ── VISÃO GLOBAL ─────────────────────────────── -->
+      <!-- Visão Global -->
       <div class="analise-secao active" id="analise-secao-global">
         <div class="summary-grid" id="summary-mes"></div>
-
         <div class="chart-full">
-          <h3>Cash-In vs Cash-Out por Mês</h3>
+          <h3>Evolução Mensal de Fluxos</h3>
           <canvas id="grafico-mensal"></canvas>
         </div>
       </div>
 
-      <!-- ── VISÃO ESPECÍFICA ─────────────────────────── -->
+      <!-- Visão Específica -->
       <div class="analise-secao" id="analise-secao-especifica">
         <div class="chart-full">
           <div class="section-header">
@@ -544,21 +603,9 @@
             <strong id="total-tipo" style="color:#1a1a1a"></strong>
           </div>
         </div>
-
-        <div class="charts-grid-2">
-          <div class="chart-card">
-            <h3>Cash-In por Categoria</h3>
-            <canvas id="grafico-in"></canvas>
-          </div>
-          <div class="chart-card">
-            <h3>Cash-Out por Categoria</h3>
-            <canvas id="grafico-out"></canvas>
-          </div>
-        </div>
-
       </div>
 
-      <!-- ── PADRÕES ──────────────────────────────────── -->
+      <!-- Padrões -->
       <div class="analise-secao" id="analise-secao-padroes">
         <div class="chart-full">
           <h3>Saídas Recorrentes</h3>
@@ -578,7 +625,9 @@
       </div>
     </div>
 
-    <!-- ── MOVIMENTOS ───────────────────────────────── -->
+    <!-- ──────────────────────────────────────────────
+         PÁGINA: MOVIMENTOS
+    ────────────────────────────────────────────── -->
     <div class="page" id="page-movimentos">
       <div class="banner-pendentes" id="banner-pendentes" style="display:none">
         <span class="texto" id="banner-pendentes-texto"></span>
@@ -586,28 +635,29 @@
       </div>
 
       <div class="filtros">
-        <div class="field"><label>Conta</label>
-          <select id="filtro-conta" onchange="carregarMovimentos()">
-            <option value="">Todas</option>
-          </select>
+        <div class="field">
+          <label>Conta</label>
+          <select id="filtro-conta" onchange="carregarMovimentos()"><option value="">Todas</option></select>
         </div>
-        <div class="field"><label>Direção</label>
+        <div class="field">
+          <label>Direção</label>
           <select id="filtro-direcao" onchange="atualizarFiltroCategoriasMovimentos()">
             <option value="">Todas</option>
             <option value="in" style="color:#166534">↑ Cash-In</option>
             <option value="out" style="color:#991b1b">↓ Cash-Out</option>
           </select>
         </div>
-        <div class="field"><label>Categoria</label>
-          <select id="filtro-categoria" onchange="carregarMovimentos()">
-            <option value="">Todas</option>
-          </select>
+        <div class="field">
+          <label>Categoria</label>
+          <select id="filtro-categoria" onchange="carregarMovimentos()"><option value="">Todas</option></select>
         </div>
         <div class="field"><label>Período</label><input type="text" id="mov-periodo" placeholder="Selecionar datas"></div>
         <div class="field"><label>Procurar</label><input type="text" id="filtro-pesquisa" placeholder="Descrição..." oninput="renderizarTabelaMovimentos()"></div>
         <button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>
       </div>
-      <div class="filtros-limpar-linha" id="mov-filtros-limpar-linha"><span class="filtros-limpar" onclick="limparFiltrosMovimentos()">Limpar filtros</span></div>
+      <div class="filtros-limpar-linha" id="mov-filtros-limpar-linha">
+        <span class="filtros-limpar" onclick="limparFiltrosMovimentos()">Limpar filtros</span>
+      </div>
 
       <div class="table-wrap cards-mobile">
         <table>
@@ -624,7 +674,9 @@
       </div>
     </div>
 
-    <!-- ── PERFIL ───────────────────────────────────── -->
+    <!-- ──────────────────────────────────────────────
+         PÁGINA: PERFIL
+    ────────────────────────────────────────────── -->
     <div class="page" id="page-perfil">
       <div class="perfil-layout">
         <div class="perfil-sidebar">
@@ -635,34 +687,34 @@
             <span class="icone" id="icone-sidebar-categorias"></span> Categorias
           </div>
         </div>
-
         <div class="perfil-conteudo">
           <div class="perfil-secao active" id="perfil-secao-geral">
             <h2 class="perfil-secao-titulo">Geral</h2>
             <p class="perfil-secao-subtitulo">Gere os dados do teu perfil.</p>
-
             <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Perfil</div></div>
             <div class="table-wrap" style="padding:1.25rem">
               <div class="field"><label>Nome</label><input type="text" id="perfil-nome" required></div>
               <div class="field"><label>Email</label><input type="email" id="perfil-email" required></div>
               <button class="btn-primary" id="btn-guardar-perfil" onclick="guardarPerfil()">Guardar</button>
             </div>
-
             <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Alterar Password</div></div>
             <div class="table-wrap" style="padding:1.25rem">
-              <div class="field field-com-toggle"><label>Password Atual</label><input type="password" id="perfil-pw-atual" required>
+              <div class="field field-com-toggle">
+                <label>Password Atual</label>
+                <input type="password" id="perfil-pw-atual" required>
                 <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('perfil-pw-atual', this)"></button>
               </div>
-              <div class="field field-com-toggle"><label>Nova Password</label><input type="password" id="perfil-pw-nova" required minlength="8">
+              <div class="field field-com-toggle">
+                <label>Nova Password</label>
+                <input type="password" id="perfil-pw-nova" required minlength="8">
                 <button type="button" class="toggle-password" onclick="alternarVisibilidadePassword('perfil-pw-nova', this)"></button>
                 <p class="ajuda" id="ajuda-perfil-pw-nova">Mínimo de 8 caracteres.</p>
               </div>
               <button class="btn-primary" id="btn-guardar-password" onclick="guardarPassword()">Atualizar Password</button>
             </div>
-
             <div class="section-header" style="margin-top:1.5rem"><div class="section-title" style="color:var(--color-negativo)">Zona de Perigo</div></div>
             <div class="table-wrap" style="padding:1.25rem">
-              <p class="danger-zone-text">Eliminar a conta remove permanentemente todos os teus dados — contas, movimentos e categorias. Não há forma de recuperar isto depois.</p>
+              <p class="danger-zone-text">Eliminar a conta remove permanentemente todos os teus dados. Não há forma de recuperar isto depois.</p>
               <button class="btn-danger" onclick="eliminarContaUtilizador()">Eliminar a minha conta</button>
             </div>
           </div>
@@ -670,7 +722,6 @@
           <div class="perfil-secao" id="perfil-secao-categorias">
             <h2 class="perfil-secao-titulo">Categorias</h2>
             <p class="perfil-secao-subtitulo">Organiza os grupos e categorias usados nos teus movimentos.</p>
-
             <div class="section-header" style="margin-top:1.5rem">
               <div class="section-title">Gestão de Categorias</div>
               <div class="toggle-tipo">
@@ -690,7 +741,30 @@
   </main>
 </div>
 
-<!-- ═══════════════════ MODAIS ═══════════════════ -->
+<!-- ═══════════════════════════════════════════════════════
+     MODAL DRILL-DOWN
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-drilldown">
+  <div class="modal-drilldown">
+    <div class="modal-drilldown-header">
+      <div class="modal-drilldown-header-texto">
+        <div class="drilldown-titulo-label" id="drawer-subtitulo">Evolução mensal</div>
+        <h2 id="drawer-titulo" style="font-size:1.1rem;font-weight:600;margin:0"></h2>
+      </div>
+      <button class="btn-sm" onclick="fecharDrillDown()" aria-label="Fechar">✕</button>
+    </div>
+    <canvas id="grafico-drilldown"></canvas>
+    <div class="estado-vazio estado-vazio-grafico" id="drilldown-vazio" style="display:none">
+      <div class="subtitulo">Sem dados para este período.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAIS
+═══════════════════════════════════════════════════════ -->
+
+<!-- Modal: Movimento -->
 <div class="modal-overlay" id="modal-movimento">
   <div class="modal">
     <h2 id="modal-movimento-titulo">Adicionar movimento</h2>
@@ -698,7 +772,8 @@
     <div class="field"><label>Conta</label><select id="mov-conta"></select></div>
     <div class="field"><label>Data</label><input type="text" id="mov-data" placeholder="Selecionar data"></div>
     <div class="field"><label>Descrição</label><input type="text" id="mov-descricao" required></div>
-    <div class="field"><label>Tipo</label>
+    <div class="field">
+      <label>Tipo</label>
       <select id="mov-tipo" onchange="atualizarCategoriasPorTipo()">
         <option value="in">↑ Cash-In</option>
         <option value="out">↓ Cash-Out</option>
@@ -713,6 +788,7 @@
   </div>
 </div>
 
+<!-- Modal: Conta -->
 <div class="modal-overlay" id="modal-conta">
   <div class="modal">
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
@@ -732,7 +808,8 @@
       <label>Identificador <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
       <input type="text" id="conta-iban" placeholder="IBAN, Número de Conta, ou Outro">
     </div>
-    <div class="field"><label>Moeda</label>
+    <div class="field">
+      <label>Moeda</label>
       <select id="conta-moeda">
         <option value="EUR">EUR (€)</option>
         <option value="USD">USD ($)</option>
@@ -755,6 +832,7 @@
   </div>
 </div>
 
+<!-- Modal: Reconciliações -->
 <div class="modal-overlay" id="modal-reconciliacoes">
   <div class="modal">
     <h2>Reconciliações de Saldo</h2>
@@ -765,7 +843,6 @@
         <tbody id="tabela-reconciliacoes"></tbody>
       </table>
     </div>
-
     <div id="form-reconciliacao" style="display:none;border-top:1px solid #e5e5e5;padding-top:1rem;margin-bottom:1rem">
       <input type="hidden" id="reconc-id">
       <div class="field"><label>Data</label><input type="text" id="reconc-data" placeholder="Selecionar data"></div>
@@ -775,21 +852,21 @@
         <button class="btn-primary" id="btn-guardar-reconciliacao" onclick="guardarReconciliacao()">Guardar</button>
       </div>
     </div>
-
     <button class="btn-sm" id="btn-add-reconciliacao" onclick="mostrarFormReconciliacao()">+ Adicionar reconciliação</button>
-
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModalReconciliacoes()">Fechar</button>
     </div>
   </div>
 </div>
 
+<!-- Modal: Grupo de categorias -->
 <div class="modal-overlay" id="modal-grupo">
   <div class="modal">
     <h2 id="modal-grupo-titulo">Adicionar grupo</h2>
     <input type="hidden" id="grupo-id">
     <div class="field"><label>Nome</label><input type="text" id="grupo-nome" required></div>
-    <div class="field" id="grupo-tipo-campo"><label>Tipo</label>
+    <div class="field" id="grupo-tipo-campo">
+      <label>Tipo</label>
       <select id="grupo-tipo">
         <option value="in">Entrada (Recebimento)</option>
         <option value="out">Saída (Pagamento)</option>
@@ -802,6 +879,7 @@
   </div>
 </div>
 
+<!-- Modal: Categoria -->
 <div class="modal-overlay" id="modal-categoria-gestao">
   <div class="modal">
     <h2 id="modal-categoria-gestao-titulo">Adicionar categoria</h2>
@@ -815,6 +893,7 @@
   </div>
 </div>
 
+<!-- Modal: Eliminar categoria com opções -->
 <div class="modal-overlay" id="modal-eliminar-categoria">
   <div class="modal">
     <h2 id="elim-titulo">Eliminar categoria</h2>
@@ -828,6 +907,7 @@
   </div>
 </div>
 
+<!-- Modal: Confirmação genérica -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal">
     <p id="confirm-modal-texto" style="font-size:0.9rem;color:var(--color-text);margin-bottom:1.25rem"></p>
@@ -840,7 +920,7 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// CONFIGURAÇÃO E ESTADO GLOBAL
+// ESTADO GLOBAL
 // ═══════════════════════════════════════════════════════════
 const API = ""
 let TOKEN = localStorage.getItem("token")
@@ -849,7 +929,8 @@ let NOME  = localStorage.getItem("nome")
 let contasCache           = []
 let categoriasCache       = []
 let gruposCache           = []
-let arvoreCategoriasCache = []
+let arvoreCategoriasCache = []  // perfil — gestão de categorias
+let arvoreAnaliseCache    = []  // análise — filtro de categorias
 let movimentosCache       = []
 let reconciliacoesCache   = []
 
@@ -859,9 +940,11 @@ let moedaAnaliseGlobal   = "EUR"
 let valoresOcultos       = localStorage.getItem("valoresOcultos") === "true"
 let gruposExpandidos     = false
 let pendentesAtivo       = false
+let filtroCatAberto      = false
+let categoriasExcluidas  = new Set()
 
 let graficos = {}
-let analiseCache = { mensal: null, categorias: null }
+let analiseCache = { mensal: null }
 
 let anDataDe, anDataAte
 let movDataDe = null, movDataAte = null
@@ -875,39 +958,35 @@ let ordenacaoRecorrentes   = { campo: null, direcao: 1 }
 let recorrentesTabelaCache = []
 
 let elimAtual = null
-
 let pickerMovData = null
 let pickerReconc  = null
-let pickerContas = null
+let pickerContas  = null
 
 let timerInatividade = null
-const TEMPO_INATIVIDADE_MS = 15 * 60 * 1000 // 15 minutos
+const TEMPO_INATIVIDADE_MS = 15 * 60 * 1000
 const EVENTOS_ATIVIDADE = ["mousemove", "keydown", "click", "scroll", "touchstart"]
 
-const BANCOS_PT_COMUNS = [
-  "Caixa Geral de Depósitos", "Millennium BCP", "Novo Banco", "Santander Totta",
-  "BPI", "Crédito Agrícola", "ActivoBank", "Bankinter", "Banco CTT", "Revolut",
-]
-const TIPOS_CONTA_COMUNS = [
-  "Conta Corrente", "Conta Poupança", "Conta a Prazo", "Numerário",
-]
+const BANCOS_PT_COMUNS  = ["Caixa Geral de Depósitos","Millennium BCP","Novo Banco","Santander Totta","BPI","Crédito Agrícola","ActivoBank","Bankinter","Banco CTT","Revolut"]
+const TIPOS_CONTA_COMUNS = ["Conta Corrente","Conta Poupança","Conta a Prazo","Numerário"]
 
-// ── ÍCONES (SVG inline) ───────────────────────────────────────
-const ICONE_OLHO_ABERTO  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
-const ICONE_OLHO_FECHADO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
-const ICONE_SUGESTAO_LLM = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg>`
-const ICONE_SEM_MATCH = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.1 9a3 3 0 1 1 4.4 2.6c-.8.5-1.5 1-1.5 2.4"></path><path d="M12 17h.01"></path></svg>`
-const ICONE_PROTEGIDA = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
-const ICONE_TOAST_SUCESSO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
-const ICONE_TOAST_ERRO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
-const ICONE_ORDENAR_NEUTRO = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"></path><path d="M16 15l-4 4-4-4"></path></svg>`
-const ICONE_ORDENAR_ASC = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>`
-const ICONE_ORDENAR_DESC = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M19 12l-7 7-7-7"></path></svg>`
-const ICONE_PERFIL_GERAL = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`
+// ═══════════════════════════════════════════════════════════
+// ÍCONES (SVG inline)
+// ═══════════════════════════════════════════════════════════
+const ICONE_OLHO_ABERTO       = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
+const ICONE_OLHO_FECHADO      = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
+const ICONE_SUGESTAO_LLM      = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg>`
+const ICONE_SEM_MATCH         = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.1 9a3 3 0 1 1 4.4 2.6c-.8.5-1.5 1-1.5 2.4"></path><path d="M12 17h.01"></path></svg>`
+const ICONE_PROTEGIDA         = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+const ICONE_TOAST_SUCESSO     = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
+const ICONE_TOAST_ERRO        = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
+const ICONE_ORDENAR_NEUTRO    = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"></path><path d="M16 15l-4 4-4-4"></path></svg>`
+const ICONE_ORDENAR_ASC       = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>`
+const ICONE_ORDENAR_DESC      = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M19 12l-7 7-7-7"></path></svg>`
+const ICONE_PERFIL_GERAL      = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`
 const ICONE_PERFIL_CATEGORIAS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83Z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg>`
-const ICONE_SETA_BAIXO = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`
-const ICONE_SETA_CIMA = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>`
-
+const ICONE_SETA_BAIXO        = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`
+const ICONE_SETA_CIMA         = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>`
+const ICONE_GRAFICO           = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
 
 // ═══════════════════════════════════════════════════════════
 // UTILS GERAIS
@@ -933,10 +1012,7 @@ function fmtDiaCurto(iso) {
   return `${d} ${nomes[parseInt(m)-1]}`
 }
 function isoDateStr(d) {
-  const ano = d.getFullYear()
-  const mes = String(d.getMonth() + 1).padStart(2, '0')
-  const dia = String(d.getDate()).padStart(2, '0')
-  return `${ano}-${mes}-${dia}`
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
 function api(path) {
@@ -955,12 +1031,7 @@ function destruirGrafico(nome) {
   if (graficos[nome]) { graficos[nome].destroy(); delete graficos[nome] }
 }
 function carregarFiltrosSalvos(pagina) {
-  try {
-    const raw = localStorage.getItem("filtros_" + pagina)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
+  try { return JSON.parse(localStorage.getItem("filtros_" + pagina)) } catch { return null }
 }
 function guardarFiltrosPagina(pagina, dados) {
   localStorage.setItem("filtros_" + pagina, JSON.stringify(dados))
@@ -968,28 +1039,23 @@ function guardarFiltrosPagina(pagina, dados) {
 function fecharModal() {
   document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
 }
-
+function mensagemDeErro(d) {
+  if (typeof d.detail === "string") return d.detail
+  if (Array.isArray(d.detail) && d.detail[0]?.msg) return d.detail[0].msg
+  return "Ocorreu um erro inesperado."
+}
 
 // ═══════════════════════════════════════════════════════════
-// TOASTS, CONFIRMAÇÃO E MENSAGENS DE ERRO
+// TOASTS E CONFIRMAÇÃO
 // ═══════════════════════════════════════════════════════════
 function mostrarToast(mensagem, tipo = "info") {
   const container = document.getElementById("toast-container")
   const toast = document.createElement("div")
   toast.className = `toast ${tipo}`
   const icone = tipo === "sucesso" ? ICONE_TOAST_SUCESSO : tipo === "erro" ? ICONE_TOAST_ERRO : ""
-  toast.innerHTML = `
-    ${icone ? `<span class="icone">${icone}</span>` : ""}
-    <span class="texto">${mensagem}</span>
-    <button class="fechar" onclick="this.parentElement.remove()" aria-label="Fechar notificação">✕</button>`
+  toast.innerHTML = `${icone ? `<span class="icone">${icone}</span>` : ""}<span class="texto">${mensagem}</span><button class="fechar" onclick="this.parentElement.remove()" aria-label="Fechar">✕</button>`
   container.appendChild(toast)
   setTimeout(() => toast.remove(), 4000)
-}
-
-function mensagemDeErro(d) {
-  if (typeof d.detail === "string") return d.detail
-  if (Array.isArray(d.detail) && d.detail[0]?.msg) return d.detail[0].msg
-  return "Ocorreu um erro inesperado."
 }
 
 function confirmarAcao(mensagem, { textoConfirmar = "Confirmar", perigo = false } = {}) {
@@ -1000,22 +1066,20 @@ function confirmarAcao(mensagem, { textoConfirmar = "Confirmar", perigo = false 
     btnConfirmar.textContent = textoConfirmar
     btnConfirmar.className = perigo ? "btn-danger" : "btn-primary"
     document.getElementById("confirm-modal").classList.add("open")
-
     function limpar() {
       document.getElementById("confirm-modal").classList.remove("open")
       btnConfirmar.removeEventListener("click", onConfirmar)
       btnCancelar.removeEventListener("click", onCancelar)
     }
     function onConfirmar() { limpar(); resolve(true) }
-    function onCancelar() { limpar(); resolve(false) }
+    function onCancelar()  { limpar(); resolve(false) }
     btnConfirmar.addEventListener("click", onConfirmar)
     btnCancelar.addEventListener("click", onCancelar)
   })
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// ESTADOS DE CARREGAMENTO E VAZIO (helpers genéricos)
+// ESTADOS VAZIOS E SKELETONS
 // ═══════════════════════════════════════════════════════════
 function linhasEsqueleto(numColunas, numLinhas = 3) {
   let html = ""
@@ -1026,17 +1090,9 @@ function linhasEsqueleto(numColunas, numLinhas = 3) {
   }
   return html
 }
-
 function linhaVazia(numColunas, titulo, subtitulo, botaoHtml = "") {
-  return `<tr><td colspan="${numColunas}">
-    <div class="estado-vazio">
-      <div class="titulo">${titulo}</div>
-      ${subtitulo ? `<div class="subtitulo">${subtitulo}</div>` : ""}
-      ${botaoHtml}
-    </div>
-  </td></tr>`
+  return `<tr><td colspan="${numColunas}"><div class="estado-vazio"><div class="titulo">${titulo}</div>${subtitulo ? `<div class="subtitulo">${subtitulo}</div>` : ""}${botaoHtml}</div></td></tr>`
 }
-
 function mostrarGraficoOuVazio(idCanvas, temDados, mensagem, render) {
   const canvas = document.getElementById(idCanvas)
   const existente = canvas.parentElement.querySelector(".estado-vazio-grafico")
@@ -1053,26 +1109,20 @@ function mostrarGraficoOuVazio(idCanvas, temDados, mensagem, render) {
   }
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// VALIDAÇÃO DE FORMULÁRIOS (usado por todos os modais)
+// VALIDAÇÃO DE FORMULÁRIOS
 // ═══════════════════════════════════════════════════════════
 function camposValidos(...ids) {
   for (const id of ids) {
     const el = document.getElementById(id)
-    if (!el.checkValidity()) {
-      el.reportValidity()
-      return false
-    }
+    if (!el.checkValidity()) { el.reportValidity(); return false }
   }
   return true
 }
-
 function ligarValidacaoFormulario(idsCampos, idBotao) {
   const botao = document.getElementById(idBotao)
   function atualizar() {
-    const valido = idsCampos.every(id => document.getElementById(id).checkValidity())
-    botao.disabled = !valido
+    botao.disabled = !idsCampos.every(id => document.getElementById(id).checkValidity())
   }
   idsCampos.forEach(id => {
     document.getElementById(id).removeEventListener("input", atualizar)
@@ -1080,18 +1130,14 @@ function ligarValidacaoFormulario(idsCampos, idBotao) {
   })
   atualizar()
 }
-
 function mostrarAjudaAoEscrever(idInput, idAjuda) {
   const input = document.getElementById(idInput)
   const ajuda = document.getElementById(idAjuda)
-  input.addEventListener("input", () => {
-    ajuda.style.display = input.value.length > 0 ? "block" : "none"
-  })
+  input.addEventListener("input", () => { ajuda.style.display = input.value.length > 0 ? "block" : "none" })
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// ORDENAÇÃO DE TABELAS (indicador visual partilhado)
+// ORDENAÇÃO DE TABELAS
 // ═══════════════════════════════════════════════════════════
 function atualizarIconesOrdenacao(idCabecalho, estado) {
   document.querySelectorAll(`#${idCabecalho} th[data-campo]`).forEach(th => {
@@ -1108,7 +1154,6 @@ function atualizarIconesOrdenacao(idCabecalho, estado) {
     }
   })
 }
-
 
 // ═══════════════════════════════════════════════════════════
 // CALENDÁRIOS (LITEPICKER)
@@ -1138,85 +1183,56 @@ function rangesPadrao() {
 function iniciarPickerContas() {
   pickerContas = new Litepicker({
     element: document.getElementById('ct-periodo-btn'),
-    singleMode: false,
-    format: 'YYYY-MM-DD',
-    maxDays: 365,
+    singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
     startDate: new Date(ctDataDe + 'T00:00:00'),
-    endDate: new Date(ctDataAte + 'T00:00:00'),
+    endDate:   new Date(ctDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    plugins: ['ranges'],
-    ranges: rangesPadrao(),
+    plugins: ['ranges'], ranges: rangesPadrao(),
     setup: (picker) => {
-      picker.on('selected', (date1, date2) => {
-        ctDataDe  = date1.format('YYYY-MM-DD')
-        ctDataAte = date2.format('YYYY-MM-DD')
-        carregarContas()
-      })
+      picker.on('selected', (d1, d2) => { ctDataDe = d1.format('YYYY-MM-DD'); ctDataAte = d2.format('YYYY-MM-DD'); carregarContas() })
     }
   })
 }
-
 function iniciarPickerAnalise() {
   new Litepicker({
     element: document.getElementById('an-periodo'),
-    singleMode: false,
-    format: 'YYYY-MM-DD',
-    maxDays: 365,
+    singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
     startDate: new Date(anDataDe + 'T00:00:00'),
-    endDate: new Date(anDataAte + 'T00:00:00'),
+    endDate:   new Date(anDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    plugins: ['ranges'],
-    ranges: rangesPadrao(),
+    plugins: ['ranges'], ranges: rangesPadrao(),
     setup: (picker) => {
-      picker.on('selected', (date1, date2) => {
-        anDataDe  = date1.format('YYYY-MM-DD')
-        anDataAte = date2.format('YYYY-MM-DD')
-        carregarAnalise()
-      })
+      picker.on('selected', (d1, d2) => { anDataDe = d1.format('YYYY-MM-DD'); anDataAte = d2.format('YYYY-MM-DD'); carregarAnalise() })
     }
   })
 }
-
 function iniciarPickerMovimentos() {
   new Litepicker({
     element: document.getElementById('mov-periodo'),
-    singleMode: false,
-    format: 'YYYY-MM-DD',
-    maxDays: 365,
+    singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
     startDate: new Date(movDataDe + 'T00:00:00'),
-    endDate: new Date(movDataAte + 'T00:00:00'),
+    endDate:   new Date(movDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    plugins: ['ranges'],
-    ranges: rangesPadrao(),
+    plugins: ['ranges'], ranges: rangesPadrao(),
     setup: (picker) => {
-      picker.on('selected', (date1, date2) => {
-        movDataDe  = date1.format('YYYY-MM-DD')
-        movDataAte = date2.format('YYYY-MM-DD')
-        carregarMovimentos()
-      })
+      picker.on('selected', (d1, d2) => { movDataDe = d1.format('YYYY-MM-DD'); movDataAte = d2.format('YYYY-MM-DD'); carregarMovimentos() })
     }
   })
 }
-
 function iniciarPickerMovData() {
   pickerMovData = new Litepicker({
     element: document.getElementById('mov-data'),
-    singleMode: true,
-    format: 'YYYY-MM-DD',
+    singleMode: true, format: 'YYYY-MM-DD',
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
   })
 }
-
 function iniciarPickerReconciliacao() {
   pickerReconc = new Litepicker({
     element: document.getElementById('reconc-data'),
-    singleMode: true,
-    format: 'YYYY-MM-DD',
-    maxDate: new Date(),
+    singleMode: true, format: 'YYYY-MM-DD', maxDate: new Date(),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
   })
 }
-
 
 // ═══════════════════════════════════════════════════════════
 // AUTENTICAÇÃO
@@ -1225,32 +1241,24 @@ function trocarTab(tab) {
   document.querySelectorAll(".auth-tab").forEach((t, i) => t.classList.toggle("active", (i===0)===(tab==="login")))
   document.getElementById("tab-login").style.display   = tab === "login"   ? "" : "none"
   document.getElementById("tab-registo").style.display = tab === "registo" ? "" : "none"
-  document.getElementById("tab-esqueci").style.display  = "none"
+  document.getElementById("tab-esqueci").style.display = "none"
   document.getElementById("auth-erro").textContent = ""
 }
 async function fazerLogin() {
-  const r = await apiPost("/login", {
-    email:    document.getElementById("login-email").value,
-    password: document.getElementById("login-password").value
-  })
+  const r = await apiPost("/login", { email: document.getElementById("login-email").value, password: document.getElementById("login-password").value })
   const d = await r.json()
   if (!r.ok) { document.getElementById("auth-erro").textContent = mensagemDeErro(d); return }
   guardarSessao(d.token, d.nome)
 }
 async function fazerRegisto() {
-  const r = await apiPost("/registro", {
-    nome:     document.getElementById("reg-nome").value,
-    email:    document.getElementById("reg-email").value,
-    password: document.getElementById("reg-password").value
-  })
+  const r = await apiPost("/registro", { nome: document.getElementById("reg-nome").value, email: document.getElementById("reg-email").value, password: document.getElementById("reg-password").value })
   const d = await r.json()
   if (!r.ok) { document.getElementById("auth-erro").textContent = mensagemDeErro(d); return }
   guardarSessao(d.token, d.nome)
 }
 function guardarSessao(token, nome) {
   TOKEN = token; NOME = nome
-  localStorage.setItem("token", token)
-  localStorage.setItem("nome", nome)
+  localStorage.setItem("token", token); localStorage.setItem("nome", nome)
   iniciarApp()
 }
 function logout() {
@@ -1264,12 +1272,11 @@ function logout() {
 function abrirEsqueciPassword() {
   document.getElementById("tab-login").style.display   = "none"
   document.getElementById("tab-registo").style.display = "none"
-  document.getElementById("tab-esqueci").style.display  = ""
+  document.getElementById("tab-esqueci").style.display = ""
   document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"))
 }
 async function enviarEsqueciPassword() {
-  const email = document.getElementById("esqueci-email").value
-  const r = await apiPost("/esqueci-password", { email })
+  const r = await apiPost("/esqueci-password", { email: document.getElementById("esqueci-email").value })
   const d = await r.json()
   mostrarToast(d.mensagem, "info")
   trocarTab("login")
@@ -1285,38 +1292,28 @@ function verificarTokenReset() {
   return true
 }
 async function submeterRedefinicao() {
-  const password_nova = document.getElementById("reset-password-nova").value
-  const r = await apiPost("/redefinir-password", { token: window.RESET_TOKEN, password_nova })
-  if (!r.ok) {
-    const d = await r.json()
-    document.getElementById("reset-erro").textContent = mensagemDeErro(d)
-    return
-  }
+  const r = await apiPost("/redefinir-password", { token: window.RESET_TOKEN, password_nova: document.getElementById("reset-password-nova").value })
+  if (!r.ok) { document.getElementById("reset-erro").textContent = mensagemDeErro(await r.json()); return }
   mostrarToast("Password redefinida com sucesso. Já podes entrar.", "sucesso")
   setTimeout(() => { window.location.href = "/static/index.html" }, 1200)
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// LOGOUT AUTOMÁTICO POR INATIVIDADE
+// INATIVIDADE
 // ═══════════════════════════════════════════════════════════
 function reiniciarTimerInatividade() {
   clearTimeout(timerInatividade)
   timerInatividade = setTimeout(logoutPorInatividade, TEMPO_INATIVIDADE_MS)
 }
 function iniciarDetecaoInatividade() {
-  EVENTOS_ATIVIDADE.forEach(evento => document.addEventListener(evento, reiniciarTimerInatividade))
+  EVENTOS_ATIVIDADE.forEach(e => document.addEventListener(e, reiniciarTimerInatividade))
   reiniciarTimerInatividade()
 }
 function pararDetecaoInatividade() {
   clearTimeout(timerInatividade)
-  EVENTOS_ATIVIDADE.forEach(evento => document.removeEventListener(evento, reiniciarTimerInatividade))
+  EVENTOS_ATIVIDADE.forEach(e => document.removeEventListener(e, reiniciarTimerInatividade))
 }
-function logoutPorInatividade() {
-  logout()
-  mostrarToast("Sessão terminada por inatividade.", "info")
-}
-
+function logoutPorInatividade() { logout(); mostrarToast("Sessão terminada por inatividade.", "info") }
 
 // ═══════════════════════════════════════════════════════════
 // INICIALIZAÇÃO E NAVEGAÇÃO
@@ -1324,7 +1321,6 @@ function logoutPorInatividade() {
 async function iniciarApp() {
   document.getElementById("auth-screen").style.display = "none"
   document.getElementById("nav-nome").textContent = NOME
-
   const btnOlho = document.getElementById("icone-olho")
   btnOlho.innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
   btnOlho.setAttribute("aria-label", valoresOcultos ? "Mostrar valores" : "Ocultar valores")
@@ -1335,7 +1331,9 @@ async function iniciarApp() {
 
   contasCache = await api("/contas")
   atualizarFiltrosDeTipo()
-  categoriasCache = await api("/categorias")
+  categoriasCache    = await api("/categorias")
+  arvoreAnaliseCache = await api("/categorias/arvore")
+  renderizarFiltroCatPanel()
 
   const optionsContas = construirOptionsContas()
   document.getElementById("filtro-conta").innerHTML    += optionsContas
@@ -1344,7 +1342,6 @@ async function iniciarApp() {
   document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
 
   restaurarFiltros()
-
   iniciarPickerContas()
   iniciarPickerAnalise()
   iniciarPickerMovimentos()
@@ -1361,96 +1358,40 @@ function restaurarFiltros() {
   const inicioMes = isoDateStr(primeiroDiaMes())
 
   const ct = carregarFiltrosSalvos("contas")
-  ctDataDe  = (ct && ct.dataDe)  || inicioMes
-  ctDataAte = (ct && ct.dataAte) || hoje
-  if (ct && ct.tipo) {
-    document.getElementById("ct-filtro-tipo").value = ct.tipo
-    atualizarFiltroContasPorTipo("ct")
-  }
-  if (ct && ct.conta) document.getElementById("ct-filtro-conta").value = ct.conta
+  ctDataDe  = (ct?.dataDe)  || inicioMes
+  ctDataAte = (ct?.dataAte) || hoje
+  if (ct?.tipo)  { document.getElementById("ct-filtro-tipo").value = ct.tipo;  atualizarFiltroContasPorTipo("ct") }
+  if (ct?.conta) document.getElementById("ct-filtro-conta").value = ct.conta
 
   const an = carregarFiltrosSalvos("analise")
-  anDataDe  = (an && an.dataDe)  || inicioMes
-  anDataAte = (an && an.dataAte) || hoje
-  if (an && an.tipo) {
-    document.getElementById("an-filtro-tipo").value = an.tipo
-    atualizarFiltroContasPorTipo("an")
-  }
-  if (an && an.conta) document.getElementById("an-filtro-conta").value = an.conta
+  anDataDe  = (an?.dataDe)  || inicioMes
+  anDataAte = (an?.dataAte) || hoje
+  if (an?.tipo)  { document.getElementById("an-filtro-tipo").value = an.tipo;  atualizarFiltroContasPorTipo("an") }
+  if (an?.conta) document.getElementById("an-filtro-conta").value = an.conta
 
   const mv = carregarFiltrosSalvos("movimentos")
-  movDataDe  = (mv && mv.dataDe)  || inicioMes
-  movDataAte = (mv && mv.dataAte) || hoje
-  if (mv && mv.direcao) {
-    document.getElementById("filtro-direcao").value = mv.direcao
-    document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(mv.direcao)
-  }
-  if (mv && mv.categoria) document.getElementById("filtro-categoria").value = mv.categoria
-  if (mv && mv.conta)     document.getElementById("filtro-conta").value = mv.conta
-}
-
-function limparFiltrosContas() {
-  document.getElementById("ct-filtro-conta").value = ""
-  document.getElementById("ct-filtro-tipo").value = ""
-  ctDataDe  = isoDateStr(primeiroDiaMes())
-  ctDataAte = isoDateStr(new Date())
-  localStorage.removeItem("filtros_contas")
-  iniciarPickerContas()
-  carregarContas()
-}
-
-function limparFiltrosAnalise() {
-  document.getElementById("an-filtro-conta").value = ""
-  document.getElementById("an-filtro-tipo").value = ""
-  anDataDe  = isoDateStr(primeiroDiaMes())
-  anDataAte = isoDateStr(new Date())
-  localStorage.removeItem("filtros_analise")
-  iniciarPickerAnalise()
-  carregarAnalise()
-}
-
-function limparFiltrosMovimentos() {
-  pendentesAtivo = false
-  document.getElementById("filtro-conta").value = ""
-  document.getElementById("filtro-direcao").value = ""
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
-  document.getElementById("filtro-pesquisa").value = ""
-  movDataDe  = isoDateStr(primeiroDiaMes())
-  movDataAte = isoDateStr(new Date())
-  localStorage.removeItem("filtros_movimentos")
-  iniciarPickerMovimentos()
-  carregarMovimentos()
+  movDataDe  = (mv?.dataDe)  || inicioMes
+  movDataAte = (mv?.dataAte) || hoje
+  if (mv?.direcao)   { document.getElementById("filtro-direcao").value = mv.direcao; document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(mv.direcao) }
+  if (mv?.categoria) document.getElementById("filtro-categoria").value = mv.categoria
+  if (mv?.conta)     document.getElementById("filtro-conta").value = mv.conta
 }
 
 function ativarPagina(pagina) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
-  const elPagina = document.getElementById("page-" + pagina)
-  if (elPagina) elPagina.classList.add("active")
+  document.getElementById("page-" + pagina)?.classList.add("active")
   const navLinks = { contas: 0, analise: 1, movimentos: 2 }
-  if (pagina in navLinks) {
-    document.querySelectorAll(".nav-link")[navLinks[pagina]].classList.add("active")
-  }
+  if (pagina in navLinks) document.querySelectorAll(".nav-link")[navLinks[pagina]].classList.add("active")
 }
-
 function carregarPagina(pagina) {
   if (pagina === "contas")     carregarContas()
   if (pagina === "analise")    carregarAnalise(true)
   if (pagina === "movimentos") carregarMovimentos()
   if (pagina === "perfil")     carregarPerfil()
 }
-
-function irPara(pagina, el) {
-  ativarPagina(pagina)
-  localStorage.setItem("paginaAtual", pagina)
-  carregarPagina(pagina)
-}
-
-function irParaPerfil() {
-  ativarPagina("perfil")
-  localStorage.setItem("paginaAtual", "perfil")
-  carregarPagina("perfil")
-}
+function irPara(pagina) { ativarPagina(pagina); localStorage.setItem("paginaAtual", pagina); carregarPagina(pagina) }
+function irParaPerfil() { irPara("perfil") }
 
 function alternarOcultarValores() {
   valoresOcultos = !valoresOcultos
@@ -1460,7 +1401,6 @@ function alternarOcultarValores() {
   btn.setAttribute("aria-label", valoresOcultos ? "Mostrar valores" : "Ocultar valores")
   carregarPagina(localStorage.getItem("paginaAtual") || "contas")
 }
-
 function alternarVisibilidadePassword(idCampo, botao) {
   const input = document.getElementById(idCampo)
   const aRevelar = input.type === "password"
@@ -1469,92 +1409,62 @@ function alternarVisibilidadePassword(idCampo, botao) {
   botao.setAttribute("aria-label", aRevelar ? "Ocultar password" : "Mostrar password")
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// HELPERS: OPÇÕES DE CONTA E CATEGORIA (dropdowns partilhados)
+// HELPERS: OPÇÕES DE CONTA E CATEGORIA
 // ═══════════════════════════════════════════════════════════
 function construirOptionsContas(selecionado, tipoFiltro) {
-  let html = ""
-  let bancoAtual = null
-  const lista = tipoFiltro ? contasCache.filter(c => c.tipo === tipoFiltro) : contasCache
-  const ordenadas = [...lista].sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
-  ordenadas.forEach(c => {
-    if (c.banco !== bancoAtual) {
-      if (bancoAtual !== null) html += "</optgroup>"
-      html += `<optgroup label="${c.banco}">`
-      bancoAtual = c.banco
-    }
+  let html = ""; let bancoAtual = null
+  const lista = [...(tipoFiltro ? contasCache.filter(c => c.tipo === tipoFiltro) : contasCache)]
+    .sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
+  lista.forEach(c => {
+    if (c.banco !== bancoAtual) { if (bancoAtual !== null) html += "</optgroup>"; html += `<optgroup label="${c.banco}">`; bancoAtual = c.banco }
     html += `<option value="${c.id}" ${c.id === selecionado ? "selected" : ""}>${c.nome}</option>`
   })
   if (bancoAtual !== null) html += "</optgroup>"
   return html
 }
-
 function atualizarFiltrosDeConta() {
-  const selConta   = document.getElementById("filtro-conta")
-  const selContaAn = document.getElementById("an-filtro-conta")
-  const selContaCt = document.getElementById("ct-filtro-conta")
-
+  const selConta = document.getElementById("filtro-conta")
+  const selAn    = document.getElementById("an-filtro-conta")
+  const selCt    = document.getElementById("ct-filtro-conta")
   selConta.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selConta.value)
-
-  const tipoAn = document.getElementById("an-filtro-tipo").value
-  selContaAn.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaAn.value, tipoAn)
-
-  const tipoCt = document.getElementById("ct-filtro-tipo").value
-  selContaCt.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selContaCt.value, tipoCt)
+  selAn.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selAn.value, document.getElementById("an-filtro-tipo").value)
+  selCt.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selCt.value, document.getElementById("ct-filtro-tipo").value)
 }
-
 function atualizarFiltroContasPorTipo(prefixo) {
   const tipo = document.getElementById(prefixo + "-filtro-tipo").value
-  const contaSelect = document.getElementById(prefixo + "-filtro-conta")
-  const contaAtual = contaSelect.value
-  contaSelect.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(contaAtual, tipo)
+  const sel  = document.getElementById(prefixo + "-filtro-conta")
+  sel.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(sel.value, tipo)
 }
-
 function atualizarFiltroTipoPorConta(prefixo) {
   const contaId = document.getElementById(prefixo + "-filtro-conta").value
-  if (contaId) {
-    const conta = contasCache.find(c => c.id === contaId)
-    if (conta) document.getElementById(prefixo + "-filtro-tipo").value = conta.tipo
-  }
+  if (contaId) { const c = contasCache.find(c => c.id === contaId); if (c) document.getElementById(prefixo + "-filtro-tipo").value = c.tipo }
 }
-
 function construirOptionsTipos(selecionado) {
-  const tipos = [...new Set(contasCache.map(c => c.tipo))].sort()
-  return tipos.map(t => `<option value="${t}" ${t === selecionado ? "selected" : ""}>${t}</option>`).join("")
+  return [...new Set(contasCache.map(c => c.tipo))].sort().map(t => `<option value="${t}" ${t === selecionado ? "selected" : ""}>${t}</option>`).join("")
 }
-
 function atualizarFiltrosDeTipo() {
   const selCt = document.getElementById("ct-filtro-tipo")
   const selAn = document.getElementById("an-filtro-tipo")
   selCt.innerHTML = '<option value="">Todos</option>' + construirOptionsTipos(selCt.value)
   selAn.innerHTML = '<option value="">Todos</option>' + construirOptionsTipos(selAn.value)
 }
-
-function opcoesBancos() {
-  return [...new Set([...BANCOS_PT_COMUNS, ...contasCache.map(c => c.banco)])].sort()
-}
-function opcoesTipos() {
-  return [...new Set([...TIPOS_CONTA_COMUNS, ...contasCache.map(c => c.tipo)])].sort()
-}
+function opcoesBancos() { return [...new Set([...BANCOS_PT_COMUNS, ...contasCache.map(c => c.banco)])].sort() }
+function opcoesTipos()  { return [...new Set([...TIPOS_CONTA_COMUNS, ...contasCache.map(c => c.tipo)])].sort() }
 
 function ligarCampoComSugestoes(idInput, getOpcoes) {
   const input = document.getElementById(idInput)
   const lista = document.getElementById(idInput + "-sugestoes")
   let indiceAtivo = -1
-
   function renderizar() {
     const termo = input.value.trim().toLowerCase()
     const opcoes = getOpcoes().filter(o => o.toLowerCase().includes(termo))
     indiceAtivo = -1
-    lista.innerHTML = opcoes.length
-      ? opcoes.map(o => `<div class="item">${o}</div>`).join("")
-      : `<div class="vazio">Sem sugestões — o texto escrito será usado.</div>`
+    lista.innerHTML = opcoes.length ? opcoes.map(o => `<div class="item">${o}</div>`).join("") : `<div class="vazio">Sem sugestões — o texto escrito será usado.</div>`
     lista.classList.add("aberta")
   }
   function esconder() { lista.classList.remove("aberta") }
   function selecionar(texto) { input.value = texto; esconder() }
-
   input.addEventListener("focus", renderizar)
   input.addEventListener("input", renderizar)
   input.addEventListener("keydown", (e) => {
@@ -1566,28 +1476,17 @@ function ligarCampoComSugestoes(idInput, getOpcoes) {
     else return
     itens.forEach((el, i) => el.classList.toggle("destacado", i === indiceAtivo))
   })
-  lista.addEventListener("mousedown", (e) => {
-    const item = e.target.closest(".item")
-    if (item) selecionar(item.textContent)
-  })
-  document.addEventListener("click", (e) => {
-    if (e.target !== input && !lista.contains(e.target)) esconder()
-  })
+  lista.addEventListener("mousedown", (e) => { const item = e.target.closest(".item"); if (item) selecionar(item.textContent) })
+  document.addEventListener("click", (e) => { if (e.target !== input && !lista.contains(e.target)) esconder() })
 }
 
 function construirOptionsCategorias(selecionado, direcao) {
   let lista = categoriasCache
   if (direcao === "in")  lista = lista.filter(c => c.eh_recebimento)
   if (direcao === "out") lista = lista.filter(c => !c.eh_recebimento)
-
-  let html = ""
-  let grupoAtual = null
+  let html = ""; let grupoAtual = null
   lista.forEach(c => {
-    if (c.grupo !== grupoAtual) {
-      if (grupoAtual !== null) html += "</optgroup>"
-      html += `<optgroup label="${c.grupo}">`
-      grupoAtual = c.grupo
-    }
+    if (c.grupo !== grupoAtual) { if (grupoAtual !== null) html += "</optgroup>"; html += `<optgroup label="${c.grupo}">`; grupoAtual = c.grupo }
     const simbolo = c.eh_recebimento ? "↑" : "↓"
     const cor = c.eh_recebimento ? "#166534" : "#991b1b"
     html += `<option value="${c.id}" style="color:${cor}" ${c.id === selecionado ? "selected" : ""}>${simbolo} ${c.nome}</option>`
@@ -1595,133 +1494,202 @@ function construirOptionsCategorias(selecionado, direcao) {
   if (grupoAtual !== null) html += "</optgroup>"
   return html
 }
-
 function construirOptionsCategoriasFiltro(direcao) {
   let lista = categoriasCache
-  if (direcao === "in")  lista = categoriasCache.filter(c => c.eh_recebimento)
-  if (direcao === "out") lista = categoriasCache.filter(c => !c.eh_recebimento)
-
-  let html = '<option value="">Todas</option>'
-  let grupoAtual = null
+  if (direcao === "in")  lista = lista.filter(c => c.eh_recebimento)
+  if (direcao === "out") lista = lista.filter(c => !c.eh_recebimento)
+  let html = '<option value="">Todas</option>'; let grupoAtual = null
   lista.forEach(c => {
-    if (c.grupo !== grupoAtual) {
-      if (grupoAtual !== null) html += "</optgroup>"
-      html += `<optgroup label="${c.grupo}">`
-      grupoAtual = c.grupo
-    }
-    const simbolo = c.eh_recebimento ? "↑" : "↓"
-    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
-    html += `<option value="${c.id}" style="color:${cor}">${simbolo} ${c.nome}</option>`
+    if (c.grupo !== grupoAtual) { if (grupoAtual !== null) html += "</optgroup>"; html += `<optgroup label="${c.grupo}">`; grupoAtual = c.grupo }
+    html += `<option value="${c.id}" style="color:${c.eh_recebimento ? '#166534' : '#991b1b'}">${c.eh_recebimento ? '↑' : '↓'} ${c.nome}</option>`
   })
   if (grupoAtual !== null) html += "</optgroup>"
   return html
 }
-
 function atualizarFiltroCategoriasMovimentos() {
-  const direcao = document.getElementById("filtro-direcao").value
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(direcao)
+  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(document.getElementById("filtro-direcao").value)
   carregarMovimentos()
 }
-
 function atualizarCategoriasPorTipo() {
   const tipo = document.getElementById("mov-tipo").value
-  const categoriaAtual = document.getElementById("mov-categoria").value
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(categoriaAtual, tipo)
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(document.getElementById("mov-categoria").value, tipo)
 }
 
+// ─── Visibilidade do botão "Limpar filtros" ───────────────
 function atualizarVisibilidadeLimparContas() {
-  const ehDefeito =
-    document.getElementById("ct-filtro-conta").value === "" &&
-    document.getElementById("ct-filtro-tipo").value === "" &&
-    ctDataDe === isoDateStr(primeiroDiaMes()) &&
-    ctDataAte === isoDateStr(new Date())
+  const ehDefeito = !document.getElementById("ct-filtro-conta").value && !document.getElementById("ct-filtro-tipo").value && ctDataDe === isoDateStr(primeiroDiaMes()) && ctDataAte === isoDateStr(new Date())
   document.getElementById("ct-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
 }
-
 function atualizarVisibilidadeLimparAnalise() {
-  const ehDefeito =
-    document.getElementById("an-filtro-conta").value === "" &&
-    document.getElementById("an-filtro-tipo").value === "" &&
-    anDataDe === isoDateStr(primeiroDiaMes()) &&
-    anDataAte === isoDateStr(new Date())
+  const ehDefeito = !document.getElementById("an-filtro-conta").value && !document.getElementById("an-filtro-tipo").value && categoriasExcluidas.size === 0 && anDataDe === isoDateStr(primeiroDiaMes()) && anDataAte === isoDateStr(new Date())
   document.getElementById("an-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
 }
-
 function temFiltrosMovimentosAtivos() {
-  return document.getElementById("filtro-conta").value !== "" ||
-         document.getElementById("filtro-direcao").value !== "" ||
-         document.getElementById("filtro-categoria").value !== "" ||
-         document.getElementById("filtro-pesquisa").value.trim() !== "" ||
-         pendentesAtivo ||
-         movDataDe !== isoDateStr(primeiroDiaMes()) ||
-         movDataAte !== isoDateStr(new Date())
+  return !!(document.getElementById("filtro-conta").value || document.getElementById("filtro-direcao").value || document.getElementById("filtro-categoria").value || document.getElementById("filtro-pesquisa").value.trim() || pendentesAtivo || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
 }
-
 function atualizarVisibilidadeLimparMovimentos() {
   document.getElementById("mov-filtros-limpar-linha").classList.toggle("escondido", !temFiltrosMovimentosAtivos())
 }
 
+// ─── Limpar filtros ───────────────────────────────────────
+function limparFiltrosContas() {
+  document.getElementById("ct-filtro-conta").value = ""
+  document.getElementById("ct-filtro-tipo").value = ""
+  ctDataDe = isoDateStr(primeiroDiaMes()); ctDataAte = isoDateStr(new Date())
+  localStorage.removeItem("filtros_contas")
+  iniciarPickerContas(); carregarContas()
+}
+function limparFiltrosAnalise() {
+  document.getElementById("an-filtro-conta").value = ""
+  document.getElementById("an-filtro-tipo").value = ""
+  anDataDe = isoDateStr(primeiroDiaMes()); anDataAte = isoDateStr(new Date())
+  categoriasExcluidas.clear(); atualizarBtnFiltroCat()
+  localStorage.removeItem("filtros_analise")
+  iniciarPickerAnalise(); carregarAnalise()
+}
+function limparFiltrosMovimentos() {
+  pendentesAtivo = false
+  document.getElementById("filtro-conta").value = ""
+  document.getElementById("filtro-direcao").value = ""
+  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
+  document.getElementById("filtro-pesquisa").value = ""
+  movDataDe = isoDateStr(primeiroDiaMes()); movDataAte = isoDateStr(new Date())
+  localStorage.removeItem("filtros_movimentos")
+  iniciarPickerMovimentos(); carregarMovimentos()
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTRO DE CATEGORIAS (ANÁLISE)
+// ═══════════════════════════════════════════════════════════
+function toggleFiltroCat(e) {
+  e.stopPropagation()
+  filtroCatAberto = !filtroCatAberto
+  document.getElementById("filtro-cat-panel").classList.toggle("aberto", filtroCatAberto)
+  document.getElementById("filtro-cat-btn").classList.toggle("ativo", filtroCatAberto)
+}
+function fecharFiltroCat() {
+  filtroCatAberto = false
+  document.getElementById("filtro-cat-panel").classList.remove("aberto")
+  document.getElementById("filtro-cat-btn").classList.remove("ativo")
+}
+function renderizarFiltroCatPanel() {
+  const lista = document.getElementById("filtro-cat-lista")
+  if (!lista) return
+  lista.innerHTML = ""
+
+  const grupos = { entrada: arvoreAnaliseCache.filter(g => g.eh_recebimento), saida: arvoreAnaliseCache.filter(g => !g.eh_recebimento) }
+
+  ;[{ label: "↑ Entradas", grupos: grupos.entrada }, { label: "↓ Saídas", grupos: grupos.saida }].forEach(secao => {
+    if (secao.grupos.length === 0) return
+
+    const sep = document.createElement("div")
+    sep.className = "filtro-cat-separador"
+    sep.textContent = secao.label
+    lista.appendChild(sep)
+
+    secao.grupos.forEach(g => {
+      const catIds = g.categorias.map(c => c.id)
+      const nExcluidas = catIds.filter(id => categoriasExcluidas.has(id)).length
+      const todasExcluidas = nExcluidas === catIds.length
+      const parcial = nExcluidas > 0 && !todasExcluidas
+
+      const grupoRow = document.createElement("div")
+      grupoRow.className = "filtro-cat-grupo-row"
+      grupoRow.innerHTML = `
+        <input type="checkbox" id="fg-${g.id}" ${todasExcluidas ? '' : 'checked'}
+               onchange="toggleGrupoFiltroCat(${g.id}, this.checked)">
+        <label for="fg-${g.id}" style="cursor:pointer;flex:1">${g.nome}</label>`
+      lista.appendChild(grupoRow)
+      if (parcial) grupoRow.querySelector('input').indeterminate = true
+
+      g.categorias.forEach(c => {
+        const catRow = document.createElement("div")
+        catRow.className = "filtro-cat-item-row"
+        catRow.innerHTML = `
+          <input type="checkbox" id="fc-${c.id}" ${categoriasExcluidas.has(c.id) ? '' : 'checked'}
+                 onchange="toggleCategoriaFiltroCat(${c.id}, ${g.id}, this.checked)">
+          <label for="fc-${c.id}" style="cursor:pointer;flex:1">${c.nome}</label>`
+        lista.appendChild(catRow)
+      })
+    })
+  })
+}
+function toggleGrupoFiltroCat(grupoId, incluir) {
+  const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
+  if (!grupo) return
+  grupo.categorias.forEach(c => {
+    if (incluir) categoriasExcluidas.delete(c.id)
+    else         categoriasExcluidas.add(c.id)
+    const el = document.getElementById("fc-" + c.id)
+    if (el) el.checked = incluir
+  })
+  atualizarBtnFiltroCat()
+  carregarAnalise()
+}
+function toggleCategoriaFiltroCat(catId, grupoId, incluir) {
+  if (incluir) categoriasExcluidas.delete(catId)
+  else         categoriasExcluidas.add(catId)
+
+  // atualizar estado parcial do grupo pai
+  const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
+  if (grupo) {
+    const catIds = grupo.categorias.map(c => c.id)
+    const nExcluidas = catIds.filter(id => categoriasExcluidas.has(id)).length
+    const grupoChk = document.getElementById("fg-" + grupoId)
+    if (grupoChk) {
+      grupoChk.checked = nExcluidas === 0
+      grupoChk.indeterminate = nExcluidas > 0 && nExcluidas < catIds.length
+    }
+  }
+  atualizarBtnFiltroCat()
+  carregarAnalise()
+}
+function selecionarTodasCat() { categoriasExcluidas.clear(); renderizarFiltroCatPanel(); atualizarBtnFiltroCat(); carregarAnalise() }
+function limparTodasCat()     { arvoreAnaliseCache.forEach(g => g.categorias.forEach(c => categoriasExcluidas.add(c.id))); renderizarFiltroCatPanel(); atualizarBtnFiltroCat(); carregarAnalise() }
+function atualizarBtnFiltroCat() {
+  const n = categoriasExcluidas.size
+  const badge = document.getElementById("filtro-cat-badge")
+  const label = document.getElementById("filtro-cat-label")
+  if (n > 0) { badge.textContent = n; badge.style.display = "inline-flex"; label.textContent = "Categorias" }
+  else        { badge.style.display = "none"; label.textContent = "Todas as categorias" }
+}
 
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: CONTAS
 // ═══════════════════════════════════════════════════════════
 async function carregarContas() {
   document.getElementById("tabela-contas").innerHTML = linhasEsqueleto(6, 3)
-
   const contaSel = document.getElementById("ct-filtro-conta").value
   const tipoSel  = document.getElementById("ct-filtro-tipo").value
-
   guardarFiltrosPagina("contas", { conta: contaSel, tipo: tipoSel, dataDe: ctDataDe, dataAte: ctDataAte })
   atualizarVisibilidadeLimparContas()
-
   contasCache = await api("/contas")
-  atualizarFiltrosDeTipo()
-  atualizarFiltrosDeConta()
-
+  atualizarFiltrosDeTipo(); atualizarFiltrosDeConta()
   const params = new URLSearchParams()
   if (contaSel) params.set("conta_id", contaSel)
   if (tipoSel)  params.set("tipo", tipoSel)
   if (ctDataDe)  params.set("data_de", ctDataDe)
   if (ctDataAte) params.set("data_ate", ctDataAte)
   const qs = params.toString() ? "?" + params.toString() : ""
-
   const saldoDiario = await api("/stats/saldo-diario" + qs)
-
   let contasFiltradas = contasCache
   if (contaSel) contasFiltradas = contasFiltradas.filter(c => c.id === contaSel)
   if (tipoSel)  contasFiltradas = contasFiltradas.filter(c => c.tipo === tipoSel)
-
-  const moedaContas = moedaPredominante(contasFiltradas)
   renderizarCardSaldoTotal(contasFiltradas)
-  renderizarGraficoSaldo(saldoDiario, moedaContas)
-
+  renderizarGraficoSaldo(saldoDiario, moedaPredominante(contasFiltradas))
   contasTabelaCache = contasFiltradas
   renderizarTabelaContas()
 }
 
-function renderizarCardSaldoTotal(contasFiltradas) {
-  const moedasPresentes = [...new Set(contasFiltradas.map(c => c.moeda))]
+function renderizarCardSaldoTotal(lista) {
+  const moedas = [...new Set(lista.map(c => c.moeda))]
   let html
-  if (moedasPresentes.length <= 1) {
-    const totalConsolidado = contasFiltradas.reduce((s, c) => s + c.saldo, 0)
-    const moeda = moedasPresentes[0] || "EUR"
-    html = `
-      <div class="card destaque">
-        <div class="label">Saldo Total Consolidado</div>
-        <div class="valor positivo">${fmt(totalConsolidado, moeda)}</div>
-        <div class="sub">${contasFiltradas.length} conta(s)</div>
-      </div>`
+  if (moedas.length <= 1) {
+    const total = lista.reduce((s, c) => s + c.saldo, 0)
+    html = `<div class="card destaque"><div class="label">Saldo Total Consolidado</div><div class="valor positivo">${fmt(total, moedas[0] || "EUR")}</div><div class="sub">${lista.length} conta(s)</div></div>`
   } else {
-    const subtotais = moedasPresentes.map(moeda => {
-      const total = contasFiltradas.filter(c => c.moeda === moeda).reduce((s, c) => s + c.saldo, 0)
-      return `<div class="valor positivo" style="font-size:1.1rem">${fmt(total, moeda)}</div>`
-    }).join("")
-    html = `
-      <div class="card destaque">
-        <div class="label">Saldo Total Consolidado (por moeda)</div>
-        ${subtotais}
-        <div class="sub">${contasFiltradas.length} conta(s) em ${moedasPresentes.length} moedas</div>
-      </div>`
+    const subtotais = moedas.map(m => `<div class="valor positivo" style="font-size:1.1rem">${fmt(lista.filter(c => c.moeda === m).reduce((s, c) => s + c.saldo, 0), m)}</div>`).join("")
+    html = `<div class="card destaque"><div class="label">Saldo Total Consolidado (por moeda)</div>${subtotais}<div class="sub">${lista.length} conta(s) em ${moedas.length} moedas</div></div>`
   }
   document.getElementById("ct-card-total").innerHTML = html
 }
@@ -1731,158 +1699,65 @@ function renderizarGraficoSaldo(saldoDiario, moeda) {
     destruirGrafico("saldoMensal")
     graficos.saldoMensal = new Chart(document.getElementById("grafico-saldo-mensal"), {
       type: "line",
-      data: {
-        labels: saldoDiario.map(s => fmtDiaCurto(s.data)),
-        datasets: [{
-          label: "Saldo", data: saldoDiario.map(s => s.saldo),
-          borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)",
-          fill: true, tension: 0.35, pointRadius: 0, pointHoverRadius: 5
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moeda)}` } }
-        },
-        interaction: { mode: 'index', intersect: false },
-        scales: {
-          x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 } }
-        }
-      }
+      data: { labels: saldoDiario.map(s => fmtDiaCurto(s.data)), datasets: [{ label: "Saldo", data: saldoDiario.map(s => s.saldo), borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)", fill: true, tension: 0.35, pointRadius: 0, pointHoverRadius: 5 }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moeda)}` } } }, interaction: { mode: 'index', intersect: false }, scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 } } } }
     })
   })
 }
 
 function ordenarContas(campo) {
-  if (ordenacaoContas.campo === campo) {
-    ordenacaoContas.direcao *= -1
-  } else {
-    ordenacaoContas.campo = campo
-    ordenacaoContas.direcao = 1
-  }
+  ordenacaoContas.campo === campo ? ordenacaoContas.direcao *= -1 : (ordenacaoContas.campo = campo, ordenacaoContas.direcao = 1)
   renderizarTabelaContas()
 }
-
 function renderizarTabelaContas() {
   let lista = [...contasTabelaCache]
   const { campo, direcao } = ordenacaoContas
-  if (campo) {
-    lista.sort((a, b) => {
-      let va = a[campo], vb = b[campo]
-      if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }
-      if (va < vb) return -1 * direcao
-      if (va > vb) return 1 * direcao
-      return 0
-    })
-  }
+  if (campo) lista.sort((a, b) => { let va = a[campo], vb = b[campo]; if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }; return va < vb ? -direcao : va > vb ? direcao : 0 })
   atualizarIconesOrdenacao("cabecalho-contas", ordenacaoContas)
-
   const tb = document.getElementById("tabela-contas")
-  if (lista.length === 0) {
-    tb.innerHTML = linhaVazia(6, "Ainda não tens contas",
-      "Adiciona a primeira conta para começares a registar movimentos.",
-      `<button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>`)
-    return
-  }
-
+  if (lista.length === 0) { tb.innerHTML = linhaVazia(6, "Ainda não tens contas", "Adiciona a primeira conta para começares a registar movimentos.", `<button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>`); return }
   tb.innerHTML = ""
   lista.forEach(c => {
-    tb.innerHTML += `
-      <tr>
-        <td data-label="Nome">${c.nome}</td>
-        <td data-label="Banco">${c.banco}</td>
-        <td data-label="Tipo"><span class="badge">${c.tipo}</span></td>
-        <td data-label="Identificador">${c.iban}</td>
-        <td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td>
-        <td class="td-acoes" style="white-space:nowrap">
-          <button class="btn-sm" onclick="abrirEditarConta('${c.id}')">editar</button>
-          <button class="btn-danger" onclick="eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button>
-        </td>
-      </tr>`
+    tb.innerHTML += `<tr><td data-label="Nome">${c.nome}</td><td data-label="Banco">${c.banco}</td><td data-label="Tipo"><span class="badge">${c.tipo}</span></td><td data-label="Identificador">${c.iban}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes" style="white-space:nowrap"><button class="btn-sm" onclick="abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
   })
 }
 
 function abrirModalConta() {
   document.getElementById("modal-conta-titulo").textContent = "Adicionar conta"
-  document.getElementById("conta-id").value = ""
-  document.getElementById("conta-nome").value = ""
-  document.getElementById("conta-banco").value = ""
-  document.getElementById("conta-tipo").value = ""
-  document.getElementById("conta-iban").value = ""
-  document.getElementById("conta-moeda").value = "EUR"
-  document.getElementById("conta-saldo").value = ""
-  document.getElementById("conta-saldo").disabled = false
-  document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"
-  document.getElementById("conta-saldo-ajustar").style.display = "none"
+  document.getElementById("conta-id").value = ""; document.getElementById("conta-nome").value = ""; document.getElementById("conta-banco").value = ""; document.getElementById("conta-tipo").value = ""; document.getElementById("conta-iban").value = ""
+  document.getElementById("conta-moeda").value = "EUR"; document.getElementById("conta-saldo").value = ""; document.getElementById("conta-saldo").disabled = false
+  document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"; document.getElementById("conta-saldo-ajustar").style.display = "none"
   document.getElementById("modal-conta").classList.add("open")
-  ligarCampoComSugestoes("conta-banco", opcoesBancos)
-  ligarCampoComSugestoes("conta-tipo", opcoesTipos)
+  ligarCampoComSugestoes("conta-banco", opcoesBancos); ligarCampoComSugestoes("conta-tipo", opcoesTipos)
 }
-
 function abrirEditarConta(id) {
   const c = contasCache.find(x => x.id === id)
   document.getElementById("modal-conta-titulo").textContent = "Editar conta"
-  document.getElementById("conta-id").value = c.id
-  document.getElementById("conta-nome").value = c.nome
-  document.getElementById("conta-banco").value = c.banco
-  document.getElementById("conta-tipo").value = c.tipo
-  document.getElementById("conta-iban").value = c.iban
-  document.getElementById("conta-moeda").value = c.moeda
-  document.getElementById("conta-saldo").value = c.saldo
-  document.getElementById("conta-saldo").disabled = true
-  document.getElementById("conta-saldo-label").textContent = "Saldo Atual"
-  document.getElementById("conta-saldo-ajustar").style.display = "block"
+  document.getElementById("conta-id").value = c.id; document.getElementById("conta-nome").value = c.nome; document.getElementById("conta-banco").value = c.banco; document.getElementById("conta-tipo").value = c.tipo; document.getElementById("conta-iban").value = c.iban; document.getElementById("conta-moeda").value = c.moeda; document.getElementById("conta-saldo").value = c.saldo
+  document.getElementById("conta-saldo").disabled = true; document.getElementById("conta-saldo-label").textContent = "Saldo Atual"; document.getElementById("conta-saldo-ajustar").style.display = "block"
   document.getElementById("modal-conta").classList.add("open")
   ligarValidacaoFormulario(["conta-nome", "conta-banco", "conta-saldo"], "btn-guardar-conta")
 }
-
 async function guardarConta() {
   if (!camposValidos("conta-nome", "conta-banco", "conta-saldo")) return
   const id = document.getElementById("conta-id").value
-  const body = {
-    nome:  document.getElementById("conta-nome").value,
-    banco: document.getElementById("conta-banco").value,
-    tipo:  document.getElementById("conta-tipo").value,
-    iban:  document.getElementById("conta-iban").value,
-    moeda: document.getElementById("conta-moeda").value,
-  }
+  const body = { nome: document.getElementById("conta-nome").value, banco: document.getElementById("conta-banco").value, tipo: document.getElementById("conta-tipo").value, iban: document.getElementById("conta-iban").value, moeda: document.getElementById("conta-moeda").value }
   let r
-  if (id) {
-    r = await apiPut("/contas/" + id, body)
-  } else {
-    body.saldo = parseFloat(document.getElementById("conta-saldo").value)
-    r = await apiPost("/contas", body)
-  }
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-  fecharModal()
-  carregarContas()
+  if (id) { r = await apiPut("/contas/" + id, body) }
+  else     { body.saldo = parseFloat(document.getElementById("conta-saldo").value); r = await apiPost("/contas", body) }
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  fecharModal(); carregarContas()
 }
-
 async function eliminarConta(id) {
   if (!(await confirmarAcao("Eliminar esta conta?", { perigo: true }))) return
-
   let r = await apiDelete("/contas/" + id)
-  if (r.ok) {
-    carregarContas()
-    return
-  }
-
+  if (r.ok) { carregarContas(); return }
   const d = await r.json()
   if (!(await confirmarAcao(mensagemDeErro(d) + " Continuar e eliminar tudo permanentemente?", { textoConfirmar: "Eliminar tudo", perigo: true }))) return
-
   r = await apiDelete("/contas/" + id + "?forcar=true")
-  if (!r.ok) {
-    const erro = await r.json()
-    mostrarToast(mensagemDeErro(erro), "erro")
-    return
-  }
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
   carregarContas()
 }
-
 
 // ═══════════════════════════════════════════════════════════
 // RECONCILIAÇÕES DE SALDO
@@ -1895,37 +1770,23 @@ async function abrirModalAjusteSaldo() {
   await carregarReconciliacoes(id)
   document.getElementById("modal-reconciliacoes").classList.add("open")
 }
-
 function fecharModalReconciliacoes() {
   document.getElementById("modal-reconciliacoes").classList.remove("open")
   abrirEditarConta(document.getElementById("conta-id").value)
 }
-
 async function carregarReconciliacoes(contaId) {
   reconciliacoesCache = await api("/contas/" + contaId + "/ajustes-saldo")
   renderizarTabelaReconciliacoes(true)
 }
-
 function renderizarTabelaReconciliacoes(comAcoes) {
   const contaId = document.getElementById("reconc-conta-id").value
   const conta = contasCache.find(c => c.id === contaId)
   const tb = document.getElementById("tabela-reconciliacoes")
   tb.innerHTML = ""
   reconciliacoesCache.forEach(a => {
-    tb.innerHTML += `
-      <tr>
-        <td>${a.data}</td>
-        <td style="text-align:right">${fmt(a.saldo_real, conta ? conta.moeda : null)}</td>
-        <td style="white-space:nowrap">
-          <span style="visibility:${comAcoes ? 'visible' : 'hidden'}">
-            <button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button>
-            <button class="btn-danger" onclick="eliminarReconciliacao(${a.id})" aria-label="Eliminar reconciliação">✕</button>
-          </span>
-        </td>
-      </tr>`
+    tb.innerHTML += `<tr><td>${a.data}</td><td style="text-align:right">${fmt(a.saldo_real, conta?.moeda)}</td><td style="white-space:nowrap"><span style="visibility:${comAcoes ? 'visible' : 'hidden'}"><button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button><button class="btn-danger" onclick="eliminarReconciliacao(${a.id})">✕</button></span></td></tr>`
   })
 }
-
 function mostrarFormReconciliacao(id, data, valor) {
   document.getElementById("reconc-id").value = id || ""
   pickerReconc.setDate(data || new Date())
@@ -1935,47 +1796,27 @@ function mostrarFormReconciliacao(id, data, valor) {
   renderizarTabelaReconciliacoes(false)
   ligarValidacaoFormulario(["reconc-data", "reconc-valor"], "btn-guardar-reconciliacao")
 }
-
 function esconderFormReconciliacao() {
   document.getElementById("form-reconciliacao").style.display = "none"
   document.getElementById("btn-add-reconciliacao").style.display = "inline-block"
   renderizarTabelaReconciliacoes(true)
 }
-
 async function guardarReconciliacao() {
   if (!camposValidos("reconc-data", "reconc-valor")) return
   const id = document.getElementById("reconc-id").value
   const contaId = document.getElementById("reconc-conta-id").value
-  const body = {
-    data: document.getElementById("reconc-data").value,
-    saldo_real: parseFloat(document.getElementById("reconc-valor").value),
-  }
-  const r = id
-    ? await apiPut("/ajustes-saldo/" + id, body)
-    : await apiPost("/contas/" + contaId + "/ajustes-saldo", body)
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-  esconderFormReconciliacao()
-  await carregarReconciliacoes(contaId)
-  carregarContas()
+  const body = { data: document.getElementById("reconc-data").value, saldo_real: parseFloat(document.getElementById("reconc-valor").value) }
+  const r = id ? await apiPut("/ajustes-saldo/" + id, body) : await apiPost("/contas/" + contaId + "/ajustes-saldo", body)
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  esconderFormReconciliacao(); await carregarReconciliacoes(contaId); carregarContas()
 }
-
 async function eliminarReconciliacao(id) {
   if (!(await confirmarAcao("Eliminar esta reconciliação?", { perigo: true }))) return
   const contaId = document.getElementById("reconc-conta-id").value
   const r = await apiDelete("/ajustes-saldo/" + id)
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-  await carregarReconciliacoes(contaId)
-  carregarContas()
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  await carregarReconciliacoes(contaId); carregarContas()
 }
-
 
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: ANÁLISE
@@ -1984,57 +1825,54 @@ function trocarAbaAnalise(aba) {
   document.querySelectorAll(".analise-tab").forEach(t => t.classList.toggle("active", t.dataset.aba === aba))
   document.querySelectorAll(".analise-secao").forEach(el => el.classList.toggle("active", el.id === `analise-secao-${aba}`))
   requestAnimationFrame(() => {
-    if (aba === "global" && analiseCache.mensal !== null) {
-      destruirGrafico("mensal")
-      renderizarGraficoMensal(analiseCache.mensal)
-    }
-    if (aba === "especifica" && analiseCache.categorias !== null) {
-      destruirGrafico("in")
-      destruirGrafico("out")
-      renderizarDonutsCategoria(analiseCache.categorias)
-    }
+    if (aba === "global" && analiseCache.mensal !== null) { destruirGrafico("mensal"); renderizarGraficoMensal(analiseCache.mensal) }
   })
+}
+
+// constrói os params incluindo exclusões de categorias
+function construirParamsAnalise() {
+  const conta = document.getElementById("an-filtro-conta").value
+  const tipo  = document.getElementById("an-filtro-tipo").value
+  const params = new URLSearchParams()
+  if (conta)   params.set("conta_id", conta)
+  if (tipo)    params.set("tipo", tipo)
+  if (anDataDe)  params.set("data_de", anDataDe)
+  if (anDataAte) params.set("data_ate", anDataAte)
+  if (categoriasExcluidas.size > 0) params.set("excluir_categorias", [...categoriasExcluidas].join(','))
+  return params
 }
 
 async function carregarAnalise(resetarAba = false) {
   if (resetarAba) trocarAbaAnalise('global')
+  fecharDrillDown()
   document.getElementById("tabela-recorrentes").innerHTML = linhasEsqueleto(5, 3)
   document.getElementById("lista-grupos").innerHTML = `<div class="estado-vazio"><div class="subtitulo">A carregar...</div></div>`
 
-  const conta   = document.getElementById("an-filtro-conta").value
-  const tipo    = document.getElementById("an-filtro-tipo").value
-  const dataDe  = anDataDe
-  const dataAte = anDataAte
+  const conta  = document.getElementById("an-filtro-conta").value
+  const tipo   = document.getElementById("an-filtro-tipo").value
 
   atualizarVisibilidadeLimparAnalise()
-  guardarFiltrosPagina("analise", { conta, tipo, dataDe, dataAte })
+  guardarFiltrosPagina("analise", { conta, tipo, dataDe: anDataDe, dataAte: anDataAte })
 
   let contasConsideradas = contasCache
   if (conta) contasConsideradas = contasConsideradas.filter(c => c.id === conta)
   if (tipo)  contasConsideradas = contasConsideradas.filter(c => c.tipo === tipo)
   moedaAnaliseGlobal = moedaPredominante(contasConsideradas)
 
-  const params = new URLSearchParams()
-  if (conta)   params.set("conta_id", conta)
-  if (tipo)    params.set("tipo", tipo)
-  if (dataDe)  params.set("data_de", dataDe)
-  if (dataAte) params.set("data_ate", dataAte)
-  const qs = params.toString() ? "?" + params.toString() : ""
+  // usa sempre construirParamsAnalise para garantir que excluir_categorias é enviado
+  const qs = construirParamsAnalise().toString()
+  const qsStr = qs ? "?" + qs : ""
 
-  const [mensal, categorias, grupos, recorrentes] = await Promise.all([
-    api("/stats/mensal" + qs),
-    api("/stats/categorias" + qs),
-    api("/stats/grupos" + qs),
-    api("/stats/recorrentes" + qs)
+  const [mensal, grupos, recorrentes] = await Promise.all([
+    api("/stats/mensal" + qsStr),
+    api("/stats/grupos" + qsStr),
+    api("/stats/recorrentes" + qsStr),
   ])
   analiseCache.mensal = mensal
-  analiseCache.categorias = categorias
 
   renderizarResumoAnalise(mensal)
   renderizarGraficoMensal(mensal)
-  renderizarDonutsCategoria(categorias)
   renderizarRecorrentes(recorrentes)
-  
   gruposCache = grupos
   renderizarGrupos()
 }
@@ -2043,21 +1881,10 @@ function renderizarResumoAnalise(mensal) {
   const totalIn  = mensal.reduce((s, m) => s + m.entradas, 0)
   const totalOut = mensal.reduce((s, m) => s + m.saidas, 0)
   const pctGasto = totalIn > 0 ? (totalOut / totalIn * 100) : 0
-
   document.getElementById("summary-mes").innerHTML = `
-    <div class="summary-card">
-      <div class="label">Cash-In</div>
-      <div class="valor positivo">${fmt(totalIn, moedaAnaliseGlobal)}</div>
-    </div>
-    <div class="summary-card">
-      <div class="label">Cash-Out</div>
-      <div class="valor negativo">${fmt(totalOut, moedaAnaliseGlobal)}</div>
-      <div class="sub">${totalIn > 0 ? pctGasto.toFixed(0) + '% do cash-in' : ''}</div>
-    </div>
-    <div class="summary-card">
-      <div class="label">Líquido</div>
-      <div class="valor ${totalIn - totalOut >= 0 ? 'positivo' : 'negativo'}">${fmt(totalIn - totalOut, moedaAnaliseGlobal)}</div>
-    </div>`
+    <div class="summary-card"><div class="label">Cash-In</div><div class="valor positivo">${fmt(totalIn, moedaAnaliseGlobal)}</div></div>
+    <div class="summary-card"><div class="label">Cash-Out</div><div class="valor negativo">${fmt(totalOut, moedaAnaliseGlobal)}</div><div class="sub">${totalIn > 0 ? pctGasto.toFixed(0) + '% do cash-in' : ''}</div></div>
+    <div class="summary-card"><div class="label">Líquido</div><div class="valor ${totalIn - totalOut >= 0 ? 'positivo' : 'negativo'}">${fmt(totalIn - totalOut, moedaAnaliseGlobal)}</div></div>`
 }
 
 function renderizarGraficoMensal(mensal) {
@@ -2065,64 +1892,18 @@ function renderizarGraficoMensal(mensal) {
     destruirGrafico("mensal")
     graficos.mensal = new Chart(document.getElementById("grafico-mensal"), {
       type: "bar",
-      data: {
-        labels: mensal.map(m => fmtMes(m.mes)),
-        datasets: [
-          { label: "Cash-In",  data: mensal.map(m => m.entradas), backgroundColor: "#1a7a4a" },
-          { label: "Cash-Out", data: mensal.map(m => m.saidas),   backgroundColor: "#c0392b" }
-        ]
-      },
+      data: { labels: mensal.map(m => fmtMes(m.mes)), datasets: [{ label: "Cash-In", data: mensal.map(m => m.entradas), backgroundColor: "#1a7a4a" }, { label: "Cash-Out", data: mensal.map(m => m.saidas), backgroundColor: "#c0392b" }] },
       options: {
         plugins: {
           legend: { labels: { font: { size: 11 } } },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const campo = ctx.datasetIndex === 0 ? 'entradas' : 'saidas'
-                let linha = `${ctx.dataset.label}: ${fmt(ctx.raw, moedaAnaliseGlobal)}`
-                if (ctx.dataIndex > 0) {
-                  const anterior = mensal[ctx.dataIndex - 1][campo]
-                  if (anterior > 0) {
-                    const variacao = ((ctx.raw - anterior) / anterior) * 100
-                    linha += ` (${variacao >= 0 ? '+' : ''}${variacao.toFixed(0)}% mês anterior)`
-                  }
-                }
-                return linha
-              }
-            }
-          }
+          tooltip: { callbacks: { label: (ctx) => {
+            const campo = ctx.datasetIndex === 0 ? 'entradas' : 'saidas'
+            let linha = `${ctx.dataset.label}: ${fmt(ctx.raw, moedaAnaliseGlobal)}`
+            if (ctx.dataIndex > 0) { const anterior = mensal[ctx.dataIndex - 1][campo]; if (anterior > 0) { const v = ((ctx.raw - anterior) / anterior) * 100; linha += ` (${v >= 0 ? '+' : ''}${v.toFixed(0)}% mês anterior)` } }
+            return linha
+          }}}
         },
         scales: { x: { grid: { display: false } } }
-      }
-    })
-  })
-}
-
-function renderizarDonutsCategoria(categorias) {
-  const cores = ["#1a7a4a","#2563eb","#c0392b","#d97706","#7c3aed","#0891b2","#be185d","#4d7c0f","#b45309","#6b7280","#dc2626","#059669"]
-
-  const out = categorias.filter(c => !c.eh_recebimento)
-  mostrarGraficoOuVazio("grafico-out", out.length > 0, "Sem saídas neste período.", () => {
-    destruirGrafico("out")
-    graficos.out = new Chart(document.getElementById("grafico-out"), {
-      type: "doughnut",
-      data: { labels: out.map(c => c.categoria), datasets: [{ data: out.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
-      options: {
-        animation: { animateRotate: false, animateScale: true },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${out[ctx.dataIndex].percentagem}%)` } } }
-      }
-    })
-  })
-
-  const inp = categorias.filter(c => c.eh_recebimento)
-  mostrarGraficoOuVazio("grafico-in", inp.length > 0, "Sem entradas neste período.", () => {
-    destruirGrafico("in")
-    graficos.in = new Chart(document.getElementById("grafico-in"), {
-      type: "doughnut",
-      data: { labels: inp.map(c => c.categoria), datasets: [{ data: inp.map(c => c.total), backgroundColor: cores, borderWidth: 0 }] },
-      options: {
-        animation: { animateRotate: false, animateScale: true },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moedaAnaliseGlobal)}  (${inp[ctx.dataIndex].percentagem}%)` } } }
       }
     })
   })
@@ -2132,352 +1913,240 @@ function trocarTipo(tipo) {
   tipoAtual = tipo
   document.getElementById("btn-tipo-out").classList.toggle("active", tipo === "out")
   document.getElementById("btn-tipo-in").classList.toggle("active", tipo === "in")
-  renderizarGrupos()
+  fecharDrillDown(); renderizarGrupos()
 }
 
 function renderizarGrupos() {
   const filtrados = gruposCache.filter(g => tipoAtual === "in" ? g.eh_recebimento : !g.eh_recebimento)
   const el = document.getElementById("lista-grupos")
-
   if (filtrados.length === 0) {
-    el.innerHTML = `<div class="estado-vazio">
-      <div class="titulo">Sem ${tipoAtual === "in" ? "entradas" : "saídas"} neste período</div>
-      <div class="subtitulo">Experimenta alargar o período selecionado.</div>
-    </div>`
+    el.innerHTML = `<div class="estado-vazio"><div class="titulo">Sem ${tipoAtual === "in" ? "entradas" : "saídas"} neste período</div><div class="subtitulo">Experimenta alargar o período selecionado.</div></div>`
     document.getElementById("total-tipo").textContent = fmt(0, moedaAnaliseGlobal)
     document.getElementById("label-tipo").textContent = tipoAtual === "in" ? "Entradas" : "Saídas"
-    return
+    fecharDrillDown(); return
   }
-
   const totalTipo = filtrados.reduce((s, g) => s + g.total, 0)
-  const cor = tipoAtual === "in" ? "#1a7a4a" : "#c0392b"
+  const corBase  = tipoAtual === "in" ? "#1a7a4a" : "#c0392b"
+  const corClara = tipoAtual === "in" ? "rgba(26,122,74,0.3)" : "rgba(192,57,43,0.3)"
   el.innerHTML = ""
   filtrados.forEach((g, gi) => {
     const pct = totalTipo > 0 ? (g.total / totalTipo * 100) : 0
-    el.innerHTML += `
-      <div class="grupo-bar-row" onclick="toggleGrupo(${gi})">
-        <div class="linha-topo">
-          <span class="nome">${g.grupo}</span>
-          <span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total, moedaAnaliseGlobal)}</strong></span>
-        </div>
-        <div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${cor}"></div></div>
-        <div class="sub-grupo" id="sub-grupo-${gi}">
-          ${g.subcategorias.map(s => {
-            const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
-            return `<div class="sub-item"><span>${s.categoria}</span><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span></div>`
-          }).join("")}
-        </div>
-      </div>`
+    const subcatHtml = g.subcategorias.map(s => {
+      const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
+      return `<div class="sub-item"><span>${s.categoria}</span><span style="display:flex;align-items:center;gap:8px"><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span><button class="btn-drilldown" title="Ver evolução mensal de ${s.categoria}" onclick="abrirDrillDownCategoria(${s.categoria_id}, '${s.categoria.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button></span></div><div class="sub-barra-fundo"><div class="barra-fill" style="width:${sPct}%;background:${corClara}"></div></div>`
+    }).join("")
+    el.innerHTML += `<div class="grupo-bar-row"><div class="linha-topo" onclick="toggleGrupo(${gi})" style="cursor:pointer"><span class="nome">${g.grupo}</span><span style="display:flex;align-items:center;gap:8px"><span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total, moedaAnaliseGlobal)}</strong></span><button class="btn-drilldown" title="Ver evolução mensal de ${g.grupo}" onclick="event.stopPropagation(); abrirDrillDownGrupo(${g.grupo_id}, '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button></span></div><div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${corBase}"></div></div><div class="sub-grupo" id="sub-grupo-${gi}">${subcatHtml}</div></div>`
   })
-
   document.getElementById("total-tipo").textContent = fmt(totalTipo, moedaAnaliseGlobal)
   document.getElementById("label-tipo").textContent = tipoAtual === "in" ? "Entradas" : "Saídas"
 }
 
-function toggleGrupo(gi) {
-  document.getElementById("sub-grupo-" + gi).classList.toggle("visible")
-}
-
+function toggleGrupo(gi) { document.getElementById("sub-grupo-" + gi).classList.toggle("visible") }
 function alternarExpandirTodos() {
   gruposExpandidos = !gruposExpandidos
   document.querySelectorAll('.sub-grupo').forEach(el => el.classList.toggle('visible', gruposExpandidos))
   atualizarIconeExpandirRecolher()
 }
-
 function atualizarIconeExpandirRecolher() {
   const btn = document.getElementById("btn-expandir-recolher")
   btn.innerHTML = gruposExpandidos ? ICONE_SETA_CIMA : ICONE_SETA_BAIXO
   btn.setAttribute("aria-label", gruposExpandidos ? "Recolher todos os grupos" : "Expandir todos os grupos")
 }
 
-function ordenarRecorrentes(campo) {
-  if (ordenacaoRecorrentes.campo === campo) {
-    ordenacaoRecorrentes.direcao *= -1
-  } else {
-    ordenacaoRecorrentes.campo = campo
-    ordenacaoRecorrentes.direcao = 1
-  }
-  renderizarTabelaRecorrentes()
+// ─── Drill-down ───────────────────────────────────────────
+function abrirDrawer(titulo, subtitulo) {
+  document.getElementById("drawer-titulo").textContent = titulo
+  document.getElementById("drawer-subtitulo").textContent = subtitulo
+  document.getElementById("grafico-drilldown").style.display = "none"
+  document.getElementById("drilldown-vazio").style.display = "none"
+  document.getElementById("modal-drilldown").classList.add("open")
+  destruirGrafico("drilldown")
 }
 
-function renderizarRecorrentes(recorrentes) {
-  recorrentesTabelaCache = recorrentes
-  renderizarTabelaRecorrentes()
-}
-
-function renderizarTabelaRecorrentes() {
-  let lista = [...recorrentesTabelaCache]
-  const { campo, direcao } = ordenacaoRecorrentes
-  if (campo) {
-    lista.sort((a, b) => {
-      let va = a[campo], vb = b[campo]
-      if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }
-      if (va < vb) return -1 * direcao
-      if (va > vb) return 1 * direcao
-      return 0
-    })
-  }
-  atualizarIconesOrdenacao("cabecalho-recorrentes", ordenacaoRecorrentes)
-
-  const tb = document.getElementById("tabela-recorrentes")
-  if (lista.length === 0) {
-    tb.innerHTML = linhaVazia(5, "Sem padrões recorrentes detetados",
-      "Precisas de pelo menos 2 movimentos com a mesma descrição para um padrão aparecer aqui.")
-    return
-  }
-
-  tb.innerHTML = ""
-  lista.forEach(r => {
-    tb.innerHTML += `
-      <tr>
-        <td data-label="Descrição">${r.descricao}</td>
-        <td data-label="Categoria">${r.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${r.grupo}</div></td>
-        <td data-label="Valor Médio" style="text-align:right" class="negativo">${fmt(r.valor_medio, moedaAnaliseGlobal)}</td>
-        <td data-label="Frequência" style="${r.regular ? '' : 'color:#aaa'}">${r.regular ? `~${r.intervalo_medio_dias} dias` : `${r.intervalo_medio_dias} dias (irregular)`}</td>
-        <td data-label="Próxima Data">${r.proxima_data_estimada}</td>
-      </tr>`
+async function abrirDrillDownGrupo(grupoId, nomeGrupo) {
+  abrirDrawer(nomeGrupo, "Evolução mensal do grupo")
+  const params = construirParamsAnalise()
+  params.set("grupo_id", grupoId)
+  const dados = await api("/stats/mensal-detalhe?" + params.toString())
+  if (!dados.meses || dados.meses.length === 0) { document.getElementById("drilldown-vazio").style.display = "flex"; return }
+  const totaisPorMes = dados.meses.map(m => ({ mes: m.mes, total: dados.categorias.reduce((s, cat) => s + (m.categorias[cat] || 0), 0) }))
+  const cor = tipoAtual === "in" ? "#1a7a4a" : "#c0392b"
+  document.getElementById("grafico-drilldown").style.display = "block"
+  graficos.drilldown = new Chart(document.getElementById("grafico-drilldown"), {
+    type: "bar",
+    data: { labels: totaisPorMes.map(m => fmtMes(m.mes)), datasets: [{ data: totaisPorMes.map(m => m.total), backgroundColor: cor }] },
+    options: {
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
+        const idx = ctx.dataIndex; let linha = ` ${fmt(ctx.raw, moedaAnaliseGlobal)}`
+        if (idx > 0) { const ant = totaisPorMes[idx-1].total; if (ant > 0) { const v = ((totaisPorMes[idx].total - ant) / ant) * 100; linha += ` (${v >= 0 ? '+' : ''}${v.toFixed(0)}% mês anterior)` } }
+        return linha
+      }}}}   ,
+      scales: { x: { grid: { display: false } } }
+    }
   })
 }
 
+async function abrirDrillDownCategoria(categoriaId, nomeCategoria) {
+  abrirDrawer(nomeCategoria, "Evolução mensal")
+  const params = construirParamsAnalise()
+  params.set("categoria_id", categoriaId)
+  const dados = await api("/stats/mensal-detalhe?" + params.toString())
+  if (!dados || dados.length === 0) { document.getElementById("drilldown-vazio").style.display = "flex"; return }
+  const cor = tipoAtual === "in" ? "#1a7a4a" : "#c0392b"
+  document.getElementById("grafico-drilldown").style.display = "block"
+  graficos.drilldown = new Chart(document.getElementById("grafico-drilldown"), {
+    type: "bar",
+    data: { labels: dados.map(m => fmtMes(m.mes)), datasets: [{ data: dados.map(m => m.total), backgroundColor: cor }] },
+    options: {
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
+        const idx = ctx.dataIndex; let linha = ` ${fmt(ctx.raw, moedaAnaliseGlobal)}`
+        if (idx > 0) { const ant = dados[idx-1].total; if (ant > 0) { const v = ((dados[idx].total - ant) / ant) * 100; linha += ` (${v >= 0 ? '+' : ''}${v.toFixed(0)}% mês anterior)` } }
+        return linha
+      }}}},
+      scales: { x: { grid: { display: false } } }
+    }
+  })
+}
+
+function fecharDrillDown() {
+  document.getElementById("modal-drilldown").classList.remove("open")
+  destruirGrafico("drilldown")
+}
+
+// ─── Padrões recorrentes ─────────────────────────────────
+function ordenarRecorrentes(campo) {
+  ordenacaoRecorrentes.campo === campo ? ordenacaoRecorrentes.direcao *= -1 : (ordenacaoRecorrentes.campo = campo, ordenacaoRecorrentes.direcao = 1)
+  renderizarTabelaRecorrentes()
+}
+function renderizarRecorrentes(recorrentes) { recorrentesTabelaCache = recorrentes; renderizarTabelaRecorrentes() }
+function renderizarTabelaRecorrentes() {
+  let lista = [...recorrentesTabelaCache]
+  const { campo, direcao } = ordenacaoRecorrentes
+  if (campo) lista.sort((a, b) => { let va = a[campo], vb = b[campo]; if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }; return va < vb ? -direcao : va > vb ? direcao : 0 })
+  atualizarIconesOrdenacao("cabecalho-recorrentes", ordenacaoRecorrentes)
+  const tb = document.getElementById("tabela-recorrentes")
+  if (lista.length === 0) { tb.innerHTML = linhaVazia(5, "Sem padrões recorrentes detetados", "Precisas de pelo menos 2 movimentos com a mesma descrição para um padrão aparecer aqui."); return }
+  tb.innerHTML = ""
+  lista.forEach(r => {
+    tb.innerHTML += `<tr><td data-label="Descrição">${r.descricao}</td><td data-label="Categoria">${r.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${r.grupo}</div></td><td data-label="Valor Médio" style="text-align:right" class="negativo">${fmt(r.valor_medio, moedaAnaliseGlobal)}</td><td data-label="Frequência" style="${r.regular ? '' : 'color:#aaa'}">${r.regular ? `~${r.intervalo_medio_dias} dias` : `${r.intervalo_medio_dias} dias (irregular)`}</td><td data-label="Próxima Data">${r.proxima_data_estimada}</td></tr>`
+  })
+}
 
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: MOVIMENTOS
 // ═══════════════════════════════════════════════════════════
 async function carregarMovimentos() {
   document.getElementById("tabela-movimentos").innerHTML = linhasEsqueleto(6, 4)
-
-  const conta     = document.getElementById("filtro-conta").value
-  const direcao   = document.getElementById("filtro-direcao").value
-  const categoria = document.getElementById("filtro-categoria").value
-  const dataDe    = movDataDe
-  const dataAte   = movDataAte
-
+  const conta = document.getElementById("filtro-conta").value, direcao = document.getElementById("filtro-direcao").value, categoria = document.getElementById("filtro-categoria").value
   atualizarVisibilidadeLimparMovimentos()
-  guardarFiltrosPagina("movimentos", { conta, direcao, categoria, dataDe, dataAte })
-
+  guardarFiltrosPagina("movimentos", { conta, direcao, categoria, dataDe: movDataDe, dataAte: movDataAte })
   const params = new URLSearchParams()
   if (conta)     params.set("conta_id", conta)
   if (direcao)   params.set("direcao", direcao)
   if (categoria) params.set("categoria_id", categoria)
-  if (dataDe)    params.set("data_de", dataDe)
-  if (dataAte)   params.set("data_ate", dataAte)
+  if (movDataDe)  params.set("data_de", movDataDe)
+  if (movDataAte) params.set("data_ate", movDataAte)
   if (pendentesAtivo) params.set("precisa_confirmacao", "true")
   const qs = params.toString() ? "?" + params.toString() : ""
-
-  const todos = await api("/movimentos" + qs)
-  movimentosCache = todos
-  movimentosTabelaCache = todos
-  renderizarTabelaMovimentos()
-  atualizarBadgePendentes()
+  movimentosCache = movimentosTabelaCache = await api("/movimentos" + qs)
+  renderizarTabelaMovimentos(); atualizarBadgePendentes()
 }
 
 function ordenarMovimentos(campo) {
-  if (ordenacaoMovimentos.campo === campo) {
-    ordenacaoMovimentos.direcao *= -1
-  } else {
-    ordenacaoMovimentos.campo = campo
-    ordenacaoMovimentos.direcao = 1
-  }
+  ordenacaoMovimentos.campo === campo ? ordenacaoMovimentos.direcao *= -1 : (ordenacaoMovimentos.campo = campo, ordenacaoMovimentos.direcao = 1)
   renderizarTabelaMovimentos()
 }
-
 function renderizarTabelaMovimentos() {
   let lista = [...movimentosTabelaCache]
   atualizarVisibilidadeLimparMovimentos()
-
   const pesquisa = document.getElementById("filtro-pesquisa").value.trim().toLowerCase()
-  if (pesquisa) {
-    lista = lista.filter(m => m.descricao.toLowerCase().includes(pesquisa))
-  }
-
+  if (pesquisa) lista = lista.filter(m => m.descricao.toLowerCase().includes(pesquisa))
   const { campo, direcao } = ordenacaoMovimentos
-  if (campo) {
-    lista.sort((a, b) => {
-      let va, vb
-      if (campo === "conta") {
-        const ca = contasCache.find(c => c.id === a.conta_id)
-        const cb = contasCache.find(c => c.id === b.conta_id)
-        va = ca ? ca.nome : a.conta_id
-        vb = cb ? cb.nome : b.conta_id
-      } else {
-        va = a[campo]; vb = b[campo]
-      }
-      if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }
-      if (va < vb) return -1 * direcao
-      if (va > vb) return 1 * direcao
-      return 0
-    })
-  }
+  if (campo) lista.sort((a, b) => {
+    let va, vb
+    if (campo === "conta") { const ca = contasCache.find(c => c.id === a.conta_id), cb = contasCache.find(c => c.id === b.conta_id); va = ca ? ca.nome : a.conta_id; vb = cb ? cb.nome : b.conta_id }
+    else { va = a[campo]; vb = b[campo] }
+    if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }
+    return va < vb ? -direcao : va > vb ? direcao : 0
+  })
   atualizarIconesOrdenacao("cabecalho-movimentos", ordenacaoMovimentos)
-
   const tb = document.getElementById("tabela-movimentos")
   if (lista.length === 0) {
-    if (temFiltrosMovimentosAtivos()) {
-      tb.innerHTML = linhaVazia(6, "Nenhum movimento encontrado",
-        "Experimenta ajustar ou limpar os filtros.",
-        `<button class="btn-sm" onclick="limparFiltrosMovimentos()">Limpar filtros</button>`)
-    } else {
-      tb.innerHTML = linhaVazia(6, "Ainda não tens movimentos",
-        "Os movimentos que adicionares vão aparecer aqui.",
-        `<button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>`)
-    }
+    tb.innerHTML = temFiltrosMovimentosAtivos()
+      ? linhaVazia(6, "Nenhum movimento encontrado", "Experimenta ajustar ou limpar os filtros.", `<button class="btn-sm" onclick="limparFiltrosMovimentos()">Limpar filtros</button>`)
+      : linhaVazia(6, "Ainda não tens movimentos", "Os movimentos que adicionares vão aparecer aqui.", `<button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>`)
     return
   }
-
   tb.innerHTML = ""
   lista.forEach(m => {
     const conta = contasCache.find(c => c.id === m.conta_id)
     const pendente = !m.confirmado
-    const iconePendente = !pendente ? "" : (
-      m.sem_categoria
-        ? `<span class="icone-auto sem-match" title="Foi atribuída uma categoria genérica. Recomenda-se a sua validação.">${ICONE_SEM_MATCH}</span>`
-        : `<span class="icone-auto llm" title="Categoria atribuída automaticamente. Recomenda-se a sua confirmação.">${ICONE_SUGESTAO_LLM}</span>`
-    )
-
-    tb.innerHTML += `
-      <tr>
-        <td data-label="Data">${m.data}</td>
-        <td data-label="Descrição">${m.descricao}</td>
-        <td data-label="Conta">${conta ? `${conta.nome}<div style="font-size:0.7rem;color:#888;margin-top:2px">${conta.banco}</div>` : m.conta_id}</td>
-        <td data-label="Categoria">${m.categoria}${iconePendente}<div style="font-size:0.7rem;color:#888;margin-top:2px">${m.grupo}</div></td>
-        <td data-label="Valor" style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta ? conta.moeda : null)}</td>
-        <td class="td-acoes" style="white-space:nowrap">
-          ${pendente ? `<button class="btn-confirmar" onclick="confirmarMovimento('${m.id}')">✓ confirmar</button>` : ""}
-          <button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button>
-          <button class="btn-danger" onclick="eliminarMovimento('${m.id}')" aria-label="Eliminar movimento">✕</button>
-        </td>
-      </tr>`
+    const iconePendente = !pendente ? "" : (m.sem_categoria ? `<span class="icone-auto sem-match" title="Categoria genérica. Recomenda-se validação.">${ICONE_SEM_MATCH}</span>` : `<span class="icone-auto llm" title="Categoria automática. Recomenda-se confirmação.">${ICONE_SUGESTAO_LLM}</span>`)
+    tb.innerHTML += `<tr><td data-label="Data">${m.data}</td><td data-label="Descrição">${m.descricao}</td><td data-label="Conta">${conta ? `${conta.nome}<div style="font-size:0.7rem;color:#888;margin-top:2px">${conta.banco}</div>` : m.conta_id}</td><td data-label="Categoria">${m.categoria}${iconePendente}<div style="font-size:0.7rem;color:#888;margin-top:2px">${m.grupo}</div></td><td data-label="Valor" style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta?.moeda)}</td><td class="td-acoes" style="white-space:nowrap">${pendente ? `<button class="btn-confirmar" onclick="confirmarMovimento('${m.id}')">✓ confirmar</button>` : ""}<button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button><button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button></td></tr>`
   })
 }
 
 function abrirModalMovimento() {
   document.getElementById("modal-movimento-titulo").textContent = "Adicionar movimento"
-  document.getElementById("mov-id").value = ""
-  document.getElementById("mov-conta").innerHTML = construirOptionsContas()
-  document.getElementById("mov-tipo").value = "out"
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(null, "out")
-  pickerMovData.setDate(new Date())
-  document.getElementById("mov-descricao").value = ""
-  document.getElementById("mov-valor").value = ""
+  document.getElementById("mov-id").value = ""; document.getElementById("mov-conta").innerHTML = construirOptionsContas(); document.getElementById("mov-tipo").value = "out"
+  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(null, "out"); pickerMovData.setDate(new Date()); document.getElementById("mov-descricao").value = ""; document.getElementById("mov-valor").value = ""
   document.getElementById("modal-movimento").classList.add("open")
   ligarValidacaoFormulario(["mov-descricao", "mov-valor", "mov-categoria"], "btn-guardar-movimento")
 }
-
 function abrirEditarMovimento(id) {
-  const m = movimentosCache.find(x => x.id === id)
-  if (!m) return
+  const m = movimentosCache.find(x => x.id === id); if (!m) return
   document.getElementById("modal-movimento-titulo").textContent = "Editar movimento"
-  document.getElementById("mov-id").value = m.id
-  document.getElementById("mov-conta").innerHTML = construirOptionsContas(m.conta_id)
-  pickerMovData.setDate(m.data)
-  document.getElementById("mov-descricao").value = m.descricao
-  const tipo = m.valor > 0 ? "in" : "out"
-  document.getElementById("mov-tipo").value = tipo
-  document.getElementById("mov-valor").value = Math.abs(m.valor)
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(m.categoria_id, tipo)
+  document.getElementById("mov-id").value = m.id; document.getElementById("mov-conta").innerHTML = construirOptionsContas(m.conta_id); pickerMovData.setDate(m.data); document.getElementById("mov-descricao").value = m.descricao
+  const tipo = m.valor > 0 ? "in" : "out"; document.getElementById("mov-tipo").value = tipo; document.getElementById("mov-valor").value = Math.abs(m.valor); document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(m.categoria_id, tipo)
   document.getElementById("modal-movimento").classList.add("open")
   ligarValidacaoFormulario(["mov-descricao", "mov-valor", "mov-categoria"], "btn-guardar-movimento")
 }
-
 async function guardarMovimento() {
   if (!camposValidos("mov-descricao", "mov-valor", "mov-categoria")) return
-  const id = document.getElementById("mov-id").value
-  const tipo = document.getElementById("mov-tipo").value
+  const id = document.getElementById("mov-id").value, tipo = document.getElementById("mov-tipo").value
   const magnitude = Math.abs(parseFloat(document.getElementById("mov-valor").value))
-  const valor = tipo === "in" ? magnitude : -magnitude
-  const body = {
-    conta_id:     document.getElementById("mov-conta").value,
-    data:         document.getElementById("mov-data").value,
-    descricao:    document.getElementById("mov-descricao").value,
-    valor:        valor,
-    categoria_id: parseInt(document.getElementById("mov-categoria").value),
-  }
-  const r = id
-    ? await apiPut("/movimentos/" + id, body)
-    : await apiPost("/movimentos", body)
-
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-
-  fecharModal()
-  carregarMovimentos()
+  const body = { conta_id: document.getElementById("mov-conta").value, data: document.getElementById("mov-data").value, descricao: document.getElementById("mov-descricao").value, valor: tipo === "in" ? magnitude : -magnitude, categoria_id: parseInt(document.getElementById("mov-categoria").value) }
+  const r = id ? await apiPut("/movimentos/" + id, body) : await apiPost("/movimentos", body)
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  fecharModal(); carregarMovimentos()
 }
-
 async function eliminarMovimento(id) {
   if (!(await confirmarAcao("Eliminar este movimento?", { perigo: true }))) return
   const r = await apiDelete("/movimentos/" + id)
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
   carregarMovimentos()
 }
 
 async function atualizarBadgePendentes() {
   const r = await api("/movimentos/pendentes/contagem")
   const badge = document.getElementById("badge-pendentes")
-  if (r.contagem > 0) {
-    badge.textContent = r.contagem
-    badge.style.display = "inline-flex"
-  } else {
-    badge.style.display = "none"
-  }
+  if (r.contagem > 0) { badge.textContent = r.contagem; badge.style.display = "inline-flex" } else { badge.style.display = "none" }
   renderizarBannerPendentes(r.contagem)
 }
-
 function renderizarBannerPendentes(contagem) {
-  const banner = document.getElementById("banner-pendentes")
-  const texto  = document.getElementById("banner-pendentes-texto")
-  const acoes  = banner.querySelector(".acoes")
-
+  const banner = document.getElementById("banner-pendentes"), texto = document.getElementById("banner-pendentes-texto"), acoes = banner.querySelector(".acoes")
   if (pendentesAtivo) {
     texto.textContent = "A mostrar apenas movimentos pendentes de confirmação."
-    acoes.innerHTML = `
-      <button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button>
-      <button class="btn-sm" onclick="limparModoPendentes()">Ver todos os movimentos</button>`
+    acoes.innerHTML = `<button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button><button class="btn-sm" onclick="limparModoPendentes()">Ver todos</button>`
     banner.style.display = "flex"
   } else if (contagem > 0) {
-    texto.innerHTML = `${ICONE_SUGESTAO_LLM} ${contagem} movimento(s) foram categorizados automaticamente - confirme.`
-    acoes.innerHTML = `
-      <button class="btn-sm" onclick="filtrarApenasPendentes()">Ver pendentes</button>
-      <button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button>`
+    texto.innerHTML = `${ICONE_SUGESTAO_LLM} ${contagem} movimento(s) categorizados automaticamente — confirme.`
+    acoes.innerHTML = `<button class="btn-sm" onclick="filtrarApenasPendentes()">Ver pendentes</button><button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button>`
     banner.style.display = "flex"
-  } else {
-    banner.style.display = "none"
-  }
+  } else { banner.style.display = "none" }
 }
-
-function filtrarApenasPendentes() {
-  pendentesAtivo = true
-  carregarMovimentos()
-}
-
-function limparModoPendentes() {
-  pendentesAtivo = false
-  carregarMovimentos()
-}
-
+function filtrarApenasPendentes()  { pendentesAtivo = true;  carregarMovimentos() }
+function limparModoPendentes()     { pendentesAtivo = false; carregarMovimentos() }
 async function confirmarMovimento(id) {
   const r = await apiPost(`/movimentos/${id}/confirmar`, {})
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
   carregarMovimentos()
 }
-
 async function confirmarTodosPendentes() {
   if (!(await confirmarAcao("Confirmar todos os movimentos categorizados automaticamente?"))) return
   await apiPost("/movimentos/confirmar-todos", {})
-  pendentesAtivo = false
-  carregarMovimentos()
+  pendentesAtivo = false; carregarMovimentos()
 }
-
 
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: PERFIL
@@ -2486,7 +2155,6 @@ function trocarSecaoPerfil(secao) {
   document.querySelectorAll(".perfil-sidebar-item").forEach(item => item.classList.toggle("active", item.dataset.secao === secao))
   document.querySelectorAll(".perfil-secao").forEach(el => el.classList.toggle("active", el.id === `perfil-secao-${secao}`))
 }
-
 async function carregarPerfil() {
   trocarSecaoPerfil('geral')
   const dados = await api("/me")
@@ -2496,63 +2164,35 @@ async function carregarPerfil() {
   ligarValidacaoFormulario(["perfil-pw-atual", "perfil-pw-nova"], "btn-guardar-password")
   await carregarArvoreCategorias()
 }
-
 async function guardarPerfil() {
-  const nome  = document.getElementById("perfil-nome").value
-  const email = document.getElementById("perfil-email").value
-  const r = await apiPut("/me", { nome, email })
+  const r = await apiPut("/me", { nome: document.getElementById("perfil-nome").value, email: document.getElementById("perfil-email").value })
   const d = await r.json()
-  if (!r.ok) {
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-  NOME = d.nome
-  localStorage.setItem("nome", NOME)
-  document.getElementById("nav-nome").textContent = NOME
+  if (!r.ok) { mostrarToast(mensagemDeErro(d), "erro"); return }
+  NOME = d.nome; localStorage.setItem("nome", NOME); document.getElementById("nav-nome").textContent = NOME
   mostrarToast("Perfil atualizado.", "sucesso")
 }
-
 async function guardarPassword() {
-  const password_atual = document.getElementById("perfil-pw-atual").value
-  const password_nova  = document.getElementById("perfil-pw-nova").value
-  const r = await apiPut("/me/password", { password_atual, password_nova })
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-  document.getElementById("perfil-pw-atual").value = ""
-  document.getElementById("perfil-pw-nova").value = ""
+  const r = await apiPut("/me/password", { password_atual: document.getElementById("perfil-pw-atual").value, password_nova: document.getElementById("perfil-pw-nova").value })
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  document.getElementById("perfil-pw-atual").value = ""; document.getElementById("perfil-pw-nova").value = ""
   ligarValidacaoFormulario(["perfil-pw-atual", "perfil-pw-nova"], "btn-guardar-password")
   mostrarToast("Password atualizada.", "sucesso")
 }
-
 async function eliminarContaUtilizador() {
   if (!(await confirmarAcao("Isto elimina PERMANENTEMENTE a tua conta e todos os dados. Tens a certeza?", { perigo: true }))) return
   if (!(await confirmarAcao("Última confirmação — não há forma de recuperar isto depois. Continuar?", { textoConfirmar: "Eliminar definitivamente", perigo: true }))) return
-  await apiDelete("/me")
-  logout()
+  await apiDelete("/me"); logout()
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// GESTÃO DE CATEGORIAS (Perfil)
+// GESTÃO DE CATEGORIAS (PERFIL)
 // ═══════════════════════════════════════════════════════════
 async function recarregarCategoriasGlobais() {
   categoriasCache = await api("/categorias")
-  const direcaoAtual = document.getElementById("filtro-direcao").value
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(direcaoAtual)
+  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(document.getElementById("filtro-direcao").value)
 }
-
-async function aposMudarCategorias() {
-  await carregarArvoreCategorias()
-  await recarregarCategoriasGlobais()
-}
-
-async function carregarArvoreCategorias() {
-  arvoreCategoriasCache = await api("/categorias/arvore")
-  renderizarArvoreCategorias()
-}
+async function aposMudarCategorias() { await carregarArvoreCategorias(); await recarregarCategoriasGlobais() }
+async function carregarArvoreCategorias() { arvoreCategoriasCache = await api("/categorias/arvore"); renderizarArvoreCategorias() }
 
 function trocarTipoCategorias(tipo) {
   tipoGestaoCategorias = tipo
@@ -2560,203 +2200,96 @@ function trocarTipoCategorias(tipo) {
   document.getElementById("cat-tipo-out").classList.toggle("active", tipo === "out")
   renderizarArvoreCategorias()
 }
-
 function renderizarArvoreCategorias() {
   const grupos = arvoreCategoriasCache.filter(g => tipoGestaoCategorias === "in" ? g.eh_recebimento : !g.eh_recebimento)
   const el = document.getElementById("lista-categorias-gestao")
   el.innerHTML = ""
-
   grupos.forEach(g => {
     const grupoProtegido = g.categorias.some(c => c.protegida)
-    const tagGrupoProtegido = grupoProtegido
-      ? `<span class="icone-protegida" title="Este grupo contém uma categoria do sistema e não pode ser eliminado.">${ICONE_PROTEGIDA}</span>`
-      : ""
-    const btnEliminarGrupo = grupoProtegido
-      ? ""
-      : `<button class="btn-danger" onclick="confirmarEliminarCategoria(${g.id}, true)">eliminar</button>`
-
-    el.innerHTML += `
-      <div class="grupo-gestao">
-        <div class="grupo-gestao-header">
-          <span class="nome">${g.nome}${tagGrupoProtegido}</span>
-          <div class="acoes">
-            <button class="btn-sm" onclick="moverCategoria(${g.id},'up')" aria-label="Mover ${g.nome} para cima">↑</button>
-            <button class="btn-sm" onclick="moverCategoria(${g.id},'down')" aria-label="Mover ${g.nome} para baixo">↓</button>
-            <button class="btn-sm" onclick="abrirModalCategoria(${g.id})">+ categoria</button>
-            <button class="btn-sm" onclick="abrirEditarGrupo(${g.id},'${g.nome.replace(/'/g,"\\'")}')">editar</button>
-            ${btnEliminarGrupo}
-          </div>
-        </div>
-        <div class="categorias-gestao-lista">
-          ${g.categorias.map(c => {
-            const tagProtegida = c.protegida
-              ? `<span class="icone-protegida" title="Categoria do sistema — destino quando nada se aplica. Não pode ser renomeada ou eliminada.">${ICONE_PROTEGIDA}</span>`
-              : ""
-            const acoes = c.protegida ? "" : `
-              <button class="btn-sm" onclick="abrirEditarCategoriaGestao(${c.id},'${c.nome.replace(/'/g,"\\'")}',${g.id})">editar</button>
-              <button class="btn-danger" onclick="confirmarEliminarCategoria(${c.id}, false)">eliminar</button>`
-            return `
-              <div class="categoria-gestao-item">
-                <span>${c.nome}${tagProtegida}</span>
-                <div class="acoes">
-                  <button class="btn-sm" onclick="moverCategoria(${c.id},'up')" aria-label="Mover ${c.nome} para cima">↑</button>
-                  <button class="btn-sm" onclick="moverCategoria(${c.id},'down')" aria-label="Mover ${c.nome} para baixo">↓</button>
-                  ${acoes}
-                </div>
-              </div>`
-          }).join("")}
-        </div>
-      </div>`
+    const tagGrupoProtegido = grupoProtegido ? `<span class="icone-protegida" title="Este grupo contém uma categoria do sistema e não pode ser eliminado.">${ICONE_PROTEGIDA}</span>` : ""
+    const btnEliminarGrupo = grupoProtegido ? "" : `<button class="btn-danger" onclick="confirmarEliminarCategoria(${g.id}, true)">eliminar</button>`
+    el.innerHTML += `<div class="grupo-gestao"><div class="grupo-gestao-header"><span class="nome">${g.nome}${tagGrupoProtegido}</span><div class="acoes"><button class="btn-sm" onclick="moverCategoria(${g.id},'up')">↑</button><button class="btn-sm" onclick="moverCategoria(${g.id},'down')">↓</button><button class="btn-sm" onclick="abrirModalCategoria(${g.id})">+ categoria</button><button class="btn-sm" onclick="abrirEditarGrupo(${g.id},'${g.nome.replace(/'/g,"\\'")}')">editar</button>${btnEliminarGrupo}</div></div><div class="categorias-gestao-lista">${g.categorias.map(c => {
+      const tagProtegida = c.protegida ? `<span class="icone-protegida" title="Categoria do sistema — não pode ser renomeada ou eliminada.">${ICONE_PROTEGIDA}</span>` : ""
+      const acoes = c.protegida ? "" : `<button class="btn-sm" onclick="abrirEditarCategoriaGestao(${c.id},'${c.nome.replace(/'/g,"\\'")}',${g.id})">editar</button><button class="btn-danger" onclick="confirmarEliminarCategoria(${c.id}, false)">eliminar</button>`
+      return `<div class="categoria-gestao-item"><span>${c.nome}${tagProtegida}</span><div class="acoes"><button class="btn-sm" onclick="moverCategoria(${c.id},'up')">↑</button><button class="btn-sm" onclick="moverCategoria(${c.id},'down')">↓</button>${acoes}</div></div>`
+    }).join("")}</div></div>`
   })
 }
 
 function abrirModalGrupo() {
-  document.getElementById("modal-grupo-titulo").textContent = "Adicionar grupo"
-  document.getElementById("grupo-id").value = ""
-  document.getElementById("grupo-nome").value = ""
-  document.getElementById("grupo-tipo").value = tipoGestaoCategorias
-  document.getElementById("grupo-tipo-campo").style.display = ""
-  document.getElementById("modal-grupo").classList.add("open")
-  ligarValidacaoFormulario(["grupo-nome"], "btn-guardar-grupo")
+  document.getElementById("modal-grupo-titulo").textContent = "Adicionar grupo"; document.getElementById("grupo-id").value = ""; document.getElementById("grupo-nome").value = ""; document.getElementById("grupo-tipo").value = tipoGestaoCategorias; document.getElementById("grupo-tipo-campo").style.display = ""
+  document.getElementById("modal-grupo").classList.add("open"); ligarValidacaoFormulario(["grupo-nome"], "btn-guardar-grupo")
 }
-
 function abrirEditarGrupo(id, nome) {
-  document.getElementById("modal-grupo-titulo").textContent = "Editar grupo"
-  document.getElementById("grupo-id").value = id
-  document.getElementById("grupo-nome").value = nome
-  document.getElementById("grupo-tipo-campo").style.display = "none"
-  document.getElementById("modal-grupo").classList.add("open")
-  ligarValidacaoFormulario(["grupo-nome"], "btn-guardar-grupo")
+  document.getElementById("modal-grupo-titulo").textContent = "Editar grupo"; document.getElementById("grupo-id").value = id; document.getElementById("grupo-nome").value = nome; document.getElementById("grupo-tipo-campo").style.display = "none"
+  document.getElementById("modal-grupo").classList.add("open"); ligarValidacaoFormulario(["grupo-nome"], "btn-guardar-grupo")
 }
-
 async function guardarGrupo() {
   if (!camposValidos("grupo-nome")) return
-  const id   = document.getElementById("grupo-id").value
-  const nome = document.getElementById("grupo-nome").value
+  const id = document.getElementById("grupo-id").value, nome = document.getElementById("grupo-nome").value
   let r
-  if (id) {
-    r = await apiPut("/categorias/" + id, { nome })
-  } else {
-    const tipo = document.getElementById("grupo-tipo").value
-    r = await apiPost("/categorias", { nome, eh_recebimento: tipo === "in" })
-  }
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-  fecharModal()
-  aposMudarCategorias()
+  if (id) { r = await apiPut("/categorias/" + id, { nome }) }
+  else     { r = await apiPost("/categorias", { nome, eh_recebimento: document.getElementById("grupo-tipo").value === "in" }) }
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  fecharModal(); aposMudarCategorias()
 }
-
 function preencherSelectGrupos(grupoSelecionadoId) {
-  const sel = document.getElementById("categoria-gestao-grupo")
-  sel.innerHTML = ""
-  arvoreCategoriasCache
-    .filter(g => tipoGestaoCategorias === "in" ? g.eh_recebimento : !g.eh_recebimento)
-    .forEach(g => {
-      sel.innerHTML += `<option value="${g.id}" ${g.id === grupoSelecionadoId ? "selected" : ""}>${g.nome}</option>`
-    })
+  const sel = document.getElementById("categoria-gestao-grupo"); sel.innerHTML = ""
+  arvoreCategoriasCache.filter(g => tipoGestaoCategorias === "in" ? g.eh_recebimento : !g.eh_recebimento).forEach(g => {
+    sel.innerHTML += `<option value="${g.id}" ${g.id === grupoSelecionadoId ? "selected" : ""}>${g.nome}</option>`
+  })
 }
-
 function abrirModalCategoria(grupoId) {
-  document.getElementById("modal-categoria-gestao-titulo").textContent = "Adicionar categoria"
-  document.getElementById("categoria-gestao-id").value = ""
-  document.getElementById("categoria-gestao-nome").value = ""
-  preencherSelectGrupos(grupoId)
-  document.getElementById("modal-categoria-gestao").classList.add("open")
-  ligarValidacaoFormulario(["categoria-gestao-nome"], "btn-guardar-categoria-gestao")
+  document.getElementById("modal-categoria-gestao-titulo").textContent = "Adicionar categoria"; document.getElementById("categoria-gestao-id").value = ""; document.getElementById("categoria-gestao-nome").value = ""; preencherSelectGrupos(grupoId)
+  document.getElementById("modal-categoria-gestao").classList.add("open"); ligarValidacaoFormulario(["categoria-gestao-nome"], "btn-guardar-categoria-gestao")
 }
-
 function abrirEditarCategoriaGestao(id, nome, grupoId) {
-  document.getElementById("modal-categoria-gestao-titulo").textContent = "Editar categoria"
-  document.getElementById("categoria-gestao-id").value = id
-  document.getElementById("categoria-gestao-nome").value = nome
-  preencherSelectGrupos(grupoId)
-  document.getElementById("modal-categoria-gestao").classList.add("open")
-  ligarValidacaoFormulario(["categoria-gestao-nome"], "btn-guardar-categoria-gestao")
+  document.getElementById("modal-categoria-gestao-titulo").textContent = "Editar categoria"; document.getElementById("categoria-gestao-id").value = id; document.getElementById("categoria-gestao-nome").value = nome; preencherSelectGrupos(grupoId)
+  document.getElementById("modal-categoria-gestao").classList.add("open"); ligarValidacaoFormulario(["categoria-gestao-nome"], "btn-guardar-categoria-gestao")
 }
-
 async function guardarCategoriaGestao() {
   if (!camposValidos("categoria-gestao-nome")) return
-  const id      = document.getElementById("categoria-gestao-id").value
-  const nome    = document.getElementById("categoria-gestao-nome").value
-  const grupoId = parseInt(document.getElementById("categoria-gestao-grupo").value)
+  const id = document.getElementById("categoria-gestao-id").value, nome = document.getElementById("categoria-gestao-nome").value, grupoId = parseInt(document.getElementById("categoria-gestao-grupo").value)
   let r
-  if (id) {
-    r = await apiPut("/categorias/" + id, { nome, parent_id: grupoId })
-  } else {
-    r = await apiPost("/categorias", { nome, parent_id: grupoId })
-  }
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
-  fecharModal()
-  aposMudarCategorias()
+  if (id) { r = await apiPut("/categorias/" + id, { nome, parent_id: grupoId }) }
+  else     { r = await apiPost("/categorias", { nome, parent_id: grupoId }) }
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  fecharModal(); aposMudarCategorias()
 }
-
 async function moverCategoria(id, direcao) {
   const r = await apiPost("/categorias/" + id + "/mover?direcao=" + direcao, {})
-  if (!r.ok) {
-    const d = await r.json()
-    mostrarToast(mensagemDeErro(d), "erro")
-    return
-  }
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
   carregarArvoreCategorias()
 }
-
 async function confirmarEliminarCategoria(id, ehGrupo) {
   elimAtual = id
   const r = await apiDelete("/categorias/" + id)
-  if (r.ok) {
-    aposMudarCategorias()
-    return
-  }
+  if (r.ok) { aposMudarCategorias(); return }
   const d = await r.json()
   document.getElementById("elim-titulo").textContent = ehGrupo ? "Eliminar grupo" : "Eliminar categoria"
   document.getElementById("elim-aviso").textContent  = mensagemDeErro(d)
-
-  const selectMigrar = document.getElementById("elim-migrar-para")
-  selectMigrar.innerHTML = ""
+  const selectMigrar = document.getElementById("elim-migrar-para"); selectMigrar.innerHTML = ""
   if (ehGrupo) {
     const grupo = arvoreCategoriasCache.find(g => g.id === id)
-    arvoreCategoriasCache
-      .filter(g => g.id !== id && g.eh_recebimento === grupo.eh_recebimento)
-      .forEach(g => selectMigrar.innerHTML += `<option value="${g.id}">${g.nome}</option>`)
+    arvoreCategoriasCache.filter(g => g.id !== id && g.eh_recebimento === grupo.eh_recebimento).forEach(g => selectMigrar.innerHTML += `<option value="${g.id}">${g.nome}</option>`)
   } else {
     const grupoPai = arvoreCategoriasCache.find(g => g.categorias.some(c => c.id === id))
-    grupoPai.categorias
-      .filter(c => c.id !== id)
-      .forEach(c => selectMigrar.innerHTML += `<option value="${c.id}">${c.nome}</option>`)
+    grupoPai.categorias.filter(c => c.id !== id).forEach(c => selectMigrar.innerHTML += `<option value="${c.id}">${c.nome}</option>`)
   }
-
   document.getElementById("modal-eliminar-categoria").classList.add("open")
 }
-
 async function confirmarEliminacaoForcada() {
   if (!(await confirmarAcao("Isto vai eliminar também os movimentos associados, de forma permanente. Continuar?", { perigo: true }))) return
-  await apiDelete("/categorias/" + elimAtual + "?forcar=true")
-  fecharModal()
-  aposMudarCategorias()
+  await apiDelete("/categorias/" + elimAtual + "?forcar=true"); fecharModal(); aposMudarCategorias()
 }
-
 async function confirmarEliminacaoComMigracao() {
-  const destino = document.getElementById("elim-migrar-para").value
-  await apiDelete("/categorias/" + elimAtual + "?migrar_para_id=" + destino)
-  fecharModal()
-  aposMudarCategorias()
+  await apiDelete("/categorias/" + elimAtual + "?migrar_para_id=" + document.getElementById("elim-migrar-para").value); fecharModal(); aposMudarCategorias()
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// INÍCIO
+// ARRANQUE
 // ═══════════════════════════════════════════════════════════
-document.querySelectorAll(".toggle-password").forEach(btn => {
-  btn.innerHTML = ICONE_OLHO_FECHADO
-  btn.setAttribute("aria-label", "Mostrar password")
-})
+document.querySelectorAll(".toggle-password").forEach(btn => { btn.innerHTML = ICONE_OLHO_FECHADO; btn.setAttribute("aria-label", "Mostrar password") })
 document.getElementById("icone-sidebar-geral").innerHTML = ICONE_PERFIL_GERAL
 document.getElementById("icone-sidebar-categorias").innerHTML = ICONE_PERFIL_CATEGORIAS
 mostrarAjudaAoEscrever("reg-password", "ajuda-reg-password")
@@ -2767,7 +2300,15 @@ ligarValidacaoFormulario(["reg-nome", "reg-email", "reg-password"], "btn-registo
 ligarValidacaoFormulario(["esqueci-email"], "btn-esqueci")
 atualizarIconeExpandirRecolher()
 
-if (!verificarTokenReset() && TOKEN) { iniciarApp() }
+document.addEventListener("keydown", e => { if (e.key === "Escape") fecharDrillDown() })
+document.addEventListener("click", e => {
+  const path = e.composedPath()
+  const btn   = document.getElementById("filtro-cat-btn")
+  const panel = document.getElementById("filtro-cat-panel")
+  if (!path.includes(btn) && !path.includes(panel)) fecharFiltroCat()
+})
+
+if (!verificarTokenReset() && TOKEN) iniciarApp()
 </script>
 </body>
 </html>

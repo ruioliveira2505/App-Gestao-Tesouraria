@@ -10,9 +10,7 @@ from fastapi.testclient import TestClient
 from app.core.config import settings
 from app.db.database import get_connection, release_connection, release_connection
 from app.main import app
-
-
-CAMINHO_SCHEMA = Path(__file__).resolve().parent.parent / "scripts" / "schema.sql"
+from scripts.migrar import aplicar_migracoes
 
 
 def _psql(*args):
@@ -24,16 +22,15 @@ def _psql(*args):
 
 
 # ─── fixtures ─────────────────────────────────────────────────────────────────
-
 @pytest.fixture(scope="session", autouse=True)
 def recriar_estrutura_bd_teste():
-    """Corre uma vez por sessão de pytest: apaga e recria a BD de testes a
-    partir de scripts/schema.sql. Assim, qualquer ALTER TABLE/CREATE INDEX
-    que apliques à BD de produção só precisa de ser refletido em schema.sql
-    — a BD de testes sincroniza-se sozinha na próxima vez que correres pytest."""
+    """Corre uma vez por sessão: apaga o schema e reconstrói-o aplicando
+    todas as migrações em scripts/migrations/, pela mesma ordem que usarias
+    em produção. Para alterar a BD, cria sempre um novo ficheiro de migração
+    — nunca edites um já aplicado."""
     assert settings.DB_NAME == "tesouraria_test", "Isto só pode correr contra a BD de teste!"
     _psql("-d", settings.DB_NAME, "-c", "DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
-    _psql("-d", settings.DB_NAME, "-f", str(CAMINHO_SCHEMA))
+    aplicar_migracoes()
 
 
 @pytest.fixture(autouse=True)

@@ -2,8 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict anQWiRB58v25ux1vXvmvrTjVVsT1uRfs1RMEnFz3QV5EcvaPAWvaingsPgtGyZe
-
 -- Dumped from database version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.4 (Ubuntu 18.4-0ubuntu0.26.04.1)
 
@@ -417,6 +415,3 @@ ALTER TABLE ONLY public.movimentos
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict anQWiRB58v25ux1vXvmvrTjVVsT1uRfs1RMEnFz3QV5EcvaPAWvaingsPgtGyZe
-

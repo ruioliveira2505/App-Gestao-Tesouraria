@@ -1,0 +1,1 @@
+ALTER TABLE utilizadores ADD COLUMN reset_token_jti text;

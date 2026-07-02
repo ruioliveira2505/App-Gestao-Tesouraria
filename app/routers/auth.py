@@ -9,6 +9,7 @@ from app.db.database import get_connection, release_connection, release_connecti
 from app.schemas.auth import RegistoInput, LoginInput, EsqueciPasswordInput, RedefinirPasswordInput
 from app.services.categorias_seed import seed_categorias_padrao
 from app.services.email import enviar_email
+import uuid
 
 router = APIRouter()
 
@@ -69,20 +70,22 @@ def esqueci_password(request: Request, dados: EsqueciPasswordInput, background_t
     try:
         cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
         row = cursor.fetchone()
+        jti = None
+        if row:
+            jti = str(uuid.uuid4())
+            cursor.execute("UPDATE utilizadores SET reset_token_jti = %s WHERE id = %s", (jti, row[0]))
+            conn.commit()
     finally:
         cursor.close()
         release_connection(conn)
 
     if row:
-        token = criar_token({"sub": str(row[0]), "tipo": "reset"}, timedelta(hours=1))
+        token = criar_token({"sub": str(row[0]), "tipo": "reset", "jti": jti}, timedelta(hours=1))
         link = f"{settings.BASE_URL}/static/index.html?token={token}"
         background_tasks.add_task(
-            enviar_email,
-            dados.email,
-            "Recuperar password — Tesouraria",
+            enviar_email, dados.email, "Recuperar password — Tesouraria",
             f"Clica neste link para definires uma password nova (válido por 1 hora):\n\n{link}"
         )
-
     return {"ok": True, "mensagem": "Se o email existir, enviámos instruções."}
 
 
@@ -95,13 +98,17 @@ def redefinir_password(dados: RedefinirPasswordInput):
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        cursor.execute("SELECT reset_token_jti FROM utilizadores WHERE id = %s", (payload["sub"],))
+        row = cursor.fetchone()
+        if not row or row[0] is None or row[0] != payload.get("jti"):
+            raise HTTPException(status_code=400, detail="Link inválido ou já foi utilizado")
+
         cursor.execute(
-            "UPDATE utilizadores SET password = %s WHERE id = %s",
+            "UPDATE utilizadores SET password = %s, reset_token_jti = NULL WHERE id = %s",
             (encriptar_password(dados.password_nova), payload["sub"])
         )
         conn.commit()
     finally:
         cursor.close()
         release_connection(conn)
-
     return {"ok": True}

@@ -712,9 +712,14 @@
               </div>
               <button class="btn-primary" id="btn-guardar-password" onclick="guardarPassword()">Atualizar Password</button>
             </div>
+            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Sessões</div></div>
+            <div class="table-wrap" style="padding:1.25rem">
+              <p class="danger-zone-text">Termina a tua sessão em todos os dispositivos onde tenhas a app aberta.</p>
+              <button class="btn-secondary" onclick="terminarTodasAsSessoes()">Terminar sessão em todos os dispositivos</button>
+            </div>
             <div class="section-header" style="margin-top:1.5rem"><div class="section-title" style="color:var(--color-negativo)">Zona de Perigo</div></div>
             <div class="table-wrap" style="padding:1.25rem">
-              <p class="danger-zone-text">Eliminar a conta remove permanentemente todos os teus dados. Não há forma de recuperar isto depois.</p>
+              <p class="danger-zone-text">Eliminar a conta remove permanentemente todos os teus dados.</p>
               <button class="btn-danger" onclick="eliminarContaUtilizador()">Eliminar a minha conta</button>
             </div>
           </div>
@@ -2189,10 +2194,18 @@ async function guardarPerfil() {
 }
 async function guardarPassword() {
   const r = await apiPut("/me/password", { password_atual: document.getElementById("perfil-pw-atual").value, password_nova: document.getElementById("perfil-pw-nova").value })
-  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  const d = await r.json()
+  if (!r.ok) { mostrarToast(mensagemDeErro(d), "erro"); return }
+  TOKEN = d.token; localStorage.setItem("token", TOKEN)   // <-- novo: mantém a sessão atual válida
   document.getElementById("perfil-pw-atual").value = ""; document.getElementById("perfil-pw-nova").value = ""
   ligarValidacaoFormulario(["perfil-pw-atual", "perfil-pw-nova"], "btn-guardar-password")
-  mostrarToast("Password atualizada.", "sucesso")
+  mostrarToast("Password atualizada. As tuas outras sessões foram terminadas.", "sucesso")
+}
+async function terminarTodasAsSessoes() {
+  if (!(await confirmarAcao("Isto termina a tua sessão em todos os dispositivos, incluindo este. Vais precisar de voltar a entrar. Continuar?"))) return
+  await apiPost("/me/sessoes/terminar", {})
+  logout()
+  mostrarToast("Sessões terminadas. Inicia sessão novamente.", "info")
 }
 async function eliminarContaUtilizador() {
   if (!(await confirmarAcao("Isto elimina PERMANENTEMENTE a tua conta e todos os dados. Tens a certeza?", { perigo: true }))) return

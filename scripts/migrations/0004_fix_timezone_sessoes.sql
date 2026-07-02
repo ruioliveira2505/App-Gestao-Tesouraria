@@ -1,0 +1,1 @@
+ALTER TABLE utilizadores ALTER COLUMN sessoes_invalidadas_em TYPE timestamptz;

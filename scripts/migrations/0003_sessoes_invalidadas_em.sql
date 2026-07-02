@@ -1,0 +1,1 @@
+ALTER TABLE utilizadores ADD COLUMN sessoes_invalidadas_em timestamp;

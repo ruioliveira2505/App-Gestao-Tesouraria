@@ -17,9 +17,10 @@ def verificar_password(password: str, hash: str) -> bool:
 
 def criar_token(dados: dict, validade: timedelta = None) -> str:
     payload = dados.copy()
-    payload["exp"] = datetime.now(timezone.utc) + (validade or timedelta(days=settings.TOKEN_DIAS))
+    agora = datetime.now(timezone.utc)
+    payload["iat"] = agora
+    payload["exp"] = agora + (validade or timedelta(days=settings.TOKEN_DIAS))
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITMO_JWT)
-
 
 def verificar_token(token: str) -> dict | None:
     try:

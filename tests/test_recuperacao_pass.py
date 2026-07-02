@@ -122,3 +122,16 @@ def test_redefinir_password_com_token_ja_usado_falha(client, headers_autenticado
 
     r2 = client.post("/redefinir-password", json={"token": token, "password_nova": "outra999"})
     assert r2.status_code == 400
+
+
+def test_redefinir_password_invalida_sessoes_anteriores(client, headers_autenticado, monkeypatch):
+    enviados = []
+    monkeypatch.setattr("app.routers.auth.enviar_email", lambda destinatario, assunto, corpo: enviados.append(corpo))
+    client.post("/esqueci-password", json={"email": "ana@exemplo.com"})
+    token_reset = extrair_token_do_corpo(enviados[0])
+
+    r = client.post("/redefinir-password", json={"token": token_reset, "password_nova": "nova45678"})
+    assert r.status_code == 200
+
+    # o token de sessão que existia antes da redefinição deixa de ser válido
+    assert client.get("/me", headers=headers_autenticado).status_code == 401

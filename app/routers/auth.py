@@ -104,7 +104,7 @@ def redefinir_password(dados: RedefinirPasswordInput):
             raise HTTPException(status_code=400, detail="Link inválido ou já foi utilizado")
 
         cursor.execute(
-            "UPDATE utilizadores SET password = %s, reset_token_jti = NULL WHERE id = %s",
+            "UPDATE utilizadores SET password = %s, reset_token_jti = NULL, sessoes_invalidadas_em = now() WHERE id = %s",
             (encriptar_password(dados.password_nova), payload["sub"])
         )
         conn.commit()

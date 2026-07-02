@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
-from app.core.security import encriptar_password, verificar_password
+from app.core.security import encriptar_password, verificar_password, criar_token 
 from app.db.database import get_connection, release_connection, release_connection, release_connection
 from app.schemas.perfil import PasswordUpdateInput, PerfilUpdateInput
 
@@ -43,12 +43,29 @@ def atualizar_password(dados: PasswordUpdateInput, utilizador: dict = Depends(ut
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT password FROM utilizadores WHERE id=%s", (utilizador["sub"],))
-        hash_atual = cursor.fetchone()[0]
+        cursor.execute("SELECT password, email FROM utilizadores WHERE id=%s", (utilizador["sub"],))
+        hash_atual, email = cursor.fetchone()
         if not verificar_password(dados.password_atual, hash_atual):
             raise HTTPException(status_code=401, detail="Password atual incorreta")
+        cursor.execute(
+            "UPDATE utilizadores SET password=%s, sessoes_invalidadas_em = now() WHERE id=%s",
+            (encriptar_password(dados.password_nova), utilizador["sub"])
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+        release_connection(conn)
 
-        cursor.execute("UPDATE utilizadores SET password=%s WHERE id=%s", (encriptar_password(dados.password_nova), utilizador["sub"]))
+    novo_token = criar_token({"sub": utilizador["sub"], "email": email})
+    return {"ok": True, "token": novo_token}
+
+
+@router.post("/me/sessoes/terminar")
+def terminar_todas_as_sessoes(utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE utilizadores SET sessoes_invalidadas_em = now() WHERE id=%s", (utilizador["sub"],))
         conn.commit()
     finally:
         cursor.close()

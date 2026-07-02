@@ -164,25 +164,26 @@ def stats_grupos(
         cursor.close()
         release_connection(conn)
 
-    grupos = defaultdict(lambda: {"eh_recebimento": None, "grupo_id": None, "total": 0.0, "subcategorias": []})
+    grupos = defaultdict(lambda: {"nome": None, "eh_recebimento": None, "grupo_id": None, "total": 0.0, "subcategorias": []})
     for r in rows:
-        grupos[r[0]]["eh_recebimento"] = r[2]
-        grupos[r[0]]["grupo_id"] = r[1]
-        grupos[r[0]]["total"] += float(r[7])
-        grupos[r[0]]["subcategorias"].append({
+        chave = r[1]  # ← grupo_raiz_id: identificador único, ao contrário do nome
+        grupos[chave]["nome"] = r[0]
+        grupos[chave]["eh_recebimento"] = r[2]
+        grupos[chave]["grupo_id"] = r[1]
+        grupos[chave]["total"] += float(r[7])
+        grupos[chave]["subcategorias"].append({
             "categoria": r[3], "categoria_id": r[4], "total": float(r[7]), "n": r[6]
         })
 
     return [
         {
-            "grupo": grupo, "grupo_id": dados["grupo_id"],
+            "grupo": dados["nome"], "grupo_id": dados["grupo_id"],
             "eh_recebimento": dados["eh_recebimento"],
             "total": round(dados["total"], 2),
             "subcategorias": sorted(dados["subcategorias"], key=lambda x: x["total"], reverse=True),
         }
-        for grupo, dados in sorted(grupos.items(), key=lambda x: (not x[1]["eh_recebimento"], -x[1]["total"]))
+        for chave, dados in sorted(grupos.items(), key=lambda x: (not x[1]["eh_recebimento"], -x[1]["total"]))
     ]
-
 
 @router.get("/stats/mensal-detalhe")
 def stats_mensal_detalhe(
@@ -345,7 +346,7 @@ def stats_recorrentes(
     excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
-            SELECT m.descricao, c.nome AS categoria, g.nome AS grupo, m.data, m.valor
+            SELECT m.descricao, m.categoria_id, c.nome AS categoria, g.nome AS grupo, m.data, m.valor
             FROM movimentos m
             JOIN categorias c ON m.categoria_id = c.id
             JOIN categorias g ON c.parent_id = g.id
@@ -363,14 +364,20 @@ def stats_recorrentes(
         cursor.close()
         release_connection(conn)
 
-    grupos = defaultdict(list)
-    for descricao, categoria, grupo, data_mov, valor in rows:
-        grupos[(descricao, categoria, grupo)].append((data_mov, float(valor)))
+    ocorrencias_por_chave = defaultdict(list)
+    info_por_chave = {}
+    for descricao, categoria_id, categoria, grupo, data_mov, valor in rows:
+        chave = (descricao, categoria_id)   # id, não nome — evita colisões entre categorias homónimas
+        info_por_chave[chave] = (categoria, grupo)
+        ocorrencias_por_chave[chave].append((data_mov, float(valor)))
 
     resultado = []
-    for (descricao, categoria, grupo), ocorrencias in grupos.items():
+    for chave, ocorrencias in ocorrencias_por_chave.items():
         if len(ocorrencias) < 2:
             continue
+
+        descricao, categoria_id = chave
+        categoria, grupo = info_por_chave[chave]
 
         datas    = [o[0] for o in ocorrencias]
         valores  = [o[1] for o in ocorrencias]

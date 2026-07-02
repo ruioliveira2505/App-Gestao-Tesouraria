@@ -1,5 +1,4 @@
-from tests.helpers import hoje, dias_atras, id_categoria, criar_movimento
-
+from tests.helpers import hoje, dias_atras, id_categoria, criar_movimento, grupo_por_direcao
 
 def recuar_reconciliacao(client, headers, conta_id, data):
     ajustes = client.get(f"/contas/{conta_id}/ajustes-saldo", headers=headers).json()
@@ -8,7 +7,6 @@ def recuar_reconciliacao(client, headers, conta_id, data):
         "data": data, "saldo_real": 1000.0,
     }, headers=headers)
     assert r.status_code == 200
-
 
 # ═══════════════════════════════════════════════════════════
 # /stats/mensal
@@ -230,3 +228,53 @@ def test_recorrentes_respeita_filtro_de_conta(client, headers_autenticado, conta
     r = client.get(f"/stats/recorrentes?conta_id={conta_id}", headers=headers_autenticado).json()
     assert any(x["descricao"] == "Netflix" for x in r)
     assert not any(x["descricao"] == "Spotify" for x in r)
+
+
+def test_stats_grupos_nao_funde_grupos_homonimos_de_direcoes_diferentes(client, headers_autenticado, conta_id):
+    entradas = grupo_por_direcao(client, headers_autenticado, "Transferências Próprias", True)
+    saidas   = grupo_por_direcao(client, headers_autenticado, "Transferências Próprias", False)
+    entre_contas_in  = next(c["id"] for c in entradas["categorias"] if c["nome"] == "Entre Contas")
+    entre_contas_out = next(c["id"] for c in saidas["categorias"] if c["nome"] == "Entre Contas")
+
+    criar_movimento(client, headers_autenticado, conta_id, entre_contas_in, valor=300.0, descricao="Entrada entre contas")
+    criar_movimento(client, headers_autenticado, conta_id, entre_contas_out, valor=-300.0, descricao="Saída entre contas")
+
+    r = client.get("/stats/grupos", headers=headers_autenticado).json()
+    grupos_homonimos = [g for g in r if g["grupo"] == "Transferências Próprias"]
+
+    assert len(grupos_homonimos) == 2  # não deve fundir num só
+
+    grupo_entrada = next(g for g in grupos_homonimos if g["eh_recebimento"])
+    grupo_saida   = next(g for g in grupos_homonimos if not g["eh_recebimento"])
+
+    assert grupo_entrada["total"] == 300.0
+    assert grupo_saida["total"] == 300.0
+    assert len(grupo_entrada["subcategorias"]) == 1
+    assert len(grupo_saida["subcategorias"]) == 1
+
+
+def test_recorrentes_nao_funde_categorias_homonimas_em_grupos_homonimos(client, headers_autenticado, conta_id):
+    recuar_reconciliacao(client, headers_autenticado, conta_id, dias_atras(65))   # ← linha nova
+
+    client.post("/categorias", json={"nome": "Saída Duplicada A", "eh_recebimento": False}, headers=headers_autenticado)
+    client.post("/categorias", json={"nome": "Saída Duplicada B", "eh_recebimento": False}, headers=headers_autenticado)
+    arvore = client.get("/categorias/arvore", headers=headers_autenticado).json()
+    grupo_a = next(g for g in arvore if g["nome"] == "Saída Duplicada A")
+    grupo_b = next(g for g in arvore if g["nome"] == "Saída Duplicada B")
+
+    client.post("/categorias", json={"nome": "Loja", "parent_id": grupo_a["id"]}, headers=headers_autenticado)
+    client.post("/categorias", json={"nome": "Loja", "parent_id": grupo_b["id"]}, headers=headers_autenticado)
+    arvore = client.get("/categorias/arvore", headers=headers_autenticado).json()
+    loja_a_id = next(c["id"] for g in arvore if g["nome"] == "Saída Duplicada A" for c in g["categorias"] if c["nome"] == "Loja")
+    loja_b_id = next(c["id"] for g in arvore if g["nome"] == "Saída Duplicada B" for c in g["categorias"] if c["nome"] == "Loja")
+
+    criar_movimento(client, headers_autenticado, conta_id, loja_a_id, valor=-10.0, data=dias_atras(60), descricao="Compra Loja")
+    criar_movimento(client, headers_autenticado, conta_id, loja_a_id, valor=-10.0, data=dias_atras(30), descricao="Compra Loja")
+    criar_movimento(client, headers_autenticado, conta_id, loja_b_id, valor=-20.0, data=dias_atras(60), descricao="Compra Loja")
+    criar_movimento(client, headers_autenticado, conta_id, loja_b_id, valor=-20.0, data=dias_atras(30), descricao="Compra Loja")
+
+    r = client.get("/stats/recorrentes", headers=headers_autenticado).json()
+    padroes_loja = [x for x in r if x["descricao"] == "Compra Loja"]
+
+    assert len(padroes_loja) == 2  # não deve fundir os dois grupos/categorias homónimos
+    assert {x["valor_medio"] for x in padroes_loja} == {-10.0, -20.0}

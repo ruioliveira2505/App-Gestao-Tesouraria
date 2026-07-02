@@ -6,9 +6,6 @@ Análise global do projeto, organizada por área. Cada item tem uma prioridade s
 
 ## 1. Segurança
 
-### 🔴 Sessões sem possibilidade de revogação
-Tokens JWT duram 30 dias por omissão e não há "logout" no servidor — só se limpa o `localStorage` no cliente. Se um token for roubado, continua válido até expirar. Nada a fazer com urgência num projeto pessoal, mas vale a pena decidir conscientemente: reduzir `TOKEN_DIAS`, ou introduzir uma tabela de sessões/blacklist para poder revogar tokens (ex.: ao mudar password, ao eliminar conta, ou manualmente).
-
 ### 🟡 Descrições de movimentos enviadas para a Groq (LLM externo)
 A categorização automática envia a descrição do movimento bancário (que pode incluir nomes, referências, etc.) para uma API externa. Para uso pessoal é uma escolha razoável, mas vale a pena estares consciente disto — e talvez mencionar isto se algum dia os "amigos próximos" perguntarem "para onde vão os meus dados". Nada de errado tecnicamente, é só uma decisão de produto a tornar explícita (ex.: opção de desativar a categorização por LLM).
 

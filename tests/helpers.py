@@ -23,3 +23,8 @@ def criar_movimento(client, headers, conta_id, categoria_id, valor=-50.0, data=N
     assert r.status_code == 200, r.json()
     movimentos = client.get("/movimentos", headers=headers).json()
     return next(m for m in movimentos if m["descricao"] == descricao)["id"]
+
+
+def grupo_por_direcao(client, headers, nome_grupo, eh_recebimento):
+    arvore = client.get("/categorias/arvore", headers=headers).json()
+    return next(g for g in arvore if g["nome"] == nome_grupo and g["eh_recebimento"] == eh_recebimento)

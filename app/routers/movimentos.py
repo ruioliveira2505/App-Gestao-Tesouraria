@@ -39,11 +39,21 @@ def _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, eh_recebimento,
         logger.exception("Falha ao gravar cache de categorização (não crítico — movimento já foi guardado)")
 
 
+def _lista_sql(coluna, valores_str):
+    if not valores_str:
+        return "", []
+    valores = [v for v in valores_str.split(',') if v.strip()]
+    if not valores:
+        return "", []
+    placeholders = ','.join(['%s'] * len(valores))
+    return f"AND {coluna} IN ({placeholders})", valores
+
+
 @router.get("/movimentos")
 def listar_movimentos(
     utilizador: dict = Depends(utilizador_atual),
     conta_id: str = None,
-    categoria_id: int = None,
+    categoria_id: str = None,
     direcao: str = None,
     data_de: str = None,
     data_ate: str = None,
@@ -52,6 +62,8 @@ def listar_movimentos(
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+
+    categoria_cond, categoria_vals = _lista_sql("m.categoria_id", categoria_id)
 
     filtro_direcao = ""
     if direcao == "in":
@@ -74,12 +86,11 @@ def listar_movimentos(
             JOIN categorias g ON c.parent_id = g.id
             WHERE m.utilizador_id = %s
               AND (%s IS NULL OR m.conta_id = %s)
-              AND (%s IS NULL OR m.categoria_id = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
-        """ + filtro_direcao + filtro_confirmacao + """
+        """ + categoria_cond + filtro_direcao + filtro_confirmacao + """
             ORDER BY m.data DESC, m.criado_em DESC
-        """, [uid, conta_id, conta_id, categoria_id, categoria_id, data_de, data_de, data_ate, data_ate])
+        """, [uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + categoria_vals)
         rows = cursor.fetchall()
     finally:
         cursor.close()

@@ -251,6 +251,13 @@
     .seletor-periodo:hover { background: var(--color-surface); border-color: var(--color-text-secondary); }
     .seletor-periodo:focus { outline: 2px solid var(--color-text); outline-offset: 1px; background: var(--color-surface); }
 
+    .campo-seletor { position: relative; }
+    .campo-seletor input[readonly] { cursor: pointer; caret-color: transparent; }
+    .seletor-grupo-label {
+      font-weight: 600; color: var(--color-text-tertiary);
+      text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.04em;
+      padding: 0.5rem 0.9rem 0.2rem; cursor: default;
+    }
     /* ═══════════════════════════════════════════════════════
        TOGGLE ENTRADAS/SAÍDAS
     ═══════════════════════════════════════════════════════ */
@@ -380,6 +387,61 @@
     .analise-secao.active { display: block; }
 
     /* ═══════════════════════════════════════════════════════
+      FILTROS — painel partilhado (Conta / Tipo / Direção / Categoria)
+    ═══════════════════════════════════════════════════════ */
+    .filtro-opcao-todas {
+      padding: 0.55rem 0.9rem; font-size: 0.85rem; color: var(--color-text-secondary);
+      cursor: pointer; border-bottom: 1px solid var(--color-border-light);
+      margin-bottom: 4px;
+    }
+    .filtro-opcao-todas:hover { background: var(--color-surface); }
+
+    .filtro-grupo-label {
+      font-size: 0.68rem; font-weight: 600; color: var(--color-text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 0.6rem 0.9rem 0.3rem;
+    }
+    /* separador entre "esferas" (Entradas/Saídas), em vez das setas coloridas */
+    .filtro-grupo-label.nova-esfera {
+      border-top: 1px solid var(--color-border-light); margin-top: 6px;
+    }
+
+    .filtro-item-linha {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.45rem 0.9rem; font-size: 0.85rem; color: var(--color-text);
+      cursor: pointer;
+    }
+    .filtro-item-linha:hover { background: var(--color-surface); }
+    .filtro-item-linha .check {
+      opacity: 0; color: var(--color-text-faint); display: flex; flex-shrink: 0;
+    }
+    .filtro-item-linha.selecionado .check,
+    .filtro-item-linha.indeterminado .check { opacity: 1; }
+    .filtro-item-linha.indeterminado .check { color: var(--color-text-secondary); }
+    .filtro-esfera-label {
+      font-size: 0.65rem; font-weight: 700; color: var(--color-text);
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding: 0.5rem 0.9rem 0.3rem;
+    }
+    .filtro-esfera-label.nova-esfera { border-top: 1px solid var(--color-border-light); margin-top: 6px; padding-top: 0.6rem; }
+
+    .filtro-grupo-linha {
+      font-weight: 600; color: var(--color-text-tertiary);
+      text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.04em;
+    }
+    .filtro-item-indentado { padding-left: 1.5rem; }
+
+    .filtro-item-linha.indeterminado .check { opacity: 1; color: var(--color-text-secondary); }
+
+    .seta-dropdown-btn { display: flex; flex-shrink: 0; color: var(--color-text-secondary); transition: transform 0.15s; }
+    .filtro-cat-btn.ativo .seta-dropdown-btn { transform: rotate(180deg); }
+
+    .campo-seletor input[readonly] { padding-right: 2.2rem; }
+    .campo-seletor .seta-dropdown-input {
+      position: absolute; right: 0.75rem; top: 30px; pointer-events: none;
+      color: var(--color-text-secondary); display: flex; align-items: center;
+    }
+    /* ═══════════════════════════════════════════════════════
        RESPONSIVO (MOBILE)
     ═══════════════════════════════════════════════════════ */
     @media (max-width: 768px) {
@@ -490,15 +552,23 @@
       <div class="filtros">
         <div class="field">
           <label>Conta</label>
-          <select id="ct-filtro-conta" onchange="atualizarFiltroTipoPorConta('ct'); carregarContas()">
+          <select id="ct-filtro-conta" onchange="carregarContas()">
             <option value="">Todas</option>
           </select>
         </div>
-        <div class="field">
-          <label>Tipo</label>
-          <select id="ct-filtro-tipo" onchange="atualizarFiltroContasPorTipo('ct'); carregarContas()">
-            <option value="">Todos</option>
-          </select>
+        <div class="filtro-cat-wrapper">
+          <label>Tipos</label>
+          <button class="filtro-cat-btn" id="ct-filtro-tipo-btn" onclick="toggleFiltroTipo('ct', event)">
+            <span style="display:flex;align-items:center;gap:6px">
+              <span id="ct-filtro-tipo-label">Todos</span>
+              <span class="filtro-cat-badge" id="ct-filtro-tipo-badge" style="display:none"></span>
+            </span>
+            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <div class="filtro-cat-panel" id="ct-filtro-tipo-panel">
+            <div class="filtro-opcao-todas" onclick="selecionarTodosOsTipos('ct')">Todos</div>
+            <div id="ct-filtro-tipo-lista"></div>
+          </div>
         </div>
         <button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>
       </div>
@@ -541,27 +611,35 @@
       <div class="filtros">
         <div class="field">
           <label>Conta</label>
-          <select id="an-filtro-conta" onchange="atualizarFiltroTipoPorConta('an'); carregarAnalise()">
+          <select id="an-filtro-conta" onchange="carregarAnalise()">
             <option value="">Todas</option>
           </select>
         </div>
-        <div class="field">
-          <label>Tipo</label>
-          <select id="an-filtro-tipo" onchange="atualizarFiltroContasPorTipo('an'); carregarAnalise()">
-            <option value="">Todos</option>
-          </select>
+        <div class="filtro-cat-wrapper">
+          <label>Tipos</label>
+          <button class="filtro-cat-btn" id="an-filtro-tipo-btn" onclick="toggleFiltroTipo('an', event)">
+            <span style="display:flex;align-items:center;gap:6px">
+              <span id="an-filtro-tipo-label">Todos</span>
+              <span class="filtro-cat-badge" id="an-filtro-tipo-badge" style="display:none"></span>
+            </span>
+            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <div class="filtro-cat-panel" id="an-filtro-tipo-panel">
+            <div class="filtro-opcao-todas" onclick="selecionarTodosOsTipos('an')">Todos</div>
+            <div id="an-filtro-tipo-lista"></div>
+          </div>
         </div>
         <div class="filtro-cat-wrapper">
           <label>Categorias</label>
           <button class="filtro-cat-btn" id="filtro-cat-btn" onclick="toggleFiltroCat(event)">
-            <span id="filtro-cat-label">Todas as categorias</span>
-            <span class="filtro-cat-badge" id="filtro-cat-badge" style="display:none"></span>
+            <span style="display:flex;align-items:center;gap:6px">
+              <span id="filtro-cat-label">Todas</span>
+              <span class="filtro-cat-badge" id="filtro-cat-badge" style="display:none"></span>
+            </span>
+            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
           </button>
           <div class="filtro-cat-panel" id="filtro-cat-panel">
-            <div class="filtro-cat-acoes">
-              <span onclick="selecionarTodasCat()">Selecionar todas</span>
-              <span onclick="limparTodasCat()">Limpar seleção</span>
-            </div>
+            <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriasFiltro()">Todas</div>
             <div id="filtro-cat-lista"></div>
           </div>
         </div>
@@ -575,7 +653,7 @@
       </div>
 
       <div class="analise-tabs">
-        <div class="analise-tab active" data-aba="resumo" onclick="trocarAbaAnalise('resumo')">Resumo</div>
+        <div class="analise-tab" data-aba="resumo" onclick="trocarAbaAnalise('resumo')">Resumo</div>
         <div class="analise-tab" data-aba="recorrencias" onclick="trocarAbaAnalise('recorrencias')">Recorrências</div>
       </div>
 
@@ -639,18 +717,32 @@
           <label>Conta</label>
           <select id="filtro-conta" onchange="carregarMovimentos()"><option value="">Todas</option></select>
         </div>
-        <div class="field">
+        <div class="filtro-cat-wrapper">
           <label>Direção</label>
-          <select id="filtro-direcao" onchange="atualizarFiltroCategoriasMovimentos()">
-            <option value="">Todas</option>
-            <option value="in" style="color:#166534">↑ Cash-In</option>
-            <option value="out" style="color:#991b1b">↓ Cash-Out</option>
-          </select>
+          <button class="filtro-cat-btn" id="mov-filtro-direcao-btn" onclick="toggleFiltroDirecao(event)">
+            <span id="mov-filtro-direcao-label">Todas</span>
+            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <div class="filtro-cat-panel" id="mov-filtro-direcao-panel">
+            <div class="filtro-opcao-todas" onclick="selecionarTodasDirecoes()">Todas</div>
+            <div id="mov-filtro-direcao-lista"></div>
+          </div>
         </div>
-        <div class="field">
-          <label>Categoria</label>
-          <select id="filtro-categoria" onchange="carregarMovimentos()"><option value="">Todas</option></select>
+        <div class="filtro-cat-wrapper">
+          <label>Categorias</label>
+          <button class="filtro-cat-btn" id="mov-filtro-categoria-btn" onclick="toggleFiltroCategoriaMov(event)">
+            <span style="display:flex;align-items:center;gap:6px">
+              <span id="mov-filtro-categoria-label">Todas</span>
+              <span class="filtro-cat-badge" id="mov-filtro-categoria-badge" style="display:none"></span>
+            </span>
+            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <div class="filtro-cat-panel" id="mov-filtro-categoria-panel">
+            <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriasMov()">Todas</div>
+            <div id="mov-filtro-categoria-lista"></div>
+          </div>
         </div>
+
         <!-- Página Movimentos -->
 <div class="field"><label>Período</label><input type="text" id="mov-periodo" placeholder="Selecionar datas" readonly></div>
         <div class="field"><label>Procurar</label><input type="text" id="filtro-pesquisa" placeholder="Descrição..." oninput="renderizarTabelaMovimentos()"></div>
@@ -782,18 +874,36 @@
   <div class="modal">
     <h2 id="modal-movimento-titulo">Adicionar movimento</h2>
     <input type="hidden" id="mov-id">
-    <div class="field"><label>Conta</label><select id="mov-conta"></select></div>
+    <div class="field campo-seletor">
+      <label>Conta</label>
+      <input type="text" id="mov-conta-display" readonly required placeholder="Selecionar conta" onclick="toggleSeletorConta(event)">
+      <input type="hidden" id="mov-conta">
+      <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+      <div class="filtro-cat-panel" id="mov-conta-panel">
+        <div id="mov-conta-lista"></div>
+      </div>
+    </div>
     <div class="field"><label>Data</label><input type="text" id="mov-data" placeholder="Selecionar data" required readonly></div>
     <div class="field"><label>Descrição</label><input type="text" id="mov-descricao" required></div>
-    <div class="field">
+    <div class="field campo-seletor">
       <label>Tipo</label>
-      <select id="mov-tipo" onchange="atualizarCategoriasPorTipo()">
-        <option value="in">↑ Cash-In</option>
-        <option value="out">↓ Cash-Out</option>
-      </select>
+      <input type="text" id="mov-tipo-display" readonly required placeholder="Selecionar tipo" onclick="toggleSeletorTipoMovForm(event)">
+      <input type="hidden" id="mov-tipo" value="out">
+      <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+      <div class="filtro-cat-panel" id="mov-tipo-panel">
+        <div id="mov-tipo-lista"></div>
+      </div>
     </div>
     <div class="field"><label>Valor</label><input type="number" id="mov-valor" step="0.01" min="0" required></div>
-    <div class="field"><label>Categoria</label><select id="mov-categoria" required></select></div>
+    <div class="field campo-seletor">
+      <label>Categoria</label>
+      <input type="text" id="mov-categoria-display" readonly required placeholder="Selecionar categoria" onclick="toggleSeletorCategoriaMovForm(event)">
+      <input type="hidden" id="mov-categoria">
+      <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+      <div class="filtro-cat-panel" id="mov-categoria-panel">
+        <div id="mov-categoria-lista"></div>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
       <button class="btn-primary" id="btn-guardar-movimento" onclick="guardarMovimento()">Guardar</button>
@@ -955,7 +1065,8 @@ let valoresOcultos       = localStorage.getItem("valoresOcultos") === "true"
 let gruposExpandidos     = false
 let pendentesAtivo       = false
 let filtroCatAberto      = false
-let categoriasExcluidas  = new Set()
+let categoriasSelecionadas = new Set()
+let categoriasMovSelecionadas = new Set()
 
 let graficos = {}
 let analiseCache = { mensal: null }
@@ -968,7 +1079,7 @@ let ordenacaoContas        = { campo: null, direcao: 1 }
 let contasTabelaCache      = []
 let ordenacaoMovimentos    = { campo: null, direcao: 1 }
 let movimentosTabelaCache  = []
-let ordenacaoRecorrentes   = { campo: null, direcao: 1 }
+let ordenacaoRecorrentes   = { campo: "proxima_data_estimada", direcao: 1 }
 let recorrentesTabelaCache = []
 
 let elimAtual = null
@@ -977,6 +1088,9 @@ let pickerReconc  = null
 let pickerContas  = null
 
 let drilldownAtual = null
+
+let filtroTiposSelecionados = { ct: new Set(), an: new Set() }
+let filtroDirecoesSelecionadas = new Set()
 
 let timerInatividade = null
 const TEMPO_INATIVIDADE_MS = 15 * 60 * 1000
@@ -1005,6 +1119,8 @@ const ICONE_PERFIL_CATEGORIAS = `<svg width="16" height="16" viewBox="0 0 24 24"
 const ICONE_SETA_BAIXO        = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`
 const ICONE_SETA_CIMA         = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>`
 const ICONE_GRAFICO           = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
+const ICONE_CHECK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
+const ICONE_INDETERMINADO = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="12" x2="18" y2="12"></line></svg>`
 
 // ═══════════════════════════════════════════════════════════
 // UTILS GERAIS
@@ -1157,7 +1273,7 @@ function ligarValidacaoFormulario(idsCampos, idBotao) {
   const botao = document.getElementById(idBotao)
   function atualizar() {
     botao.disabled = !idsCampos.every(id => document.getElementById(id).checkValidity())
-  }
+  }  
   idsCampos.forEach(id => {
     document.getElementById(id).removeEventListener("input", atualizar)
     document.getElementById(id).addEventListener("input", atualizar)
@@ -1170,6 +1286,9 @@ function mostrarAjudaAoEscrever(idInput, idAjuda) {
   input.addEventListener("input", () => { ajuda.style.display = input.value.length > 0 ? "block" : "none" })
 }
 
+function ligarValidacaoMovimento() {
+  ligarValidacaoFormulario(["mov-descricao", "mov-valor", "mov-conta-display", "mov-tipo-display", "mov-categoria-display", "mov-data"], "btn-guardar-movimento")
+}
 // ═══════════════════════════════════════════════════════════
 // ORDENAÇÃO DE TABELAS
 // ═══════════════════════════════════════════════════════════
@@ -1364,7 +1483,6 @@ async function iniciarApp() {
   document.getElementById("app-screen").style.display = "block"
 
   contasCache = await api("/contas")
-  atualizarFiltrosDeTipo()
   categoriasCache    = await api("/categorias")
   arvoreAnaliseCache = await api("/categorias/arvore")
   renderizarFiltroCatPanel()
@@ -1373,7 +1491,6 @@ async function iniciarApp() {
   document.getElementById("filtro-conta").innerHTML    += optionsContas
   document.getElementById("an-filtro-conta").innerHTML += optionsContas
   document.getElementById("ct-filtro-conta").innerHTML += optionsContas
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
 
   restaurarFiltros()
   iniciarPickerContas()
@@ -1394,21 +1511,28 @@ function restaurarFiltros() {
   const ct = carregarFiltrosSalvos("contas")
   ctDataDe  = (ct?.dataDe)  || inicioMes
   ctDataAte = (ct?.dataAte) || hoje
-  if (ct?.tipo)  { document.getElementById("ct-filtro-tipo").value = ct.tipo;  atualizarFiltroContasPorTipo("ct") }
+  if (ct?.tipos?.length) filtroTiposSelecionados.ct = new Set(ct.tipos)
   if (ct?.conta) document.getElementById("ct-filtro-conta").value = ct.conta
 
   const an = carregarFiltrosSalvos("analise")
   anDataDe  = (an?.dataDe)  || inicioMes
   anDataAte = (an?.dataAte) || hoje
-  if (an?.tipo)  { document.getElementById("an-filtro-tipo").value = an.tipo;  atualizarFiltroContasPorTipo("an") }
+  if (an?.tipos?.length) filtroTiposSelecionados.an = new Set(an.tipos)
   if (an?.conta) document.getElementById("an-filtro-conta").value = an.conta
 
   const mv = carregarFiltrosSalvos("movimentos")
   movDataDe  = (mv?.dataDe)  || inicioMes
   movDataAte = (mv?.dataAte) || hoje
-  if (mv?.direcao)   { document.getElementById("filtro-direcao").value = mv.direcao; document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(mv.direcao) }
-  if (mv?.categoria) document.getElementById("filtro-categoria").value = mv.categoria
-  if (mv?.conta)     document.getElementById("filtro-conta").value = mv.conta
+  if (mv?.direcoes?.length) filtroDirecoesSelecionadas = new Set(mv.direcoes)
+  if (mv?.categorias?.length) categoriasMovSelecionadas = new Set(mv.categorias)
+  if (mv?.conta) document.getElementById("filtro-conta").value = mv.conta
+
+  atualizarFiltroContasPorTipo("ct")
+  atualizarFiltroContasPorTipo("an")
+  renderizarFiltroTipo("ct")
+  renderizarFiltroTipo("an")
+  renderizarFiltroDirecao()
+  renderizarFiltroCategoriaMov()
 }
 
 function ativarPagina(pagina) {
@@ -1417,10 +1541,11 @@ function ativarPagina(pagina) {
   document.getElementById("page-" + pagina)?.classList.add("active")
   const navLinks = { contas: 0, analise: 1, movimentos: 2 }
   if (pagina in navLinks) document.querySelectorAll(".nav-link")[navLinks[pagina]].classList.add("active")
+  if (pagina === "analise") trocarAbaAnalise(localStorage.getItem("analise_aba") || "resumo")   // ← novo
 }
 function carregarPagina(pagina) {
   if (pagina === "contas")     carregarContas()
-  if (pagina === "analise")    carregarAnalise(true)
+  if (pagina === "analise")    carregarAnalise()
   if (pagina === "movimentos") carregarMovimentos()
   if (pagina === "perfil")     carregarPerfil()
 }
@@ -1446,9 +1571,10 @@ function alternarVisibilidadePassword(idCampo, botao) {
 // ═══════════════════════════════════════════════════════════
 // HELPERS: OPÇÕES DE CONTA E CATEGORIA
 // ═══════════════════════════════════════════════════════════
-function construirOptionsContas(selecionado, tipoFiltro) {
+function construirOptionsContas(selecionado, tiposFiltro) {
   let html = ""; let bancoAtual = null
-  const lista = [...(tipoFiltro ? contasCache.filter(c => c.tipo === tipoFiltro) : contasCache)]
+  const filtroAtivo = tiposFiltro && tiposFiltro.size > 0
+  const lista = [...(filtroAtivo ? contasCache.filter(c => tiposFiltro.has(c.tipo)) : contasCache)]
     .sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
   lista.forEach(c => {
     if (c.banco !== bancoAtual) { if (bancoAtual !== null) html += "</optgroup>"; html += `<optgroup label="${c.banco}">`; bancoAtual = c.banco }
@@ -1462,26 +1588,12 @@ function atualizarFiltrosDeConta() {
   const selAn    = document.getElementById("an-filtro-conta")
   const selCt    = document.getElementById("ct-filtro-conta")
   selConta.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selConta.value)
-  selAn.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selAn.value, document.getElementById("an-filtro-tipo").value)
-  selCt.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selCt.value, document.getElementById("ct-filtro-tipo").value)
+  selAn.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selAn.value, filtroTiposSelecionados.an)
+  selCt.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selCt.value, filtroTiposSelecionados.ct)
 }
 function atualizarFiltroContasPorTipo(prefixo) {
-  const tipo = document.getElementById(prefixo + "-filtro-tipo").value
-  const sel  = document.getElementById(prefixo + "-filtro-conta")
-  sel.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(sel.value, tipo)
-}
-function atualizarFiltroTipoPorConta(prefixo) {
-  const contaId = document.getElementById(prefixo + "-filtro-conta").value
-  if (contaId) { const c = contasCache.find(c => c.id === contaId); if (c) document.getElementById(prefixo + "-filtro-tipo").value = c.tipo }
-}
-function construirOptionsTipos(selecionado) {
-  return [...new Set(contasCache.map(c => c.tipo))].sort().map(t => `<option value="${t}" ${t === selecionado ? "selected" : ""}>${t}</option>`).join("")
-}
-function atualizarFiltrosDeTipo() {
-  const selCt = document.getElementById("ct-filtro-tipo")
-  const selAn = document.getElementById("an-filtro-tipo")
-  selCt.innerHTML = '<option value="">Todos</option>' + construirOptionsTipos(selCt.value)
-  selAn.innerHTML = '<option value="">Todos</option>' + construirOptionsTipos(selAn.value)
+  const sel = document.getElementById(prefixo + "-filtro-conta")
+  sel.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(sel.value, filtroTiposSelecionados[prefixo])
 }
 function opcoesBancos() { return [...new Set([...BANCOS_PT_COMUNS, ...contasCache.map(c => c.banco)])].sort() }
 function opcoesTipos()  { return [...new Set([...TIPOS_CONTA_COMUNS, ...contasCache.map(c => c.tipo)])].sort() }
@@ -1514,93 +1626,226 @@ function ligarCampoComSugestoes(idInput, getOpcoes) {
   document.addEventListener("click", (e) => { if (e.target !== input && !lista.contains(e.target)) esconder() })
 }
 
-function construirOptionsCategorias(selecionado, direcao) {
-  let lista = categoriasCache
-  if (direcao === "in")  lista = lista.filter(c => c.eh_recebimento)
-  if (direcao === "out") lista = lista.filter(c => !c.eh_recebimento)
-  let html = ""; let grupoAtual = null
-  lista.forEach(c => {
-    if (c.grupo !== grupoAtual) { if (grupoAtual !== null) html += "</optgroup>"; html += `<optgroup label="${c.grupo}">`; grupoAtual = c.grupo }
-    const simbolo = c.eh_recebimento ? "↑" : "↓"
-    const cor = c.eh_recebimento ? "#166534" : "#991b1b"
-    html += `<option value="${c.id}" style="color:${cor}" ${c.id === selecionado ? "selected" : ""}>${simbolo} ${c.nome}</option>`
-  })
-  if (grupoAtual !== null) html += "</optgroup>"
-  return html
-}
-function construirOptionsCategoriasFiltro(direcao) {
-  let lista = categoriasCache
-  if (direcao === "in")  lista = lista.filter(c => c.eh_recebimento)
-  if (direcao === "out") lista = lista.filter(c => !c.eh_recebimento)
-  let html = '<option value="">Todas</option>'; let grupoAtual = null
-  lista.forEach(c => {
-    if (c.grupo !== grupoAtual) { if (grupoAtual !== null) html += "</optgroup>"; html += `<optgroup label="${c.grupo}">`; grupoAtual = c.grupo }
-    html += `<option value="${c.id}" style="color:${c.eh_recebimento ? '#166534' : '#991b1b'}">${c.eh_recebimento ? '↑' : '↓'} ${c.nome}</option>`
-  })
-  if (grupoAtual !== null) html += "</optgroup>"
-  return html
-}
 function atualizarFiltroCategoriasMovimentos() {
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(document.getElementById("filtro-direcao").value)
+  const idsValidos = new Set(todasCategoriaMovIds())
+  categoriasMovSelecionadas.forEach(id => { if (!idsValidos.has(id)) categoriasMovSelecionadas.delete(id) })
+  renderizarFiltroCategoriaMov()
   carregarMovimentos()
 }
 function atualizarCategoriasPorTipo() {
+  document.getElementById("mov-categoria").value = ""
+  document.getElementById("mov-categoria-display").value = ""
+  renderizarSeletorCategoriaMovForm(null)
+  ligarValidacaoMovimento()
+}
+
+// ─── Seletor de Conta (modal Movimento) ────────────────────
+function toggleSeletorConta(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("mov-conta-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharSeletorContaForm() {
+  document.getElementById("mov-conta-panel")?.classList.remove("aberto")
+}
+
+function renderizarSeletorConta(selecionadoId) {
+  const lista = document.getElementById("mov-conta-lista")
+  lista.innerHTML = ""
+  let bancoAtual = null
+  const contasOrdenadas = [...contasCache].sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
+  contasOrdenadas.forEach(c => {
+    if (c.banco !== bancoAtual) {
+      bancoAtual = c.banco
+      const sep = document.createElement("div")
+      sep.className = "seletor-grupo-label"
+      sep.textContent = c.banco
+      lista.appendChild(sep)
+    }
+    const row = document.createElement("div")
+    row.className = "filtro-item-linha filtro-item-indentado" + (c.id === selecionadoId ? " selecionado" : "")
+    row.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
+    row.onclick = () => selecionarContaMovForm(c.id)
+    lista.appendChild(row)
+  })
+}
+
+function selecionarContaMovForm(contaId) {
+  document.getElementById("mov-conta").value = contaId
+  const conta = contasCache.find(c => c.id === contaId)
+  document.getElementById("mov-conta-display").value = conta ? conta.nome : ""
+  renderizarSeletorConta(contaId)
+  fecharSeletorContaForm()
+  ligarValidacaoMovimento()
+}
+
+// ─── Seletor de Direção (modal Movimento) ────────────────
+const ROTULOS_TIPO_MOV = { in: "Cash-In", out: "Cash-Out" }
+
+function toggleSeletorTipoMovForm(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("mov-tipo-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharSeletorTipoMovForm() {
+  document.getElementById("mov-tipo-panel")?.classList.remove("aberto")
+}
+
+function renderizarSeletorTipoMovForm(selecionado) {
+  const lista = document.getElementById("mov-tipo-lista")
+  lista.innerHTML = ""
+  ;["in", "out"].forEach(valor => {
+    const row = document.createElement("div")
+    row.className = "filtro-item-linha" + (valor === selecionado ? " selecionado" : "")
+    row.innerHTML = `<span>${ROTULOS_TIPO_MOV[valor]}</span><span class="check">${ICONE_CHECK}</span>`
+    row.onclick = () => selecionarTipoMovForm(valor)
+    lista.appendChild(row)
+  })
+}
+
+function selecionarTipoMovForm(valor) {
+  document.getElementById("mov-tipo").value = valor
+  document.getElementById("mov-tipo-display").value = ROTULOS_TIPO_MOV[valor]
+  renderizarSeletorTipoMovForm(valor)
+  fecharSeletorTipoMovForm()
+  atualizarCategoriasPorTipo()
+}
+
+// ─── Seletor de Categoria (modal Movimento) ────────────────
+function toggleSeletorCategoriaMovForm(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("mov-categoria-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharSeletorCategoriaMovForm() {
+  document.getElementById("mov-categoria-panel")?.classList.remove("aberto")
+}
+
+function renderizarSeletorCategoriaMovForm(selecionadoId) {
+  const lista = document.getElementById("mov-categoria-lista")
+  lista.innerHTML = ""
   const tipo = document.getElementById("mov-tipo").value
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(document.getElementById("mov-categoria").value, tipo)
+  if (!tipo) {
+    lista.innerHTML = `<div class="filtro-opcao-todas" style="cursor:default">Escolhe primeiro o Tipo</div>`
+    return
+  }
+  const grupos = arvoreAnaliseCache.filter(g => tipo === "in" ? g.eh_recebimento : !g.eh_recebimento)
+  grupos.forEach(g => {
+    const sep = document.createElement("div")
+    sep.className = "seletor-grupo-label"
+    sep.textContent = g.nome
+    lista.appendChild(sep)
+    g.categorias.forEach(c => {
+      const row = document.createElement("div")
+      row.className = "filtro-item-linha filtro-item-indentado" + (c.id === selecionadoId ? " selecionado" : "")
+      row.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
+      row.onclick = () => selecionarCategoriaMovForm(c.id)
+      lista.appendChild(row)
+    })
+  })
+}
+
+function selecionarCategoriaMovForm(categoriaId) {
+  document.getElementById("mov-categoria").value = categoriaId
+  let nome = ""
+  for (const g of arvoreAnaliseCache) {
+    const c = g.categorias.find(c => c.id === categoriaId)
+    if (c) { nome = c.nome; break }
+  }
+  document.getElementById("mov-categoria-display").value = nome
+  renderizarSeletorCategoriaMovForm(categoriaId)
+  fecharSeletorCategoriaMovForm()
+  ligarValidacaoMovimento()
 }
 
 // ─── Visibilidade do botão "Limpar filtros" ───────────────
 function atualizarVisibilidadeLimparContas() {
-  const ehDefeito = !document.getElementById("ct-filtro-conta").value && !document.getElementById("ct-filtro-tipo").value && ctDataDe === isoDateStr(primeiroDiaMes()) && ctDataAte === isoDateStr(new Date())
+  const ehDefeito = !document.getElementById("ct-filtro-conta").value && filtroTiposSelecionados.ct.size === 0 && ctDataDe === isoDateStr(primeiroDiaMes()) && ctDataAte === isoDateStr(new Date())
   document.getElementById("ct-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
 }
 function atualizarVisibilidadeLimparAnalise() {
-  const ehDefeito = !document.getElementById("an-filtro-conta").value && !document.getElementById("an-filtro-tipo").value && categoriasExcluidas.size === 0 && anDataDe === isoDateStr(primeiroDiaMes()) && anDataAte === isoDateStr(new Date())
+  const ehDefeito = !document.getElementById("an-filtro-conta").value && filtroTiposSelecionados.an.size === 0 && categoriasSelecionadas.size === 0 && anDataDe === isoDateStr(primeiroDiaMes()) && anDataAte === isoDateStr(new Date())
   document.getElementById("an-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
 }
 function temFiltrosMovimentosAtivos() {
-  return !!(document.getElementById("filtro-conta").value || document.getElementById("filtro-direcao").value || document.getElementById("filtro-categoria").value || document.getElementById("filtro-pesquisa").value.trim() || pendentesAtivo || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
+  return !!(document.getElementById("filtro-conta").value || filtroDirecoesSelecionadas.size > 0 || categoriasMovSelecionadas.size > 0 || document.getElementById("filtro-pesquisa").value.trim() || pendentesAtivo || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
 }
 function atualizarVisibilidadeLimparMovimentos() {
   document.getElementById("mov-filtros-limpar-linha").classList.toggle("escondido", !temFiltrosMovimentosAtivos())
 }
 
+
+
+
 // ─── Limpar filtros ───────────────────────────────────────
 function limparFiltrosContas() {
   document.getElementById("ct-filtro-conta").value = ""
-  document.getElementById("ct-filtro-tipo").value = ""
+  filtroTiposSelecionados.ct.clear()
   ctDataDe = isoDateStr(primeiroDiaMes()); ctDataAte = isoDateStr(new Date())
   localStorage.removeItem("filtros_contas")
+  renderizarFiltroTipo("ct")
   iniciarPickerContas(); carregarContas()
 }
 function limparFiltrosAnalise() {
   document.getElementById("an-filtro-conta").value = ""
-  document.getElementById("an-filtro-tipo").value = ""
+  filtroTiposSelecionados.an.clear()
   anDataDe = isoDateStr(primeiroDiaMes()); anDataAte = isoDateStr(new Date())
-  categoriasExcluidas.clear(); atualizarBtnFiltroCat()
+  categoriasSelecionadas.clear(); atualizarBtnFiltroCat()
   localStorage.removeItem("filtros_analise")
+  renderizarFiltroTipo("an")
+  renderizarFiltroCatPanel()
   iniciarPickerAnalise(); carregarAnalise()
 }
 function limparFiltrosMovimentos() {
   pendentesAtivo = false
   document.getElementById("filtro-conta").value = ""
-  document.getElementById("filtro-direcao").value = ""
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro("")
+  filtroDirecoesSelecionadas.clear()
+  categoriasMovSelecionadas.clear()
   document.getElementById("filtro-pesquisa").value = ""
   movDataDe = isoDateStr(primeiroDiaMes()); movDataAte = isoDateStr(new Date())
   localStorage.removeItem("filtros_movimentos")
+  renderizarFiltroDirecao()
+  renderizarFiltroCategoriaMov()
   iniciarPickerMovimentos(); carregarMovimentos()
 }
 
 // ═══════════════════════════════════════════════════════════
 // FILTRO DE CATEGORIAS (ANÁLISE)
 // ═══════════════════════════════════════════════════════════
+function fecharTodosOsFiltros() {
+  fecharFiltroCat()
+  fecharFiltroTipo("ct")
+  fecharFiltroTipo("an")
+  fecharFiltroDirecao()
+  fecharFiltroCategoriaMov()
+  fecharSeletorContaForm()
+  fecharSeletorCategoriaMovForm()
+  fecharSeletorTipoMovForm()
+}
+
 function toggleFiltroCat(e) {
   e.stopPropagation()
-  filtroCatAberto = !filtroCatAberto
-  document.getElementById("filtro-cat-panel").classList.toggle("aberto", filtroCatAberto)
+  const estavaAberto = filtroCatAberto
+  fecharTodosOsFiltros()
+  filtroCatAberto = !estavaAberto
+  const painel = document.getElementById("filtro-cat-panel")
+  painel.classList.toggle("aberto", filtroCatAberto)
   document.getElementById("filtro-cat-btn").classList.toggle("ativo", filtroCatAberto)
+  if (filtroCatAberto) painel.scrollTop = 0
 }
+
 function fecharFiltroCat() {
   filtroCatAberto = false
   document.getElementById("filtro-cat-panel").classList.remove("aberto")
@@ -1613,79 +1858,350 @@ function renderizarFiltroCatPanel() {
 
   const grupos = { entrada: arvoreAnaliseCache.filter(g => g.eh_recebimento), saida: arvoreAnaliseCache.filter(g => !g.eh_recebimento) }
 
-  ;[{ label: "↑ Entradas", grupos: grupos.entrada }, { label: "↓ Saídas", grupos: grupos.saida }].forEach(secao => {
+  ;[{ label: "Entradas", grupos: grupos.entrada }, { label: "Saídas", grupos: grupos.saida }].forEach((secao, indiceSecao) => {
     if (secao.grupos.length === 0) return
 
     const sep = document.createElement("div")
-    sep.className = "filtro-cat-separador"
+    sep.className = "filtro-esfera-label" + (indiceSecao > 0 ? " nova-esfera" : "")
     sep.textContent = secao.label
     lista.appendChild(sep)
 
     secao.grupos.forEach(g => {
       const catIds = g.categorias.map(c => c.id)
-      const nExcluidas = catIds.filter(id => categoriasExcluidas.has(id)).length
-      const todasExcluidas = nExcluidas === catIds.length
-      const parcial = nExcluidas > 0 && !todasExcluidas
+      const nSelecionadas = catIds.filter(id => categoriasSelecionadas.has(id)).length
+      const grupoCompleto = nSelecionadas === catIds.length
+      const grupoParcial = nSelecionadas > 0 && !grupoCompleto
 
       const grupoRow = document.createElement("div")
-      grupoRow.className = "filtro-cat-grupo-row"
-      grupoRow.innerHTML = `
-        <input type="checkbox" id="fg-${g.id}" ${todasExcluidas ? '' : 'checked'}
-               onchange="toggleGrupoFiltroCat(${g.id}, this.checked)">
-        <label for="fg-${g.id}" style="cursor:pointer;flex:1">${g.nome}</label>`
+      grupoRow.className = "filtro-item-linha filtro-grupo-linha" + (grupoCompleto ? " selecionado" : grupoParcial ? " indeterminado" : "")
+      grupoRow.innerHTML = `<span>${g.nome}</span><span class="check">${grupoParcial ? ICONE_INDETERMINADO : ICONE_CHECK}</span>`
+      grupoRow.onclick = () => toggleGrupoCategoriaFiltro(g.id)
       lista.appendChild(grupoRow)
-      if (parcial) grupoRow.querySelector('input').indeterminate = true
 
       g.categorias.forEach(c => {
         const catRow = document.createElement("div")
-        catRow.className = "filtro-cat-item-row"
-        catRow.innerHTML = `
-          <input type="checkbox" id="fc-${c.id}" ${categoriasExcluidas.has(c.id) ? '' : 'checked'}
-                 onchange="toggleCategoriaFiltroCat(${c.id}, ${g.id}, this.checked)">
-          <label for="fc-${c.id}" style="cursor:pointer;flex:1">${c.nome}</label>`
+        catRow.className = "filtro-item-linha filtro-item-indentado" + (categoriasSelecionadas.has(c.id) ? " selecionado" : "")
+        catRow.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
+        catRow.onclick = () => toggleCategoriaFiltro(c.id)
         lista.appendChild(catRow)
       })
     })
   })
 }
-function toggleGrupoFiltroCat(grupoId, incluir) {
+
+function todasCategoriasIdsAnalise() {
+  return arvoreAnaliseCache.flatMap(g => g.categorias.map(c => c.id))
+}
+
+function colapsarSeTudoSelecionado() {
+  const total = todasCategoriasIdsAnalise().length
+  if (categoriasSelecionadas.size === total) categoriasSelecionadas.clear()
+}
+
+function toggleGrupoCategoriaFiltro(grupoId) {
   const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
   if (!grupo) return
-  grupo.categorias.forEach(c => {
-    if (incluir) categoriasExcluidas.delete(c.id)
-    else         categoriasExcluidas.add(c.id)
-    const el = document.getElementById("fc-" + c.id)
-    if (el) el.checked = incluir
-  })
+  const catIds = grupo.categorias.map(c => c.id)
+  const todasJaSelecionadas = catIds.every(id => categoriasSelecionadas.has(id))
+  if (todasJaSelecionadas) catIds.forEach(id => categoriasSelecionadas.delete(id))
+  else catIds.forEach(id => categoriasSelecionadas.add(id))
+  colapsarSeTudoSelecionado()
+  renderizarFiltroCatPanel()
   atualizarBtnFiltroCat()
   carregarAnalise()
 }
-function toggleCategoriaFiltroCat(catId, grupoId, incluir) {
-  if (incluir) categoriasExcluidas.delete(catId)
-  else         categoriasExcluidas.add(catId)
 
-  // atualizar estado parcial do grupo pai
-  const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
-  if (grupo) {
-    const catIds = grupo.categorias.map(c => c.id)
-    const nExcluidas = catIds.filter(id => categoriasExcluidas.has(id)).length
-    const grupoChk = document.getElementById("fg-" + grupoId)
-    if (grupoChk) {
-      grupoChk.checked = nExcluidas === 0
-      grupoChk.indeterminate = nExcluidas > 0 && nExcluidas < catIds.length
-    }
-  }
+function toggleCategoriaFiltro(categoriaId) {
+  if (categoriasSelecionadas.has(categoriaId)) categoriasSelecionadas.delete(categoriaId)
+  else categoriasSelecionadas.add(categoriaId)
+  colapsarSeTudoSelecionado()
+  renderizarFiltroCatPanel()
   atualizarBtnFiltroCat()
   carregarAnalise()
 }
-function selecionarTodasCat() { categoriasExcluidas.clear(); renderizarFiltroCatPanel(); atualizarBtnFiltroCat(); carregarAnalise() }
-function limparTodasCat()     { arvoreAnaliseCache.forEach(g => g.categorias.forEach(c => categoriasExcluidas.add(c.id))); renderizarFiltroCatPanel(); atualizarBtnFiltroCat(); carregarAnalise() }
+
+function selecionarTodasCategoriasFiltro() {
+  categoriasSelecionadas.clear()
+  renderizarFiltroCatPanel()
+  atualizarBtnFiltroCat()
+  fecharFiltroCat()
+  carregarAnalise()
+}
+
 function atualizarBtnFiltroCat() {
-  const n = categoriasExcluidas.size
+  const n = categoriasSelecionadas.size
   const badge = document.getElementById("filtro-cat-badge")
   const label = document.getElementById("filtro-cat-label")
   if (n > 0) { badge.textContent = n; badge.style.display = "inline-flex"; label.textContent = "Categorias" }
-  else        { badge.style.display = "none"; label.textContent = "Todas as categorias" }
+  else        { badge.style.display = "none"; label.textContent = "Todas" }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTRO DE CATEGORIAS (Movimentos)
+// ═══════════════════════════════════════════════════════════
+function toggleFiltroCategoriaMov(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("mov-filtro-categoria-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const btn = document.getElementById("mov-filtro-categoria-btn")
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  btn.classList.toggle("ativo", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharFiltroCategoriaMov() {
+  document.getElementById("mov-filtro-categoria-panel").classList.remove("aberto")
+  document.getElementById("mov-filtro-categoria-btn").classList.remove("ativo")
+}
+
+function gruposCategoriaMovDisponiveis() {
+  const direcao = direcaoAtualStr()
+  if (direcao === "in") return arvoreAnaliseCache.filter(g => g.eh_recebimento)
+  if (direcao === "out") return arvoreAnaliseCache.filter(g => !g.eh_recebimento)
+  return arvoreAnaliseCache
+}
+
+function todasCategoriaMovIds() {
+  return gruposCategoriaMovDisponiveis().flatMap(g => g.categorias.map(c => c.id))
+}
+
+function desenharGrupoCategoriaMov(g, lista) {
+  const catIds = g.categorias.map(c => c.id)
+  const nSelecionadas = catIds.filter(id => categoriasMovSelecionadas.has(id)).length
+  const grupoCompleto = catIds.length > 0 && nSelecionadas === catIds.length
+  const grupoParcial = nSelecionadas > 0 && !grupoCompleto
+
+  const grupoRow = document.createElement("div")
+  grupoRow.className = "filtro-item-linha filtro-grupo-linha" + (grupoCompleto ? " selecionado" : grupoParcial ? " indeterminado" : "")
+  grupoRow.innerHTML = `<span>${g.nome}</span><span class="check">${grupoParcial ? ICONE_INDETERMINADO : ICONE_CHECK}</span>`
+  grupoRow.onclick = () => toggleGrupoCategoriaMov(g.id)
+  lista.appendChild(grupoRow)
+
+  g.categorias.forEach(c => {
+    const catRow = document.createElement("div")
+    catRow.className = "filtro-item-linha filtro-item-indentado" + (categoriasMovSelecionadas.has(c.id) ? " selecionado" : "")
+    catRow.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
+    catRow.onclick = () => toggleCategoriaMov(c.id)
+    lista.appendChild(catRow)
+  })
+}
+
+function renderizarFiltroCategoriaMov() {
+  const lista = document.getElementById("mov-filtro-categoria-lista")
+  if (!lista) return
+  lista.innerHTML = ""
+  const direcao = direcaoAtualStr()
+  const grupos = gruposCategoriaMovDisponiveis()
+
+  if (!direcao) {
+    const secoes = [
+      { label: "Entradas", grupos: grupos.filter(g => g.eh_recebimento) },
+      { label: "Saídas", grupos: grupos.filter(g => !g.eh_recebimento) },
+    ]
+    secoes.forEach((secao, indiceSecao) => {
+      if (secao.grupos.length === 0) return
+      const sep = document.createElement("div")
+      sep.className = "filtro-esfera-label" + (indiceSecao > 0 ? " nova-esfera" : "")
+      sep.textContent = secao.label
+      lista.appendChild(sep)
+      secao.grupos.forEach(g => desenharGrupoCategoriaMov(g, lista))
+    })
+  } else {
+    grupos.forEach(g => desenharGrupoCategoriaMov(g, lista))
+  }
+
+  atualizarBtnFiltroCategoriaMov()
+}
+
+function colapsarCategoriaMovSeTudoSelecionado() {
+  const total = todasCategoriaMovIds().length
+  if (total > 0 && categoriasMovSelecionadas.size === total) categoriasMovSelecionadas.clear()
+}
+
+function toggleGrupoCategoriaMov(grupoId) {
+  const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
+  if (!grupo) return
+  const catIds = grupo.categorias.map(c => c.id)
+  const todasJaSelecionadas = catIds.every(id => categoriasMovSelecionadas.has(id))
+  if (todasJaSelecionadas) catIds.forEach(id => categoriasMovSelecionadas.delete(id))
+  else catIds.forEach(id => categoriasMovSelecionadas.add(id))
+  colapsarCategoriaMovSeTudoSelecionado()
+  renderizarFiltroCategoriaMov()
+  carregarMovimentos()
+}
+
+function toggleCategoriaMov(categoriaId) {
+  if (categoriasMovSelecionadas.has(categoriaId)) categoriasMovSelecionadas.delete(categoriaId)
+  else categoriasMovSelecionadas.add(categoriaId)
+  colapsarCategoriaMovSeTudoSelecionado()
+  renderizarFiltroCategoriaMov()
+  carregarMovimentos()
+}
+
+function selecionarTodasCategoriasMov() {
+  categoriasMovSelecionadas.clear()
+  renderizarFiltroCategoriaMov()
+  fecharFiltroCategoriaMov()
+  carregarMovimentos()
+}
+
+function nomeCategoriaMovUnica() {
+  const id = [...categoriasMovSelecionadas][0]
+  for (const g of arvoreAnaliseCache) {
+    const c = g.categorias.find(c => c.id === id)
+    if (c) return c.nome
+  }
+  return "Categoria"
+}
+
+function atualizarBtnFiltroCategoriaMov() {
+  const n = categoriasMovSelecionadas.size
+  const label = document.getElementById("mov-filtro-categoria-label")
+  const badge = document.getElementById("mov-filtro-categoria-badge")
+  if (n > 0) {
+    label.textContent = n === 1 ? nomeCategoriaMovUnica() : "Categorias"
+    if (n > 1) { badge.textContent = n; badge.style.display = "inline-flex" } else badge.style.display = "none"
+  } else {
+    label.textContent = "Todas"
+    badge.style.display = "none"
+  }
+}
+
+// ─── Filtro de Tipo (Contas + Análise) ─────────────────────
+function opcoesTipoDisponiveis() {
+  return [...new Set(contasCache.map(c => c.tipo))].sort()
+}
+
+function toggleFiltroTipo(prefixo, e) {
+  e.stopPropagation()
+  const painel = document.getElementById(prefixo + "-filtro-tipo-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const btn = document.getElementById(prefixo + "-filtro-tipo-btn")
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  btn.classList.toggle("ativo", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharFiltroTipo(prefixo) {
+  document.getElementById(prefixo + "-filtro-tipo-panel").classList.remove("aberto")
+  document.getElementById(prefixo + "-filtro-tipo-btn").classList.remove("ativo")
+}
+
+function renderizarFiltroTipo(prefixo) {
+  const lista = document.getElementById(prefixo + "-filtro-tipo-lista")
+  if (!lista) return
+  const selecionados = filtroTiposSelecionados[prefixo]
+  const opcoes = opcoesTipoDisponiveis()
+  lista.innerHTML = ""
+  opcoes.forEach(tipo => {
+    const linha = document.createElement("div")
+    linha.className = "filtro-item-linha" + (selecionados.has(tipo) ? " selecionado" : "")
+    linha.innerHTML = `<span>${tipo}</span><span class="check">${ICONE_CHECK}</span>`
+    linha.onclick = () => toggleTipoItem(prefixo, tipo)
+    lista.appendChild(linha)
+  })
+  atualizarBtnFiltroTipo(prefixo)
+}
+
+function atualizarBtnFiltroTipo(prefixo) {
+  const selecionados = filtroTiposSelecionados[prefixo]
+  const label = document.getElementById(prefixo + "-filtro-tipo-label")
+  const badge = document.getElementById(prefixo + "-filtro-tipo-badge")
+  if (selecionados.size > 0) {
+    label.textContent = selecionados.size === 1 ? [...selecionados][0] : "Tipos"
+    if (selecionados.size > 1) { badge.textContent = selecionados.size; badge.style.display = "inline-flex" }
+    else badge.style.display = "none"
+  } else {
+    label.textContent = "Todos"
+    badge.style.display = "none"
+  }
+}
+
+function toggleTipoItem(prefixo, tipo) {
+  const selecionados = filtroTiposSelecionados[prefixo]
+  if (selecionados.has(tipo)) selecionados.delete(tipo)
+  else selecionados.add(tipo)
+  const opcoes = opcoesTipoDisponiveis()
+  if (selecionados.size === opcoes.length) selecionados.clear()
+  renderizarFiltroTipo(prefixo)
+  atualizarFiltroContasPorTipo(prefixo)
+  if (prefixo === "ct") carregarContas()
+  else carregarAnalise()
+}
+
+function selecionarTodosOsTipos(prefixo) {
+  filtroTiposSelecionados[prefixo].clear()
+  renderizarFiltroTipo(prefixo)
+  fecharFiltroTipo(prefixo)
+  atualizarFiltroContasPorTipo(prefixo)
+  if (prefixo === "ct") carregarContas()
+  else carregarAnalise()
+}
+
+function atualizarFiltroContasPorTipo(prefixo) {
+  const sel = document.getElementById(prefixo + "-filtro-conta")
+  sel.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(sel.value, filtroTiposSelecionados[prefixo])
+}
+
+// ─── Filtro de Direção (Movimentos) ────────────────────────
+function opcoesDirecao() { return ["in", "out"] }
+const ROTULOS_DIRECAO = { in: "Cash-In", out: "Cash-Out" }
+
+function toggleFiltroDirecao(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("mov-filtro-direcao-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const btn = document.getElementById("mov-filtro-direcao-btn")
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  btn.classList.toggle("ativo", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharFiltroDirecao() {
+  document.getElementById("mov-filtro-direcao-panel").classList.remove("aberto")
+  document.getElementById("mov-filtro-direcao-btn").classList.remove("ativo")
+}
+
+function renderizarFiltroDirecao() {
+  const lista = document.getElementById("mov-filtro-direcao-lista")
+  if (!lista) return
+  lista.innerHTML = ""
+  opcoesDirecao().forEach(valor => {
+    const linha = document.createElement("div")
+    linha.className = "filtro-item-linha" + (filtroDirecoesSelecionadas.has(valor) ? " selecionado" : "")
+    linha.innerHTML = `<span>${ROTULOS_DIRECAO[valor]}</span><span class="check">${ICONE_CHECK}</span>`
+    linha.onclick = () => toggleDirecaoItem(valor)
+    lista.appendChild(linha)
+  })
+  atualizarBtnFiltroDirecao()
+}
+
+function atualizarBtnFiltroDirecao() {
+  const label = document.getElementById("mov-filtro-direcao-label")
+  if (filtroDirecoesSelecionadas.size === 1) label.textContent = ROTULOS_DIRECAO[[...filtroDirecoesSelecionadas][0]]
+  else label.textContent = "Todas"
+}
+
+function direcaoAtualStr() {
+  return filtroDirecoesSelecionadas.size === 1 ? [...filtroDirecoesSelecionadas][0] : ""
+}
+
+function toggleDirecaoItem(valor) {
+  if (filtroDirecoesSelecionadas.has(valor)) filtroDirecoesSelecionadas.delete(valor)
+  else filtroDirecoesSelecionadas.add(valor)
+  if (filtroDirecoesSelecionadas.size === opcoesDirecao().length) filtroDirecoesSelecionadas.clear()
+  renderizarFiltroDirecao()
+  atualizarFiltroCategoriasMovimentos()
+}
+
+function selecionarTodasDirecoes() {
+  filtroDirecoesSelecionadas.clear()
+  renderizarFiltroDirecao()
+  fecharFiltroDirecao()
+  atualizarFiltroCategoriasMovimentos()
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1694,21 +2210,21 @@ function atualizarBtnFiltroCat() {
 async function carregarContas() {
   document.getElementById("tabela-contas").innerHTML = linhasEsqueleto(6, 3)
   const contaSel = document.getElementById("ct-filtro-conta").value
-  const tipoSel  = document.getElementById("ct-filtro-tipo").value
-  guardarFiltrosPagina("contas", { conta: contaSel, tipo: tipoSel, dataDe: ctDataDe, dataAte: ctDataAte })
+  const tiposSel = filtroTiposSelecionados.ct
+  guardarFiltrosPagina("contas", { conta: contaSel, tipos: [...tiposSel], dataDe: ctDataDe, dataAte: ctDataAte })
   atualizarVisibilidadeLimparContas()
   contasCache = await api("/contas")
-  atualizarFiltrosDeTipo(); atualizarFiltrosDeConta()
+  renderizarFiltroTipo("ct"); atualizarFiltrosDeConta()
   const params = new URLSearchParams()
   if (contaSel) params.set("conta_id", contaSel)
-  if (tipoSel)  params.set("tipo", tipoSel)
+  if (tiposSel.size > 0) params.set("tipo", [...tiposSel].join(","))
   if (ctDataDe)  params.set("data_de", ctDataDe)
   if (ctDataAte) params.set("data_ate", ctDataAte)
   const qs = params.toString() ? "?" + params.toString() : ""
   const saldoDiario = await api("/stats/saldo-diario" + qs)
   let contasFiltradas = contasCache
   if (contaSel) contasFiltradas = contasFiltradas.filter(c => c.id === contaSel)
-  if (tipoSel)  contasFiltradas = contasFiltradas.filter(c => c.tipo === tipoSel)
+  if (tiposSel.size > 0) contasFiltradas = contasFiltradas.filter(c => tiposSel.has(c.tipo))
   renderizarCardSaldoTotal(contasFiltradas)
   renderizarGraficoSaldo(saldoDiario, moedaPredominante(contasFiltradas))
   contasTabelaCache = contasFiltradas
@@ -1857,44 +2373,46 @@ async function eliminarReconciliacao(id) {
 // PÁGINA: ANÁLISE
 // ═══════════════════════════════════════════════════════════
 function trocarAbaAnalise(aba) {
+  localStorage.setItem("analise_aba", aba)   // ← novo
   document.querySelectorAll(".analise-tab").forEach(t => t.classList.toggle("active", t.dataset.aba === aba))
   document.querySelectorAll(".analise-secao").forEach(el => el.classList.toggle("active", el.id === `analise-secao-${aba}`))
   requestAnimationFrame(() => {
-    if (aba === "resumo" && analiseCache.mensal !== null) { destruirGrafico("mensal"); renderizarGraficoMensal(analiseCache.mensal) }   // ← "global" → "resumo"
+    if (aba === "resumo" && analiseCache.mensal !== null) { destruirGrafico("mensal"); renderizarGraficoMensal(analiseCache.mensal) }
   })
 }
 
-// constrói os params incluindo exclusões de categorias
 function construirParamsAnalise() {
   const conta = document.getElementById("an-filtro-conta").value
-  const tipo  = document.getElementById("an-filtro-tipo").value
+  const tipos = filtroTiposSelecionados.an
   const params = new URLSearchParams()
   if (conta)   params.set("conta_id", conta)
-  if (tipo)    params.set("tipo", tipo)
+  if (tipos.size > 0) params.set("tipo", [...tipos].join(","))
   if (anDataDe)  params.set("data_de", anDataDe)
   if (anDataAte) params.set("data_ate", anDataAte)
-  if (categoriasExcluidas.size > 0) params.set("excluir_categorias", [...categoriasExcluidas].join(','))
+  if (categoriasSelecionadas.size > 0) {
+    const todasIds = todasCategoriasIdsAnalise()
+    const excluidas = todasIds.filter(id => !categoriasSelecionadas.has(id))
+    if (excluidas.length > 0) params.set("excluir_categorias", excluidas.join(','))
+  }
   return params
 }
 
-async function carregarAnalise(resetarAba = false) {
-  if (resetarAba) trocarAbaAnalise('resumo')
+async function carregarAnalise() {
   fecharDrillDown()
   document.getElementById("tabela-recorrentes").innerHTML = linhasEsqueleto(5, 3)
   document.getElementById("lista-grupos").innerHTML = `<div class="estado-vazio"><div class="subtitulo">A carregar...</div></div>`
 
-  const conta  = document.getElementById("an-filtro-conta").value
-  const tipo   = document.getElementById("an-filtro-tipo").value
+  const conta = document.getElementById("an-filtro-conta").value
+  const tipos = filtroTiposSelecionados.an
 
   atualizarVisibilidadeLimparAnalise()
-  guardarFiltrosPagina("analise", { conta, tipo, dataDe: anDataDe, dataAte: anDataAte })
+  guardarFiltrosPagina("analise", { conta, tipos: [...tipos], dataDe: anDataDe, dataAte: anDataAte })
 
   let contasConsideradas = contasCache
   if (conta) contasConsideradas = contasConsideradas.filter(c => c.id === conta)
-  if (tipo)  contasConsideradas = contasConsideradas.filter(c => c.tipo === tipo)
+  if (tipos.size > 0) contasConsideradas = contasConsideradas.filter(c => tipos.has(c.tipo))
   moedaAnaliseGlobal = moedaPredominante(contasConsideradas)
 
-  // usa sempre construirParamsAnalise para garantir que excluir_categorias é enviado
   const qs = construirParamsAnalise().toString()
   const qsStr = qs ? "?" + qs : ""
 
@@ -1968,9 +2486,9 @@ function renderizarGrupos() {
     const pct = totalTipo > 0 ? (g.total / totalTipo * 100) : 0
     const subcatHtml = g.subcategorias.map(s => {
       const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
-      return `<div class="sub-item"><span>${s.categoria}</span><span style="display:flex;align-items:center;gap:8px"><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span><button class="btn-drilldown" title="Ver evolução mensal de ${s.categoria}" onclick="abrirDrillDownCategoria(${s.categoria_id}, '${s.categoria.replace(/'/g, "\\'")}', '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button></span></div><div class="sub-barra-fundo"><div class="barra-fill" style="width:${sPct}%;background:${corClara}"></div></div>`
+      return `<div class="sub-item"><span>${s.categoria}</span><span style="display:flex;align-items:center;gap:8px"><button class="btn-drilldown" title="Ver evolução mensal de ${s.categoria}" onclick="abrirDrillDownCategoria(${s.categoria_id}, '${s.categoria.replace(/'/g, "\\'")}', '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span></span></div><div class="sub-barra-fundo"><div class="barra-fill" style="width:${sPct}%;background:${corClara}"></div></div>`
     }).join("")
-    el.innerHTML += `<div class="grupo-bar-row"><div class="linha-topo" onclick="toggleGrupo(${gi})" style="cursor:pointer"><span class="nome">${g.grupo}</span><span style="display:flex;align-items:center;gap:8px"><span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total, moedaAnaliseGlobal)}</strong></span><button class="btn-drilldown" title="Ver evolução mensal de ${g.grupo}" onclick="event.stopPropagation(); abrirDrillDownGrupo(${g.grupo_id}, '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button></span></div><div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${corBase}"></div></div><div class="sub-grupo" id="sub-grupo-${gi}">${subcatHtml}</div></div>`
+    el.innerHTML += `<div class="grupo-bar-row"><div class="linha-topo" onclick="toggleGrupo(${gi})" style="cursor:pointer"><span class="nome">${g.grupo}</span><span style="display:flex;align-items:center;gap:8px"><button class="btn-drilldown" title="Ver evolução mensal de ${g.grupo}" onclick="event.stopPropagation(); abrirDrillDownGrupo(${g.grupo_id}, '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button><span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total, moedaAnaliseGlobal)}</strong></span></span></div><div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${corBase}"></div></div><div class="sub-grupo" id="sub-grupo-${gi}">${subcatHtml}</div></div>`
   })
   document.getElementById("total-tipo").textContent = fmt(totalTipo, moedaAnaliseGlobal)
   document.getElementById("label-tipo").textContent = tipoAtual === "in" ? "Entradas" : "Saídas"
@@ -2122,13 +2640,14 @@ function renderizarTabelaRecorrentes() {
 // ═══════════════════════════════════════════════════════════
 async function carregarMovimentos() {
   document.getElementById("tabela-movimentos").innerHTML = linhasEsqueleto(6, 4)
-  const conta = document.getElementById("filtro-conta").value, direcao = document.getElementById("filtro-direcao").value, categoria = document.getElementById("filtro-categoria").value
+  const conta = document.getElementById("filtro-conta").value, direcao = direcaoAtualStr()
+  const categorias = categoriasMovSelecionadas
   atualizarVisibilidadeLimparMovimentos()
-  guardarFiltrosPagina("movimentos", { conta, direcao, categoria, dataDe: movDataDe, dataAte: movDataAte })
+  guardarFiltrosPagina("movimentos", { conta, direcoes: [...filtroDirecoesSelecionadas], categorias: [...categorias], dataDe: movDataDe, dataAte: movDataAte })
   const params = new URLSearchParams()
   if (conta)     params.set("conta_id", conta)
   if (direcao)   params.set("direcao", direcao)
-  if (categoria) params.set("categoria_id", categoria)
+  if (categorias.size > 0) params.set("categoria_id", [...categorias].join(","))
   if (movDataDe)  params.set("data_de", movDataDe)
   if (movDataAte) params.set("data_ate", movDataAte)
   if (pendentesAtivo) params.set("precisa_confirmacao", "true")
@@ -2173,21 +2692,42 @@ function renderizarTabelaMovimentos() {
 
 function abrirModalMovimento() {
   document.getElementById("modal-movimento-titulo").textContent = "Adicionar movimento"
-  document.getElementById("mov-id").value = ""; document.getElementById("mov-conta").innerHTML = construirOptionsContas(); document.getElementById("mov-tipo").value = "out"
-  document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(null, "out"); pickerMovData.setDate(new Date()); document.getElementById("mov-descricao").value = ""; document.getElementById("mov-valor").value = ""
+  document.getElementById("mov-id").value = ""
+  pickerMovData.setDate(new Date())
+  document.getElementById("mov-descricao").value = ""
+  document.getElementById("mov-valor").value = ""
+
+  document.getElementById("mov-conta").value = ""
+  document.getElementById("mov-conta-display").value = ""
+  renderizarSeletorConta(null)
+
+  document.getElementById("mov-tipo").value = ""
+  document.getElementById("mov-tipo-display").value = ""
+  renderizarSeletorTipoMovForm(null)
+
+  document.getElementById("mov-categoria").value = ""
+  document.getElementById("mov-categoria-display").value = ""
+  renderizarSeletorCategoriaMovForm(null)
+
   document.getElementById("modal-movimento").classList.add("open")
-  ligarValidacaoFormulario(["mov-descricao", "mov-valor", "mov-categoria", "mov-data"], "btn-guardar-movimento")
+  ligarValidacaoMovimento()
 }
+
 function abrirEditarMovimento(id) {
   const m = movimentosCache.find(x => x.id === id); if (!m) return
   document.getElementById("modal-movimento-titulo").textContent = "Editar movimento"
-  document.getElementById("mov-id").value = m.id; document.getElementById("mov-conta").innerHTML = construirOptionsContas(m.conta_id); pickerMovData.setDate(m.data); document.getElementById("mov-descricao").value = m.descricao
-  const tipo = m.valor > 0 ? "in" : "out"; document.getElementById("mov-tipo").value = tipo; document.getElementById("mov-valor").value = Math.abs(m.valor); document.getElementById("mov-categoria").innerHTML = construirOptionsCategorias(m.categoria_id, tipo)
+  document.getElementById("mov-id").value = m.id
+  selecionarContaMovForm(m.conta_id)
+  pickerMovData.setDate(m.data)
+  document.getElementById("mov-descricao").value = m.descricao
+  const tipo = m.valor > 0 ? "in" : "out"
+  selecionarTipoMovForm(tipo)
+  selecionarCategoriaMovForm(m.categoria_id)
   document.getElementById("modal-movimento").classList.add("open")
-  ligarValidacaoFormulario(["mov-descricao", "mov-valor", "mov-categoria", "mov-data"], "btn-guardar-movimento")
+  ligarValidacaoMovimento()
 }
 async function guardarMovimento() {
-  if (!camposValidos("mov-descricao", "mov-valor", "mov-categoria", "mov-data")) return
+  if (!camposValidos("mov-descricao", "mov-valor", "mov-categoria-display", "mov-data")) return
   const id = document.getElementById("mov-id").value, tipo = document.getElementById("mov-tipo").value
   const magnitude = Math.abs(parseFloat(document.getElementById("mov-valor").value))
   const body = { conta_id: document.getElementById("mov-conta").value, data: document.getElementById("mov-data").value, descricao: document.getElementById("mov-descricao").value, valor: tipo === "in" ? magnitude : -magnitude, categoria_id: parseInt(document.getElementById("mov-categoria").value) }
@@ -2282,7 +2822,12 @@ async function eliminarContaUtilizador() {
 // ═══════════════════════════════════════════════════════════
 async function recarregarCategoriasGlobais() {
   categoriasCache = await api("/categorias")
-  document.getElementById("filtro-categoria").innerHTML = construirOptionsCategoriasFiltro(document.getElementById("filtro-direcao").value)
+  arvoreAnaliseCache = await api("/categorias/arvore")
+  categoriasSelecionadas.clear()
+  categoriasMovSelecionadas.clear()
+  renderizarFiltroCatPanel()
+  atualizarBtnFiltroCat()
+  renderizarFiltroCategoriaMov()
 }
 async function aposMudarCategorias() { await carregarArvoreCategorias(); await recarregarCategoriasGlobais() }
 async function carregarArvoreCategorias() { arvoreCategoriasCache = await api("/categorias/arvore"); renderizarArvoreCategorias() }
@@ -2393,12 +2938,32 @@ ligarValidacaoFormulario(["reg-nome", "reg-email", "reg-password"], "btn-registo
 ligarValidacaoFormulario(["esqueci-email"], "btn-esqueci")
 atualizarIconeExpandirRecolher()
 
-document.addEventListener("keydown", e => { if (e.key === "Escape") fecharDrillDown() })
 document.addEventListener("click", e => {
   const path = e.composedPath()
   const btn   = document.getElementById("filtro-cat-btn")
   const panel = document.getElementById("filtro-cat-panel")
   if (!path.includes(btn) && !path.includes(panel)) fecharFiltroCat()
+
+  const ctTipoBtn = document.getElementById("ct-filtro-tipo-btn"), ctTipoPanel = document.getElementById("ct-filtro-tipo-panel")
+  if (ctTipoBtn && !path.includes(ctTipoBtn) && !path.includes(ctTipoPanel)) fecharFiltroTipo("ct")
+
+  const anTipoBtn = document.getElementById("an-filtro-tipo-btn"), anTipoPanel = document.getElementById("an-filtro-tipo-panel")
+  if (anTipoBtn && !path.includes(anTipoBtn) && !path.includes(anTipoPanel)) fecharFiltroTipo("an")
+
+  const direcaoBtn = document.getElementById("mov-filtro-direcao-btn"), direcaoPanel = document.getElementById("mov-filtro-direcao-panel")
+  if (direcaoBtn && !path.includes(direcaoBtn) && !path.includes(direcaoPanel)) fecharFiltroDirecao()
+
+  const movCatBtn = document.getElementById("mov-filtro-categoria-btn"), movCatPanel = document.getElementById("mov-filtro-categoria-panel")
+  if (movCatBtn && !path.includes(movCatBtn) && !path.includes(movCatPanel)) fecharFiltroCategoriaMov()
+
+  const movContaPanel = document.getElementById("mov-conta-panel"), movContaInput = document.getElementById("mov-conta-display")
+  if (movContaPanel && !path.includes(movContaPanel) && !path.includes(movContaInput)) fecharSeletorContaForm()
+
+  const movCategoriaFormPanel = document.getElementById("mov-categoria-panel"), movCategoriaFormInput = document.getElementById("mov-categoria-display")
+  if (movCategoriaFormPanel && !path.includes(movCategoriaFormPanel) && !path.includes(movCategoriaFormInput)) fecharSeletorCategoriaMovForm()
+
+  const movTipoPanel = document.getElementById("mov-tipo-panel"), movTipoInput = document.getElementById("mov-tipo-display")
+  if (movTipoPanel && !path.includes(movTipoPanel) && !path.includes(movTipoInput)) fecharSeletorTipoMovForm()
 })
 
 if (!verificarTokenReset() && TOKEN) iniciarApp()

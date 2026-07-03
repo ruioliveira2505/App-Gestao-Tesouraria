@@ -19,6 +19,16 @@ def _excluir_sql(excluir_categorias: str):
     return f"AND m.categoria_id NOT IN ({placeholders})", ids
 
 
+def _lista_sql(coluna, valores_str):
+    if not valores_str:
+        return "", []
+    valores = [v for v in valores_str.split(',') if v.strip()]
+    if not valores:
+        return "", []
+    placeholders = ','.join(['%s'] * len(valores))
+    return f"AND {coluna} IN ({placeholders})", valores
+
+
 @router.get("/stats/mensal")
 def stats_mensal(
     utilizador: dict = Depends(utilizador_atual),
@@ -29,6 +39,7 @@ def stats_mensal(
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    tipo_cond, tipo_vals = _lista_sql("ct.tipo", tipo)
     excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
@@ -40,13 +51,12 @@ def stats_mensal(
             JOIN contas ct ON m.conta_id = ct.id
             WHERE m.utilizador_id = %s
               AND (%s IS NULL OR m.conta_id = %s)
-              AND (%s IS NULL OR ct.tipo = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
-        """ + excluir_cond + """
+        """ + tipo_cond + excluir_cond + """
             GROUP BY DATE_TRUNC('month', m.data)
             ORDER BY DATE_TRUNC('month', m.data)
-        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+        """, [uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + tipo_vals + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
@@ -68,6 +78,7 @@ def stats_categorias(
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    tipo_cond, tipo_vals = _lista_sql("ct.tipo", tipo)
     excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
@@ -91,14 +102,13 @@ def stats_categorias(
             JOIN arvore a ON m.categoria_id = a.id
             WHERE m.utilizador_id = %s
               AND (%s IS NULL OR m.conta_id = %s)
-              AND (%s IS NULL OR ct.tipo = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
               AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
-        """ + excluir_cond + """
+        """ + tipo_cond + excluir_cond + """
             GROUP BY a.grupo_raiz, a.caminho, a.eh_recebimento, a.id, a.categoria_nome
             ORDER BY a.eh_recebimento DESC, total DESC
-        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+        """, [uid, uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + tipo_vals + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
@@ -129,6 +139,7 @@ def stats_grupos(
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    tipo_cond, tipo_vals = _lista_sql("ct.tipo", tipo)
     excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
@@ -151,14 +162,13 @@ def stats_grupos(
             JOIN arvore a ON m.categoria_id = a.id
             WHERE m.utilizador_id = %s
               AND (%s IS NULL OR m.conta_id = %s)
-              AND (%s IS NULL OR ct.tipo = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
               AND NOT EXISTS (SELECT 1 FROM categorias f WHERE f.parent_id = a.id)
-        """ + excluir_cond + """
+        """ + tipo_cond + excluir_cond + """
             GROUP BY a.grupo_raiz, a.grupo_raiz_id, a.eh_recebimento, a.nome, a.id, a.nivel
             ORDER BY a.eh_recebimento DESC, a.grupo_raiz, total DESC
-        """, [uid, uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+        """, [uid, uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + tipo_vals + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
@@ -166,7 +176,7 @@ def stats_grupos(
 
     grupos = defaultdict(lambda: {"nome": None, "eh_recebimento": None, "grupo_id": None, "total": 0.0, "subcategorias": []})
     for r in rows:
-        chave = r[1]  # ← grupo_raiz_id: identificador único, ao contrário do nome
+        chave = r[1]
         grupos[chave]["nome"] = r[0]
         grupos[chave]["eh_recebimento"] = r[2]
         grupos[chave]["grupo_id"] = r[1]
@@ -185,6 +195,7 @@ def stats_grupos(
         for chave, dados in sorted(grupos.items(), key=lambda x: (not x[1]["eh_recebimento"], -x[1]["total"]))
     ]
 
+
 @router.get("/stats/mensal-detalhe")
 def stats_mensal_detalhe(
     utilizador: dict = Depends(utilizador_atual),
@@ -199,6 +210,7 @@ def stats_mensal_detalhe(
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    tipo_cond, tipo_vals = _lista_sql("ct.tipo", tipo)
     excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         if categoria_id:
@@ -217,13 +229,12 @@ def stats_mensal_detalhe(
                 WHERE m.utilizador_id = %s
                   AND m.categoria_id = %s
                   AND (%s IS NULL OR m.conta_id = %s)
-                  AND (%s IS NULL OR ct.tipo = %s)
                   AND (%s IS NULL OR m.data >= %s)
                   AND (%s IS NULL OR m.data <= %s)
-            """ + excluir_cond + """
+            """ + tipo_cond + excluir_cond + """
                 GROUP BY DATE_TRUNC('month', m.data)
                 ORDER BY DATE_TRUNC('month', m.data)
-            """, [uid, categoria_id, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+            """, [uid, categoria_id, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + tipo_vals + excluir_ids)
             rows = cursor.fetchall()
             return [{"mes": r[0], "total": float(r[1])} for r in rows]
 
@@ -245,13 +256,12 @@ def stats_mensal_detalhe(
                 WHERE m.utilizador_id = %s
                   AND c.parent_id = %s
                   AND (%s IS NULL OR m.conta_id = %s)
-                  AND (%s IS NULL OR ct.tipo = %s)
                   AND (%s IS NULL OR m.data >= %s)
                   AND (%s IS NULL OR m.data <= %s)
-            """ + excluir_cond + """
+            """ + tipo_cond + excluir_cond + """
                 GROUP BY DATE_TRUNC('month', m.data), c.nome
                 ORDER BY DATE_TRUNC('month', m.data), c.nome
-            """, [uid, grupo_id, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+            """, [uid, grupo_id, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + tipo_vals + excluir_ids)
             rows = cursor.fetchall()
 
             meses_dict = {}
@@ -284,13 +294,14 @@ def stats_saldo_diario(
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    tipo_cond, tipo_vals = _lista_sql("tipo", tipo)
     try:
         cursor.execute("""
             WITH contas_filtradas AS (
                 SELECT id FROM contas
                 WHERE utilizador_id = %s
                   AND (%s IS NULL OR id = %s)
-                  AND (%s IS NULL OR tipo = %s)
+        """ + tipo_cond + """
             ),
             dias AS (
                 SELECT generate_series(
@@ -316,7 +327,7 @@ def stats_saldo_diario(
             FROM saldo_por_conta_dia
             GROUP BY dia
             ORDER BY dia
-        """, [uid, conta_id, conta_id, tipo, tipo])
+        """, [uid, conta_id, conta_id] + tipo_vals)
         rows = cursor.fetchall()
     finally:
         cursor.close()
@@ -343,6 +354,7 @@ def stats_recorrentes(
     conn = get_connection()
     cursor = conn.cursor()
     uid = utilizador["sub"]
+    tipo_cond, tipo_vals = _lista_sql("ct.tipo", tipo)
     excluir_cond, excluir_ids = _excluir_sql(excluir_categorias)
     try:
         cursor.execute("""
@@ -353,12 +365,11 @@ def stats_recorrentes(
             JOIN contas ct ON m.conta_id = ct.id
             WHERE m.utilizador_id = %s AND m.valor < 0
               AND (%s IS NULL OR m.conta_id = %s)
-              AND (%s IS NULL OR ct.tipo = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
-        """ + excluir_cond + """
+        """ + tipo_cond + excluir_cond + """
             ORDER BY m.descricao, c.nome, m.data
-        """, [uid, conta_id, conta_id, tipo, tipo, data_de, data_de, data_ate, data_ate] + excluir_ids)
+        """, [uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + tipo_vals + excluir_ids)
         rows = cursor.fetchall()
     finally:
         cursor.close()
@@ -367,7 +378,7 @@ def stats_recorrentes(
     ocorrencias_por_chave = defaultdict(list)
     info_por_chave = {}
     for descricao, categoria_id, categoria, grupo, data_mov, valor in rows:
-        chave = (descricao, categoria_id)   # id, não nome — evita colisões entre categorias homónimas
+        chave = (descricao, categoria_id)
         info_por_chave[chave] = (categoria, grupo)
         ocorrencias_por_chave[chave].append((data_mov, float(valor)))
 

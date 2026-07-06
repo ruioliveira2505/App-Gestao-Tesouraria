@@ -63,6 +63,7 @@ def listar_movimentos(
     cursor = conn.cursor()
     uid = utilizador["sub"]
 
+    conta_cond, conta_vals = _lista_sql("m.conta_id", conta_id)
     categoria_cond, categoria_vals = _lista_sql("m.categoria_id", categoria_id)
 
     filtro_direcao = ""
@@ -85,12 +86,11 @@ def listar_movimentos(
             JOIN categorias c ON m.categoria_id = c.id
             JOIN categorias g ON c.parent_id = g.id
             WHERE m.utilizador_id = %s
-              AND (%s IS NULL OR m.conta_id = %s)
               AND (%s IS NULL OR m.data >= %s)
               AND (%s IS NULL OR m.data <= %s)
-        """ + categoria_cond + filtro_direcao + filtro_confirmacao + """
+        """ + conta_cond + categoria_cond + filtro_direcao + filtro_confirmacao + """
             ORDER BY m.data DESC, m.criado_em DESC
-        """, [uid, conta_id, conta_id, data_de, data_de, data_ate, data_ate] + categoria_vals)
+        """, [uid, data_de, data_de, data_ate, data_ate] + conta_vals + categoria_vals)
         rows = cursor.fetchall()
     finally:
         cursor.close()

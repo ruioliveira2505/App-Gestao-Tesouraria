@@ -215,7 +215,7 @@
       display: none; position: absolute; top: calc(100% + 4px); left: 0;
       background: var(--color-white); border: 1px solid var(--color-border);
       border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-      z-index: 60; min-width: 260px; max-height: 360px; overflow-y: auto; padding: 0.5rem 0;
+      z-index: 60; min-width: 260px; max-height: 360px; overflow-y: auto; padding: 0rem 0;
     }
     .filtro-cat-panel.aberto { display: block; }
     .filtro-cat-acoes {
@@ -238,6 +238,25 @@
     .filtro-cat-item-row:hover { background: var(--color-surface); }
     .filtro-cat-item-row input, .filtro-cat-grupo-row input { cursor: pointer; flex-shrink: 0; }
 
+    .filtro-topo-sticky {
+      position: sticky; top: 0; z-index: 2;
+      margin-top: -0.5rem; padding-top: 0.5rem;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-border-light);
+      padding-bottom: 0.4rem; margin-bottom: 4px;
+    }
+    .filtro-pesquisa-input {
+      width: calc(100% - 1.4rem); margin: 0.2rem 0.7rem 0; padding: 0.4rem 0.6rem;
+      border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+      font-size: 0.8rem; outline: none; display: block;
+    }
+    .filtro-pesquisa-input:focus { border-color: var(--color-text); }
+
+    .filtro-esfera-linha {
+      font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.05em; color: var(--color-text);
+    }
+    .filtro-esfera-linha.nova-esfera { border-top: 1px solid var(--color-border-light); margin-top: 6px; padding-top: 0.6rem; }
+    
     /* ── Seletor de período (contas) ── */
     .campo-com-icone { position: relative; display: inline-flex; align-items: center; }
     .campo-com-icone .icone-calendario { position: absolute; left: 0.7rem; color: var(--color-text-secondary); pointer-events: none; }
@@ -391,8 +410,7 @@
     ═══════════════════════════════════════════════════════ */
     .filtro-opcao-todas {
       padding: 0.55rem 0.9rem; font-size: 0.85rem; color: var(--color-text-secondary);
-      cursor: pointer; border-bottom: 1px solid var(--color-border-light);
-      margin-bottom: 4px;
+      cursor: pointer;
     }
     .filtro-opcao-todas:hover { background: var(--color-surface); }
 
@@ -550,24 +568,21 @@
     ────────────────────────────────────────────── -->
     <div class="page active" id="page-contas">
       <div class="filtros">
-        <div class="field">
-          <label>Conta</label>
-          <select id="ct-filtro-conta" onchange="carregarContas()">
-            <option value="">Todas</option>
-          </select>
-        </div>
         <div class="filtro-cat-wrapper">
-          <label>Tipos</label>
-          <button class="filtro-cat-btn" id="ct-filtro-tipo-btn" onclick="toggleFiltroTipo('ct', event)">
+          <label>Contas</label>
+          <button class="filtro-cat-btn" id="ct-filtro-conta-btn" onclick="toggleFiltroConta('ct', event)">
             <span style="display:flex;align-items:center;gap:6px">
-              <span id="ct-filtro-tipo-label">Todos</span>
-              <span class="filtro-cat-badge" id="ct-filtro-tipo-badge" style="display:none"></span>
+              <span id="ct-filtro-conta-label">Todas</span>
+              <span class="filtro-cat-badge" id="ct-filtro-conta-badge" style="display:none"></span>
             </span>
             <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
           </button>
-          <div class="filtro-cat-panel" id="ct-filtro-tipo-panel">
-            <div class="filtro-opcao-todas" onclick="selecionarTodosOsTipos('ct')">Todos</div>
-            <div id="ct-filtro-tipo-lista"></div>
+          <div class="filtro-cat-panel" id="ct-filtro-conta-panel">
+            <div class="filtro-topo-sticky">
+              <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('ct')">Todas</div>
+              <input type="text" class="filtro-pesquisa-input" id="ct-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('ct'); document.getElementById('ct-filtro-conta-panel').scrollTop = 0">
+            </div>
+            <div id="ct-filtro-conta-lista"></div>
           </div>
         </div>
         <button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>
@@ -609,24 +624,21 @@
     ────────────────────────────────────────────── -->
     <div class="page" id="page-analise">
       <div class="filtros">
-        <div class="field">
-          <label>Conta</label>
-          <select id="an-filtro-conta" onchange="carregarAnalise()">
-            <option value="">Todas</option>
-          </select>
-        </div>
         <div class="filtro-cat-wrapper">
-          <label>Tipos</label>
-          <button class="filtro-cat-btn" id="an-filtro-tipo-btn" onclick="toggleFiltroTipo('an', event)">
+          <label>Contas</label>
+          <button class="filtro-cat-btn" id="an-filtro-conta-btn" onclick="toggleFiltroConta('an', event)">
             <span style="display:flex;align-items:center;gap:6px">
-              <span id="an-filtro-tipo-label">Todos</span>
-              <span class="filtro-cat-badge" id="an-filtro-tipo-badge" style="display:none"></span>
+              <span id="an-filtro-conta-label">Todas</span>
+              <span class="filtro-cat-badge" id="an-filtro-conta-badge" style="display:none"></span>
             </span>
             <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
           </button>
-          <div class="filtro-cat-panel" id="an-filtro-tipo-panel">
-            <div class="filtro-opcao-todas" onclick="selecionarTodosOsTipos('an')">Todos</div>
-            <div id="an-filtro-tipo-lista"></div>
+          <div class="filtro-cat-panel" id="an-filtro-conta-panel">
+            <div class="filtro-topo-sticky">
+              <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('an')">Todas</div>
+              <input type="text" class="filtro-pesquisa-input" id="an-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('an'); document.getElementById('an-filtro-conta-panel').scrollTop = 0">
+            </div>
+            <div id="an-filtro-conta-lista"></div>
           </div>
         </div>
         <div class="filtro-cat-wrapper">
@@ -639,7 +651,10 @@
             <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
           </button>
           <div class="filtro-cat-panel" id="filtro-cat-panel">
-            <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriasFiltro()">Todas</div>
+            <div class="filtro-topo-sticky">
+              <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriaFiltroArvore('an')">Todas</div>
+              <input type="text" class="filtro-pesquisa-input" id="filtro-cat-pesquisa" placeholder="Pesquisar categoria..." oninput="renderizarFiltroCategoriaEspaco('an'); document.getElementById('filtro-cat-panel').scrollTop = 0">
+            </div>
             <div id="filtro-cat-lista"></div>
           </div>
         </div>
@@ -661,12 +676,12 @@
       <div class="analise-secao active" id="analise-secao-resumo">
         <div class="summary-grid" id="summary-mes"></div>
         <div class="chart-full">
-          <h3>Evolução Mensal</h3>
+          <h3>Evolução Mensal de Cash-Flow</h3>
           <canvas id="grafico-mensal"></canvas>
         </div>
         <div class="chart-full">
           <div class="section-header">
-            <h3 style="margin:0">Detalhe por Grupo</h3>
+            <h3 style="margin:0">Detalhe de Cash-Flow por Grupo</h3>
             <div style="display:flex;gap:0.5rem;align-items:center">
               <button class="btn-sm" id="btn-expandir-recolher" onclick="alternarExpandirTodos()"></button>
               <div class="toggle-tipo">
@@ -713,19 +728,21 @@
       </div>
 
       <div class="filtros">
-        <div class="field">
-          <label>Conta</label>
-          <select id="filtro-conta" onchange="carregarMovimentos()"><option value="">Todas</option></select>
-        </div>
         <div class="filtro-cat-wrapper">
-          <label>Direção</label>
-          <button class="filtro-cat-btn" id="mov-filtro-direcao-btn" onclick="toggleFiltroDirecao(event)">
-            <span id="mov-filtro-direcao-label">Todas</span>
+          <label>Contas</label>
+          <button class="filtro-cat-btn" id="mov-filtro-conta-btn" onclick="toggleFiltroConta('mov', event)">
+            <span style="display:flex;align-items:center;gap:6px">
+              <span id="mov-filtro-conta-label">Todas</span>
+              <span class="filtro-cat-badge" id="mov-filtro-conta-badge" style="display:none"></span>
+            </span>
             <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
           </button>
-          <div class="filtro-cat-panel" id="mov-filtro-direcao-panel">
-            <div class="filtro-opcao-todas" onclick="selecionarTodasDirecoes()">Todas</div>
-            <div id="mov-filtro-direcao-lista"></div>
+          <div class="filtro-cat-panel" id="mov-filtro-conta-panel">
+            <div class="filtro-topo-sticky">
+              <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('mov')">Todas</div>
+              <input type="text" class="filtro-pesquisa-input" id="mov-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('mov'); document.getElementById('mov-filtro-conta-panel').scrollTop = 0">
+            </div>
+            <div id="mov-filtro-conta-lista"></div>
           </div>
         </div>
         <div class="filtro-cat-wrapper">
@@ -738,14 +755,17 @@
             <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
           </button>
           <div class="filtro-cat-panel" id="mov-filtro-categoria-panel">
-            <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriasMov()">Todas</div>
+            <div class="filtro-topo-sticky">
+              <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriaFiltroArvore('mov')">Todas</div>
+              <input type="text" class="filtro-pesquisa-input" id="mov-filtro-categoria-pesquisa" placeholder="Pesquisar categoria..." oninput="renderizarFiltroCategoriaEspaco('mov'); document.getElementById('mov-filtro-categoria-panel').scrollTop = 0">
+            </div>
             <div id="mov-filtro-categoria-lista"></div>
           </div>
         </div>
 
         <!-- Página Movimentos -->
 <div class="field"><label>Período</label><input type="text" id="mov-periodo" placeholder="Selecionar datas" readonly></div>
-        <div class="field"><label>Procurar</label><input type="text" id="filtro-pesquisa" placeholder="Descrição..." oninput="renderizarTabelaMovimentos()"></div>
+        <div class="field"><label>Procurar</label><input type="text" id="filtro-pesquisa" placeholder="Pesquisar descrição..." oninput="renderizarTabelaMovimentos()"></div>
         <button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>
       </div>
       <div class="filtros-limpar-linha" id="mov-filtros-limpar-linha">
@@ -1067,6 +1087,7 @@ let pendentesAtivo       = false
 let filtroCatAberto      = false
 let categoriasSelecionadas = new Set()
 let categoriasMovSelecionadas = new Set()
+let contasSelecionadas = { ct: new Set(), an: new Set(), mov: new Set() }
 
 let graficos = {}
 let analiseCache = { mensal: null }
@@ -1088,9 +1109,6 @@ let pickerReconc  = null
 let pickerContas  = null
 
 let drilldownAtual = null
-
-let filtroTiposSelecionados = { ct: new Set(), an: new Set() }
-let filtroDirecoesSelecionadas = new Set()
 
 let timerInatividade = null
 const TEMPO_INATIVIDADE_MS = 15 * 60 * 1000
@@ -1485,12 +1503,6 @@ async function iniciarApp() {
   contasCache = await api("/contas")
   categoriasCache    = await api("/categorias")
   arvoreAnaliseCache = await api("/categorias/arvore")
-  renderizarFiltroCatPanel()
-
-  const optionsContas = construirOptionsContas()
-  document.getElementById("filtro-conta").innerHTML    += optionsContas
-  document.getElementById("an-filtro-conta").innerHTML += optionsContas
-  document.getElementById("ct-filtro-conta").innerHTML += optionsContas
 
   restaurarFiltros()
   iniciarPickerContas()
@@ -1511,28 +1523,25 @@ function restaurarFiltros() {
   const ct = carregarFiltrosSalvos("contas")
   ctDataDe  = (ct?.dataDe)  || inicioMes
   ctDataAte = (ct?.dataAte) || hoje
-  if (ct?.tipos?.length) filtroTiposSelecionados.ct = new Set(ct.tipos)
-  if (ct?.conta) document.getElementById("ct-filtro-conta").value = ct.conta
+  if (ct?.contas?.length) contasSelecionadas.ct = new Set(ct.contas)
 
   const an = carregarFiltrosSalvos("analise")
   anDataDe  = (an?.dataDe)  || inicioMes
   anDataAte = (an?.dataAte) || hoje
-  if (an?.tipos?.length) filtroTiposSelecionados.an = new Set(an.tipos)
-  if (an?.conta) document.getElementById("an-filtro-conta").value = an.conta
+  if (an?.contas?.length) contasSelecionadas.an = new Set(an.contas)
+  if (an?.categorias?.length) categoriasSelecionadas = new Set(an.categorias)
 
   const mv = carregarFiltrosSalvos("movimentos")
   movDataDe  = (mv?.dataDe)  || inicioMes
   movDataAte = (mv?.dataAte) || hoje
-  if (mv?.direcoes?.length) filtroDirecoesSelecionadas = new Set(mv.direcoes)
   if (mv?.categorias?.length) categoriasMovSelecionadas = new Set(mv.categorias)
-  if (mv?.conta) document.getElementById("filtro-conta").value = mv.conta
+  if (mv?.contas?.length) contasSelecionadas.mov = new Set(mv.contas)
 
-  atualizarFiltroContasPorTipo("ct")
-  atualizarFiltroContasPorTipo("an")
-  renderizarFiltroTipo("ct")
-  renderizarFiltroTipo("an")
-  renderizarFiltroDirecao()
-  renderizarFiltroCategoriaMov()
+  renderizarFiltroConta("ct")
+  renderizarFiltroConta("an")
+  renderizarFiltroConta("mov")
+  renderizarFiltroCategoriaEspaco("an")
+  renderizarFiltroCategoriaEspaco("mov")
 }
 
 function ativarPagina(pagina) {
@@ -1571,30 +1580,7 @@ function alternarVisibilidadePassword(idCampo, botao) {
 // ═══════════════════════════════════════════════════════════
 // HELPERS: OPÇÕES DE CONTA E CATEGORIA
 // ═══════════════════════════════════════════════════════════
-function construirOptionsContas(selecionado, tiposFiltro) {
-  let html = ""; let bancoAtual = null
-  const filtroAtivo = tiposFiltro && tiposFiltro.size > 0
-  const lista = [...(filtroAtivo ? contasCache.filter(c => tiposFiltro.has(c.tipo)) : contasCache)]
-    .sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
-  lista.forEach(c => {
-    if (c.banco !== bancoAtual) { if (bancoAtual !== null) html += "</optgroup>"; html += `<optgroup label="${c.banco}">`; bancoAtual = c.banco }
-    html += `<option value="${c.id}" ${c.id === selecionado ? "selected" : ""}>${c.nome}</option>`
-  })
-  if (bancoAtual !== null) html += "</optgroup>"
-  return html
-}
-function atualizarFiltrosDeConta() {
-  const selConta = document.getElementById("filtro-conta")
-  const selAn    = document.getElementById("an-filtro-conta")
-  const selCt    = document.getElementById("ct-filtro-conta")
-  selConta.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(selConta.value)
-  selAn.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selAn.value, filtroTiposSelecionados.an)
-  selCt.innerHTML    = '<option value="">Todas</option>' + construirOptionsContas(selCt.value, filtroTiposSelecionados.ct)
-}
-function atualizarFiltroContasPorTipo(prefixo) {
-  const sel = document.getElementById(prefixo + "-filtro-conta")
-  sel.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(sel.value, filtroTiposSelecionados[prefixo])
-}
+
 function opcoesBancos() { return [...new Set([...BANCOS_PT_COMUNS, ...contasCache.map(c => c.banco)])].sort() }
 function opcoesTipos()  { return [...new Set([...TIPOS_CONTA_COMUNS, ...contasCache.map(c => c.tipo)])].sort() }
 
@@ -1626,12 +1612,6 @@ function ligarCampoComSugestoes(idInput, getOpcoes) {
   document.addEventListener("click", (e) => { if (e.target !== input && !lista.contains(e.target)) esconder() })
 }
 
-function atualizarFiltroCategoriasMovimentos() {
-  const idsValidos = new Set(todasCategoriaMovIds())
-  categoriasMovSelecionadas.forEach(id => { if (!idsValidos.has(id)) categoriasMovSelecionadas.delete(id) })
-  renderizarFiltroCategoriaMov()
-  carregarMovimentos()
-}
 function atualizarCategoriasPorTipo() {
   document.getElementById("mov-categoria").value = ""
   document.getElementById("mov-categoria-display").value = ""
@@ -1772,15 +1752,15 @@ function selecionarCategoriaMovForm(categoriaId) {
 
 // ─── Visibilidade do botão "Limpar filtros" ───────────────
 function atualizarVisibilidadeLimparContas() {
-  const ehDefeito = !document.getElementById("ct-filtro-conta").value && filtroTiposSelecionados.ct.size === 0 && ctDataDe === isoDateStr(primeiroDiaMes()) && ctDataAte === isoDateStr(new Date())
+  const ehDefeito = contasSelecionadas.ct.size === 0 && ctDataDe === isoDateStr(primeiroDiaMes()) && ctDataAte === isoDateStr(new Date())
   document.getElementById("ct-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
 }
 function atualizarVisibilidadeLimparAnalise() {
-  const ehDefeito = !document.getElementById("an-filtro-conta").value && filtroTiposSelecionados.an.size === 0 && categoriasSelecionadas.size === 0 && anDataDe === isoDateStr(primeiroDiaMes()) && anDataAte === isoDateStr(new Date())
+  const ehDefeito = contasSelecionadas.an.size === 0 && categoriasSelecionadas.size === 0 && anDataDe === isoDateStr(primeiroDiaMes()) && anDataAte === isoDateStr(new Date())
   document.getElementById("an-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
 }
 function temFiltrosMovimentosAtivos() {
-  return !!(document.getElementById("filtro-conta").value || filtroDirecoesSelecionadas.size > 0 || categoriasMovSelecionadas.size > 0 || document.getElementById("filtro-pesquisa").value.trim() || pendentesAtivo || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
+  return !!(contasSelecionadas.mov.size > 0 || categoriasMovSelecionadas.size > 0 || document.getElementById("filtro-pesquisa").value.trim() || pendentesAtivo || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
 }
 function atualizarVisibilidadeLimparMovimentos() {
   document.getElementById("mov-filtros-limpar-linha").classList.toggle("escondido", !temFiltrosMovimentosAtivos())
@@ -1791,34 +1771,163 @@ function atualizarVisibilidadeLimparMovimentos() {
 
 // ─── Limpar filtros ───────────────────────────────────────
 function limparFiltrosContas() {
-  document.getElementById("ct-filtro-conta").value = ""
-  filtroTiposSelecionados.ct.clear()
+  contasSelecionadas.ct.clear()
   ctDataDe = isoDateStr(primeiroDiaMes()); ctDataAte = isoDateStr(new Date())
   localStorage.removeItem("filtros_contas")
-  renderizarFiltroTipo("ct")
+  const inputPesq = document.getElementById("ct-filtro-conta-pesquisa")
+  if (inputPesq) inputPesq.value = ""
+  renderizarFiltroConta("ct")
   iniciarPickerContas(); carregarContas()
 }
 function limparFiltrosAnalise() {
-  document.getElementById("an-filtro-conta").value = ""
-  filtroTiposSelecionados.an.clear()
+  contasSelecionadas.an.clear()
   anDataDe = isoDateStr(primeiroDiaMes()); anDataAte = isoDateStr(new Date())
-  categoriasSelecionadas.clear(); atualizarBtnFiltroCat()
+  categoriasSelecionadas.clear()
   localStorage.removeItem("filtros_analise")
-  renderizarFiltroTipo("an")
-  renderizarFiltroCatPanel()
+  const inputPesqConta = document.getElementById("an-filtro-conta-pesquisa")
+  if (inputPesqConta) inputPesqConta.value = ""
+  const inputPesqCat = document.getElementById("filtro-cat-pesquisa")
+  if (inputPesqCat) inputPesqCat.value = ""
+  renderizarFiltroConta("an")
+  renderizarFiltroCategoriaEspaco("an")
   iniciarPickerAnalise(); carregarAnalise()
 }
 function limparFiltrosMovimentos() {
   pendentesAtivo = false
-  document.getElementById("filtro-conta").value = ""
-  filtroDirecoesSelecionadas.clear()
+  contasSelecionadas.mov.clear()
   categoriasMovSelecionadas.clear()
   document.getElementById("filtro-pesquisa").value = ""
+  const inputPesqConta = document.getElementById("mov-filtro-conta-pesquisa")
+  if (inputPesqConta) inputPesqConta.value = ""
+  const inputPesqCat = document.getElementById("mov-filtro-categoria-pesquisa")
+  if (inputPesqCat) inputPesqCat.value = ""
   movDataDe = isoDateStr(primeiroDiaMes()); movDataAte = isoDateStr(new Date())
   localStorage.removeItem("filtros_movimentos")
-  renderizarFiltroDirecao()
-  renderizarFiltroCategoriaMov()
+  renderizarFiltroCategoriaEspaco("mov")
+  renderizarFiltroConta("mov")
   iniciarPickerMovimentos(); carregarMovimentos()
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTRO DE CONTAS
+// ═══════════════════════════════════════════════════════════
+// ─── Filtro de Conta, dois níveis por Banco (Contas/Análise/Movimentos) ───
+function toggleFiltroConta(prefixo, e) {
+  e.stopPropagation()
+  const painel = document.getElementById(prefixo + "-filtro-conta-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const btn = document.getElementById(prefixo + "-filtro-conta-btn")
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  btn.classList.toggle("ativo", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharFiltroConta(prefixo) {
+  document.getElementById(prefixo + "-filtro-conta-panel").classList.remove("aberto")
+  document.getElementById(prefixo + "-filtro-conta-btn").classList.remove("ativo")
+}
+
+function gruposContasPorBanco() {
+  const bancos = {}
+  contasCache.forEach(c => { (bancos[c.banco] ||= []).push(c) })
+  return Object.keys(bancos).sort().map(banco => ({
+    banco, contas: bancos[banco].sort((a, b) => a.nome.localeCompare(b.nome))
+  }))
+}
+
+function renderizarFiltroConta(prefixo) {
+  const lista = document.getElementById(prefixo + "-filtro-conta-lista")
+  if (!lista) return
+  lista.innerHTML = ""
+  const selecionadas = contasSelecionadas[prefixo]
+  const inputPesquisa = document.getElementById(prefixo + "-filtro-conta-pesquisa")
+  const termo = (inputPesquisa ? inputPesquisa.value : "").trim().toLowerCase()
+
+  gruposContasPorBanco().forEach(g => {
+    const bancoBate = !termo || g.banco.toLowerCase().includes(termo)
+    const contasVisiveis = bancoBate ? g.contas : g.contas.filter(c => c.nome.toLowerCase().includes(termo))
+    if (termo && contasVisiveis.length === 0) return
+
+    const idsGrupo = g.contas.map(c => c.id)
+    const nSel = idsGrupo.filter(id => selecionadas.has(id)).length
+    const completo = nSel === idsGrupo.length
+    const parcial = nSel > 0 && !completo
+
+    const grupoRow = document.createElement("div")
+    grupoRow.className = "filtro-item-linha filtro-grupo-linha" + (completo ? " selecionado" : parcial ? " indeterminado" : "")
+    grupoRow.innerHTML = `<span>${g.banco}</span><span class="check">${parcial ? ICONE_INDETERMINADO : ICONE_CHECK}</span>`
+    grupoRow.onclick = () => toggleGrupoContaFiltro(prefixo, g.banco)
+    lista.appendChild(grupoRow)
+
+    contasVisiveis.forEach(c => {
+      const row = document.createElement("div")
+      row.className = "filtro-item-linha filtro-item-indentado" + (selecionadas.has(c.id) ? " selecionado" : "")
+      row.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
+      row.onclick = () => toggleContaFiltro(prefixo, c.id)
+      lista.appendChild(row)
+    })
+  })
+  atualizarBtnFiltroConta(prefixo)
+}
+
+function todasContasIds() { return contasCache.map(c => c.id) }
+
+function colapsarContasSeTudoSelecionado(prefixo) {
+  const total = todasContasIds().length
+  if (total > 0 && contasSelecionadas[prefixo].size === total) contasSelecionadas[prefixo].clear()
+}
+
+function toggleGrupoContaFiltro(prefixo, banco) {
+  const idsGrupo = contasCache.filter(c => c.banco === banco).map(c => c.id)
+  const selecionadas = contasSelecionadas[prefixo]
+  const todasJaSelecionadas = idsGrupo.every(id => selecionadas.has(id))
+  if (todasJaSelecionadas) idsGrupo.forEach(id => selecionadas.delete(id))
+  else idsGrupo.forEach(id => selecionadas.add(id))
+  colapsarContasSeTudoSelecionado(prefixo)
+  renderizarFiltroConta(prefixo)
+  aoMudarFiltroConta(prefixo)
+}
+
+function toggleContaFiltro(prefixo, contaId) {
+  const selecionadas = contasSelecionadas[prefixo]
+  if (selecionadas.has(contaId)) selecionadas.delete(contaId)
+  else selecionadas.add(contaId)
+  colapsarContasSeTudoSelecionado(prefixo)
+  renderizarFiltroConta(prefixo)
+  aoMudarFiltroConta(prefixo)
+}
+
+function selecionarTodasContasFiltro(prefixo) {
+  contasSelecionadas[prefixo].clear()
+  renderizarFiltroConta(prefixo)
+  fecharFiltroConta(prefixo)
+  aoMudarFiltroConta(prefixo)
+}
+
+function aoMudarFiltroConta(prefixo) {
+  if (prefixo === "ct") carregarContas()
+  else if (prefixo === "an") carregarAnalise()
+  else carregarMovimentos()
+}
+
+function nomeContaUnica(prefixo) {
+  const id = [...contasSelecionadas[prefixo]][0]
+  const c = contasCache.find(c => c.id === id)
+  return c ? c.nome : "Conta"
+}
+
+function atualizarBtnFiltroConta(prefixo) {
+  const n = contasSelecionadas[prefixo].size
+  const label = document.getElementById(prefixo + "-filtro-conta-label")
+  const badge = document.getElementById(prefixo + "-filtro-conta-badge")
+  if (n > 0) {
+    label.textContent = n === 1 ? nomeContaUnica(prefixo) : "Contas"
+    if (n > 1) { badge.textContent = n; badge.style.display = "inline-flex" } else badge.style.display = "none"
+  } else {
+    label.textContent = "Todas"
+    badge.style.display = "none"
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1826,10 +1935,10 @@ function limparFiltrosMovimentos() {
 // ═══════════════════════════════════════════════════════════
 function fecharTodosOsFiltros() {
   fecharFiltroCat()
-  fecharFiltroTipo("ct")
-  fecharFiltroTipo("an")
-  fecharFiltroDirecao()
   fecharFiltroCategoriaMov()
+  fecharFiltroConta("ct")
+  fecharFiltroConta("an")
+  fecharFiltroConta("mov")
   fecharSeletorContaForm()
   fecharSeletorCategoriaMovForm()
   fecharSeletorTipoMovForm()
@@ -1851,89 +1960,152 @@ function fecharFiltroCat() {
   document.getElementById("filtro-cat-panel").classList.remove("aberto")
   document.getElementById("filtro-cat-btn").classList.remove("ativo")
 }
-function renderizarFiltroCatPanel() {
-  const lista = document.getElementById("filtro-cat-lista")
-  if (!lista) return
-  lista.innerHTML = ""
-
-  const grupos = { entrada: arvoreAnaliseCache.filter(g => g.eh_recebimento), saida: arvoreAnaliseCache.filter(g => !g.eh_recebimento) }
-
-  ;[{ label: "Entradas", grupos: grupos.entrada }, { label: "Saídas", grupos: grupos.saida }].forEach((secao, indiceSecao) => {
-    if (secao.grupos.length === 0) return
-
-    const sep = document.createElement("div")
-    sep.className = "filtro-esfera-label" + (indiceSecao > 0 ? " nova-esfera" : "")
-    sep.textContent = secao.label
-    lista.appendChild(sep)
-
-    secao.grupos.forEach(g => {
-      const catIds = g.categorias.map(c => c.id)
-      const nSelecionadas = catIds.filter(id => categoriasSelecionadas.has(id)).length
-      const grupoCompleto = nSelecionadas === catIds.length
-      const grupoParcial = nSelecionadas > 0 && !grupoCompleto
-
-      const grupoRow = document.createElement("div")
-      grupoRow.className = "filtro-item-linha filtro-grupo-linha" + (grupoCompleto ? " selecionado" : grupoParcial ? " indeterminado" : "")
-      grupoRow.innerHTML = `<span>${g.nome}</span><span class="check">${grupoParcial ? ICONE_INDETERMINADO : ICONE_CHECK}</span>`
-      grupoRow.onclick = () => toggleGrupoCategoriaFiltro(g.id)
-      lista.appendChild(grupoRow)
-
-      g.categorias.forEach(c => {
-        const catRow = document.createElement("div")
-        catRow.className = "filtro-item-linha filtro-item-indentado" + (categoriasSelecionadas.has(c.id) ? " selecionado" : "")
-        catRow.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
-        catRow.onclick = () => toggleCategoriaFiltro(c.id)
-        lista.appendChild(catRow)
-      })
-    })
-  })
-}
 
 function todasCategoriasIdsAnalise() {
   return arvoreAnaliseCache.flatMap(g => g.categorias.map(c => c.id))
 }
 
-function colapsarSeTudoSelecionado() {
-  const total = todasCategoriasIdsAnalise().length
-  if (categoriasSelecionadas.size === total) categoriasSelecionadas.clear()
-}
-
-function toggleGrupoCategoriaFiltro(grupoId) {
-  const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
-  if (!grupo) return
-  const catIds = grupo.categorias.map(c => c.id)
-  const todasJaSelecionadas = catIds.every(id => categoriasSelecionadas.has(id))
-  if (todasJaSelecionadas) catIds.forEach(id => categoriasSelecionadas.delete(id))
-  else catIds.forEach(id => categoriasSelecionadas.add(id))
-  colapsarSeTudoSelecionado()
-  renderizarFiltroCatPanel()
-  atualizarBtnFiltroCat()
-  carregarAnalise()
-}
-
-function toggleCategoriaFiltro(categoriaId) {
-  if (categoriasSelecionadas.has(categoriaId)) categoriasSelecionadas.delete(categoriaId)
-  else categoriasSelecionadas.add(categoriaId)
-  colapsarSeTudoSelecionado()
-  renderizarFiltroCatPanel()
-  atualizarBtnFiltroCat()
-  carregarAnalise()
-}
-
-function selecionarTodasCategoriasFiltro() {
-  categoriasSelecionadas.clear()
-  renderizarFiltroCatPanel()
-  atualizarBtnFiltroCat()
-  fecharFiltroCat()
-  carregarAnalise()
+function nomeCategoriaAnaliseUnica() {
+  const id = [...categoriasSelecionadas][0]
+  for (const g of arvoreAnaliseCache) {
+    const c = g.categorias.find(c => c.id === id)
+    if (c) return c.nome
+  }
+  return "Categoria"
 }
 
 function atualizarBtnFiltroCat() {
   const n = categoriasSelecionadas.size
   const badge = document.getElementById("filtro-cat-badge")
   const label = document.getElementById("filtro-cat-label")
-  if (n > 0) { badge.textContent = n; badge.style.display = "inline-flex"; label.textContent = "Categorias" }
-  else        { badge.style.display = "none"; label.textContent = "Todas" }
+  if (n > 0) {
+    label.textContent = n === 1 ? nomeCategoriaAnaliseUnica() : "Categorias"
+    if (n > 1) { badge.textContent = n; badge.style.display = "inline-flex" } else badge.style.display = "none"
+  } else {
+    label.textContent = "Todas"
+    badge.style.display = "none"
+  }
+}
+
+function todasCategoriaIdsEsfera(ehRecebimento) {
+  return arvoreAnaliseCache.filter(g => g.eh_recebimento === ehRecebimento).flatMap(g => g.categorias.map(c => c.id))
+}
+
+function construirArvoreFiltrada(termo) {
+  const t = (termo || "").trim().toLowerCase()
+  const esferas = [{ label: "Entradas", eh: true }, { label: "Saídas", eh: false }]
+  const resultado = []
+  esferas.forEach(esfera => {
+    const esferaBate = !t || esfera.label.toLowerCase().includes(t)
+    const grupos = []
+    arvoreAnaliseCache.filter(g => g.eh_recebimento === esfera.eh).forEach(g => {
+      const grupoBate = esferaBate || g.nome.toLowerCase().includes(t)
+      const categorias = grupoBate ? g.categorias : g.categorias.filter(c => c.nome.toLowerCase().includes(t))
+      if (!t || grupoBate || categorias.length > 0) grupos.push({ ...g, categorias })
+    })
+    if (!t || esferaBate || grupos.length > 0) resultado.push({ ...esfera, grupos })
+  })
+  return resultado
+}
+
+function getSetCategoriaFiltro(espaco) {
+  return espaco === "an" ? categoriasSelecionadas : categoriasMovSelecionadas
+}
+
+function renderizarFiltroCategoriaEspaco(espaco) {
+  const listaId = espaco === "an" ? "filtro-cat-lista" : "mov-filtro-categoria-lista"
+  const pesquisaId = espaco === "an" ? "filtro-cat-pesquisa" : "mov-filtro-categoria-pesquisa"
+  const lista = document.getElementById(listaId)
+  if (!lista) return
+  const selecionadas = getSetCategoriaFiltro(espaco)
+  const inputPesquisa = document.getElementById(pesquisaId)
+  const termo = inputPesquisa ? inputPesquisa.value : ""
+
+  lista.innerHTML = ""
+  const arvore = construirArvoreFiltrada(termo)
+  arvore.forEach((esfera, indiceEsfera) => {
+    const idsEsfera = todasCategoriaIdsEsfera(esfera.eh)
+    const nSelEsfera = idsEsfera.filter(id => selecionadas.has(id)).length
+    const esferaCompleta = idsEsfera.length > 0 && nSelEsfera === idsEsfera.length
+    const esferaParcial = nSelEsfera > 0 && !esferaCompleta
+
+    const esferaRow = document.createElement("div")
+    esferaRow.className = "filtro-item-linha filtro-esfera-linha" + (indiceEsfera > 0 ? " nova-esfera" : "") + (esferaCompleta ? " selecionado" : esferaParcial ? " indeterminado" : "")
+    esferaRow.innerHTML = `<span>${esfera.label}</span><span class="check">${esferaParcial ? ICONE_INDETERMINADO : ICONE_CHECK}</span>`
+    esferaRow.onclick = () => toggleEsferaCategoriaFiltro(espaco, esfera.eh)
+    lista.appendChild(esferaRow)
+
+    esfera.grupos.forEach(gFiltrado => {
+      const gOriginal = arvoreAnaliseCache.find(x => x.id === gFiltrado.id)
+      const idsGrupo = gOriginal.categorias.map(c => c.id)
+      const nSelGrupo = idsGrupo.filter(id => selecionadas.has(id)).length
+      const grupoCompleto = idsGrupo.length > 0 && nSelGrupo === idsGrupo.length
+      const grupoParcial = nSelGrupo > 0 && !grupoCompleto
+
+      const grupoRow = document.createElement("div")
+      grupoRow.className = "filtro-item-linha filtro-grupo-linha" + (grupoCompleto ? " selecionado" : grupoParcial ? " indeterminado" : "")
+      grupoRow.innerHTML = `<span>${gFiltrado.nome}</span><span class="check">${grupoParcial ? ICONE_INDETERMINADO : ICONE_CHECK}</span>`
+      grupoRow.onclick = () => toggleGrupoCategoriaFiltroArvore(espaco, gFiltrado.id)
+      lista.appendChild(grupoRow)
+
+      gFiltrado.categorias.forEach(c => {
+        const catRow = document.createElement("div")
+        catRow.className = "filtro-item-linha filtro-item-indentado" + (selecionadas.has(c.id) ? " selecionado" : "")
+        catRow.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
+        catRow.onclick = () => toggleCategoriaFiltroArvore(espaco, c.id)
+        lista.appendChild(catRow)
+      })
+    })
+  })
+
+  if (espaco === "an") atualizarBtnFiltroCat()
+  else atualizarBtnFiltroCategoriaMov()
+}
+
+function colapsarCategoriaFiltroSeTudoSelecionado(espaco) {
+  const selecionadas = getSetCategoriaFiltro(espaco)
+  const total = todasCategoriasIdsAnalise().length
+  if (total > 0 && selecionadas.size === total) selecionadas.clear()
+}
+
+function toggleEsferaCategoriaFiltro(espaco, ehRecebimento) {
+  const selecionadas = getSetCategoriaFiltro(espaco)
+  const ids = todasCategoriaIdsEsfera(ehRecebimento)
+  const todasJaSelecionadas = ids.every(id => selecionadas.has(id))
+  if (todasJaSelecionadas) ids.forEach(id => selecionadas.delete(id))
+  else ids.forEach(id => selecionadas.add(id))
+  colapsarCategoriaFiltroSeTudoSelecionado(espaco)
+  renderizarFiltroCategoriaEspaco(espaco)
+  if (espaco === "an") carregarAnalise(); else carregarMovimentos()
+}
+
+function toggleGrupoCategoriaFiltroArvore(espaco, grupoId) {
+  const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
+  if (!grupo) return
+  const selecionadas = getSetCategoriaFiltro(espaco)
+  const ids = grupo.categorias.map(c => c.id)
+  const todasJaSelecionadas = ids.every(id => selecionadas.has(id))
+  if (todasJaSelecionadas) ids.forEach(id => selecionadas.delete(id))
+  else ids.forEach(id => selecionadas.add(id))
+  colapsarCategoriaFiltroSeTudoSelecionado(espaco)
+  renderizarFiltroCategoriaEspaco(espaco)
+  if (espaco === "an") carregarAnalise(); else carregarMovimentos()
+}
+
+function toggleCategoriaFiltroArvore(espaco, categoriaId) {
+  const selecionadas = getSetCategoriaFiltro(espaco)
+  if (selecionadas.has(categoriaId)) selecionadas.delete(categoriaId)
+  else selecionadas.add(categoriaId)
+  colapsarCategoriaFiltroSeTudoSelecionado(espaco)
+  renderizarFiltroCategoriaEspaco(espaco)
+  if (espaco === "an") carregarAnalise(); else carregarMovimentos()
+}
+
+function selecionarTodasCategoriaFiltroArvore(espaco) {
+  getSetCategoriaFiltro(espaco).clear()
+  renderizarFiltroCategoriaEspaco(espaco)
+  if (espaco === "an") { atualizarBtnFiltroCat(); fecharFiltroCat(); carregarAnalise() }
+  else { atualizarBtnFiltroCategoriaMov(); fecharFiltroCategoriaMov(); carregarMovimentos() }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1953,97 +2125,6 @@ function toggleFiltroCategoriaMov(e) {
 function fecharFiltroCategoriaMov() {
   document.getElementById("mov-filtro-categoria-panel").classList.remove("aberto")
   document.getElementById("mov-filtro-categoria-btn").classList.remove("ativo")
-}
-
-function gruposCategoriaMovDisponiveis() {
-  const direcao = direcaoAtualStr()
-  if (direcao === "in") return arvoreAnaliseCache.filter(g => g.eh_recebimento)
-  if (direcao === "out") return arvoreAnaliseCache.filter(g => !g.eh_recebimento)
-  return arvoreAnaliseCache
-}
-
-function todasCategoriaMovIds() {
-  return gruposCategoriaMovDisponiveis().flatMap(g => g.categorias.map(c => c.id))
-}
-
-function desenharGrupoCategoriaMov(g, lista) {
-  const catIds = g.categorias.map(c => c.id)
-  const nSelecionadas = catIds.filter(id => categoriasMovSelecionadas.has(id)).length
-  const grupoCompleto = catIds.length > 0 && nSelecionadas === catIds.length
-  const grupoParcial = nSelecionadas > 0 && !grupoCompleto
-
-  const grupoRow = document.createElement("div")
-  grupoRow.className = "filtro-item-linha filtro-grupo-linha" + (grupoCompleto ? " selecionado" : grupoParcial ? " indeterminado" : "")
-  grupoRow.innerHTML = `<span>${g.nome}</span><span class="check">${grupoParcial ? ICONE_INDETERMINADO : ICONE_CHECK}</span>`
-  grupoRow.onclick = () => toggleGrupoCategoriaMov(g.id)
-  lista.appendChild(grupoRow)
-
-  g.categorias.forEach(c => {
-    const catRow = document.createElement("div")
-    catRow.className = "filtro-item-linha filtro-item-indentado" + (categoriasMovSelecionadas.has(c.id) ? " selecionado" : "")
-    catRow.innerHTML = `<span>${c.nome}</span><span class="check">${ICONE_CHECK}</span>`
-    catRow.onclick = () => toggleCategoriaMov(c.id)
-    lista.appendChild(catRow)
-  })
-}
-
-function renderizarFiltroCategoriaMov() {
-  const lista = document.getElementById("mov-filtro-categoria-lista")
-  if (!lista) return
-  lista.innerHTML = ""
-  const direcao = direcaoAtualStr()
-  const grupos = gruposCategoriaMovDisponiveis()
-
-  if (!direcao) {
-    const secoes = [
-      { label: "Entradas", grupos: grupos.filter(g => g.eh_recebimento) },
-      { label: "Saídas", grupos: grupos.filter(g => !g.eh_recebimento) },
-    ]
-    secoes.forEach((secao, indiceSecao) => {
-      if (secao.grupos.length === 0) return
-      const sep = document.createElement("div")
-      sep.className = "filtro-esfera-label" + (indiceSecao > 0 ? " nova-esfera" : "")
-      sep.textContent = secao.label
-      lista.appendChild(sep)
-      secao.grupos.forEach(g => desenharGrupoCategoriaMov(g, lista))
-    })
-  } else {
-    grupos.forEach(g => desenharGrupoCategoriaMov(g, lista))
-  }
-
-  atualizarBtnFiltroCategoriaMov()
-}
-
-function colapsarCategoriaMovSeTudoSelecionado() {
-  const total = todasCategoriaMovIds().length
-  if (total > 0 && categoriasMovSelecionadas.size === total) categoriasMovSelecionadas.clear()
-}
-
-function toggleGrupoCategoriaMov(grupoId) {
-  const grupo = arvoreAnaliseCache.find(g => g.id === grupoId)
-  if (!grupo) return
-  const catIds = grupo.categorias.map(c => c.id)
-  const todasJaSelecionadas = catIds.every(id => categoriasMovSelecionadas.has(id))
-  if (todasJaSelecionadas) catIds.forEach(id => categoriasMovSelecionadas.delete(id))
-  else catIds.forEach(id => categoriasMovSelecionadas.add(id))
-  colapsarCategoriaMovSeTudoSelecionado()
-  renderizarFiltroCategoriaMov()
-  carregarMovimentos()
-}
-
-function toggleCategoriaMov(categoriaId) {
-  if (categoriasMovSelecionadas.has(categoriaId)) categoriasMovSelecionadas.delete(categoriaId)
-  else categoriasMovSelecionadas.add(categoriaId)
-  colapsarCategoriaMovSeTudoSelecionado()
-  renderizarFiltroCategoriaMov()
-  carregarMovimentos()
-}
-
-function selecionarTodasCategoriasMov() {
-  categoriasMovSelecionadas.clear()
-  renderizarFiltroCategoriaMov()
-  fecharFiltroCategoriaMov()
-  carregarMovimentos()
 }
 
 function nomeCategoriaMovUnica() {
@@ -2068,163 +2149,24 @@ function atualizarBtnFiltroCategoriaMov() {
   }
 }
 
-// ─── Filtro de Tipo (Contas + Análise) ─────────────────────
-function opcoesTipoDisponiveis() {
-  return [...new Set(contasCache.map(c => c.tipo))].sort()
-}
-
-function toggleFiltroTipo(prefixo, e) {
-  e.stopPropagation()
-  const painel = document.getElementById(prefixo + "-filtro-tipo-panel")
-  const estavaAberto = painel.classList.contains("aberto")
-  fecharTodosOsFiltros()
-  const btn = document.getElementById(prefixo + "-filtro-tipo-btn")
-  const abrir = !estavaAberto
-  painel.classList.toggle("aberto", abrir)
-  btn.classList.toggle("ativo", abrir)
-  if (abrir) painel.scrollTop = 0
-}
-function fecharFiltroTipo(prefixo) {
-  document.getElementById(prefixo + "-filtro-tipo-panel").classList.remove("aberto")
-  document.getElementById(prefixo + "-filtro-tipo-btn").classList.remove("ativo")
-}
-
-function renderizarFiltroTipo(prefixo) {
-  const lista = document.getElementById(prefixo + "-filtro-tipo-lista")
-  if (!lista) return
-  const selecionados = filtroTiposSelecionados[prefixo]
-  const opcoes = opcoesTipoDisponiveis()
-  lista.innerHTML = ""
-  opcoes.forEach(tipo => {
-    const linha = document.createElement("div")
-    linha.className = "filtro-item-linha" + (selecionados.has(tipo) ? " selecionado" : "")
-    linha.innerHTML = `<span>${tipo}</span><span class="check">${ICONE_CHECK}</span>`
-    linha.onclick = () => toggleTipoItem(prefixo, tipo)
-    lista.appendChild(linha)
-  })
-  atualizarBtnFiltroTipo(prefixo)
-}
-
-function atualizarBtnFiltroTipo(prefixo) {
-  const selecionados = filtroTiposSelecionados[prefixo]
-  const label = document.getElementById(prefixo + "-filtro-tipo-label")
-  const badge = document.getElementById(prefixo + "-filtro-tipo-badge")
-  if (selecionados.size > 0) {
-    label.textContent = selecionados.size === 1 ? [...selecionados][0] : "Tipos"
-    if (selecionados.size > 1) { badge.textContent = selecionados.size; badge.style.display = "inline-flex" }
-    else badge.style.display = "none"
-  } else {
-    label.textContent = "Todos"
-    badge.style.display = "none"
-  }
-}
-
-function toggleTipoItem(prefixo, tipo) {
-  const selecionados = filtroTiposSelecionados[prefixo]
-  if (selecionados.has(tipo)) selecionados.delete(tipo)
-  else selecionados.add(tipo)
-  const opcoes = opcoesTipoDisponiveis()
-  if (selecionados.size === opcoes.length) selecionados.clear()
-  renderizarFiltroTipo(prefixo)
-  atualizarFiltroContasPorTipo(prefixo)
-  if (prefixo === "ct") carregarContas()
-  else carregarAnalise()
-}
-
-function selecionarTodosOsTipos(prefixo) {
-  filtroTiposSelecionados[prefixo].clear()
-  renderizarFiltroTipo(prefixo)
-  fecharFiltroTipo(prefixo)
-  atualizarFiltroContasPorTipo(prefixo)
-  if (prefixo === "ct") carregarContas()
-  else carregarAnalise()
-}
-
-function atualizarFiltroContasPorTipo(prefixo) {
-  const sel = document.getElementById(prefixo + "-filtro-conta")
-  sel.innerHTML = '<option value="">Todas</option>' + construirOptionsContas(sel.value, filtroTiposSelecionados[prefixo])
-}
-
-// ─── Filtro de Direção (Movimentos) ────────────────────────
-function opcoesDirecao() { return ["in", "out"] }
-const ROTULOS_DIRECAO = { in: "Cash-In", out: "Cash-Out" }
-
-function toggleFiltroDirecao(e) {
-  e.stopPropagation()
-  const painel = document.getElementById("mov-filtro-direcao-panel")
-  const estavaAberto = painel.classList.contains("aberto")
-  fecharTodosOsFiltros()
-  const btn = document.getElementById("mov-filtro-direcao-btn")
-  const abrir = !estavaAberto
-  painel.classList.toggle("aberto", abrir)
-  btn.classList.toggle("ativo", abrir)
-  if (abrir) painel.scrollTop = 0
-}
-function fecharFiltroDirecao() {
-  document.getElementById("mov-filtro-direcao-panel").classList.remove("aberto")
-  document.getElementById("mov-filtro-direcao-btn").classList.remove("ativo")
-}
-
-function renderizarFiltroDirecao() {
-  const lista = document.getElementById("mov-filtro-direcao-lista")
-  if (!lista) return
-  lista.innerHTML = ""
-  opcoesDirecao().forEach(valor => {
-    const linha = document.createElement("div")
-    linha.className = "filtro-item-linha" + (filtroDirecoesSelecionadas.has(valor) ? " selecionado" : "")
-    linha.innerHTML = `<span>${ROTULOS_DIRECAO[valor]}</span><span class="check">${ICONE_CHECK}</span>`
-    linha.onclick = () => toggleDirecaoItem(valor)
-    lista.appendChild(linha)
-  })
-  atualizarBtnFiltroDirecao()
-}
-
-function atualizarBtnFiltroDirecao() {
-  const label = document.getElementById("mov-filtro-direcao-label")
-  if (filtroDirecoesSelecionadas.size === 1) label.textContent = ROTULOS_DIRECAO[[...filtroDirecoesSelecionadas][0]]
-  else label.textContent = "Todas"
-}
-
-function direcaoAtualStr() {
-  return filtroDirecoesSelecionadas.size === 1 ? [...filtroDirecoesSelecionadas][0] : ""
-}
-
-function toggleDirecaoItem(valor) {
-  if (filtroDirecoesSelecionadas.has(valor)) filtroDirecoesSelecionadas.delete(valor)
-  else filtroDirecoesSelecionadas.add(valor)
-  if (filtroDirecoesSelecionadas.size === opcoesDirecao().length) filtroDirecoesSelecionadas.clear()
-  renderizarFiltroDirecao()
-  atualizarFiltroCategoriasMovimentos()
-}
-
-function selecionarTodasDirecoes() {
-  filtroDirecoesSelecionadas.clear()
-  renderizarFiltroDirecao()
-  fecharFiltroDirecao()
-  atualizarFiltroCategoriasMovimentos()
-}
-
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: CONTAS
 // ═══════════════════════════════════════════════════════════
 async function carregarContas() {
   document.getElementById("tabela-contas").innerHTML = linhasEsqueleto(6, 3)
-  const contaSel = document.getElementById("ct-filtro-conta").value
-  const tiposSel = filtroTiposSelecionados.ct
-  guardarFiltrosPagina("contas", { conta: contaSel, tipos: [...tiposSel], dataDe: ctDataDe, dataAte: ctDataAte })
+  const contasSel = contasSelecionadas.ct
+  guardarFiltrosPagina("contas", { contas: [...contasSel], dataDe: ctDataDe, dataAte: ctDataAte })
   atualizarVisibilidadeLimparContas()
   contasCache = await api("/contas")
-  renderizarFiltroTipo("ct"); atualizarFiltrosDeConta()
+  renderizarFiltroConta("ct")
   const params = new URLSearchParams()
-  if (contaSel) params.set("conta_id", contaSel)
-  if (tiposSel.size > 0) params.set("tipo", [...tiposSel].join(","))
+  if (contasSel.size > 0) params.set("conta_id", [...contasSel].join(","))
   if (ctDataDe)  params.set("data_de", ctDataDe)
   if (ctDataAte) params.set("data_ate", ctDataAte)
   const qs = params.toString() ? "?" + params.toString() : ""
   const saldoDiario = await api("/stats/saldo-diario" + qs)
   let contasFiltradas = contasCache
-  if (contaSel) contasFiltradas = contasFiltradas.filter(c => c.id === contaSel)
-  if (tiposSel.size > 0) contasFiltradas = contasFiltradas.filter(c => tiposSel.has(c.tipo))
+  if (contasSel.size > 0) contasFiltradas = contasFiltradas.filter(c => contasSel.has(c.id))
   renderizarCardSaldoTotal(contasFiltradas)
   renderizarGraficoSaldo(saldoDiario, moedaPredominante(contasFiltradas))
   contasTabelaCache = contasFiltradas
@@ -2382,11 +2324,9 @@ function trocarAbaAnalise(aba) {
 }
 
 function construirParamsAnalise() {
-  const conta = document.getElementById("an-filtro-conta").value
-  const tipos = filtroTiposSelecionados.an
+  const contasSel = contasSelecionadas.an
   const params = new URLSearchParams()
-  if (conta)   params.set("conta_id", conta)
-  if (tipos.size > 0) params.set("tipo", [...tipos].join(","))
+  if (contasSel.size > 0) params.set("conta_id", [...contasSel].join(","))
   if (anDataDe)  params.set("data_de", anDataDe)
   if (anDataAte) params.set("data_ate", anDataAte)
   if (categoriasSelecionadas.size > 0) {
@@ -2402,15 +2342,13 @@ async function carregarAnalise() {
   document.getElementById("tabela-recorrentes").innerHTML = linhasEsqueleto(5, 3)
   document.getElementById("lista-grupos").innerHTML = `<div class="estado-vazio"><div class="subtitulo">A carregar...</div></div>`
 
-  const conta = document.getElementById("an-filtro-conta").value
-  const tipos = filtroTiposSelecionados.an
+  const contasSel = contasSelecionadas.an
 
   atualizarVisibilidadeLimparAnalise()
-  guardarFiltrosPagina("analise", { conta, tipos: [...tipos], dataDe: anDataDe, dataAte: anDataAte })
+  guardarFiltrosPagina("analise", { contas: [...contasSel], categorias: [...categoriasSelecionadas], dataDe: anDataDe, dataAte: anDataAte })
 
   let contasConsideradas = contasCache
-  if (conta) contasConsideradas = contasConsideradas.filter(c => c.id === conta)
-  if (tipos.size > 0) contasConsideradas = contasConsideradas.filter(c => tipos.has(c.tipo))
+  if (contasSel.size > 0) contasConsideradas = contasConsideradas.filter(c => contasSel.has(c.id))
   moedaAnaliseGlobal = moedaPredominante(contasConsideradas)
 
   const qs = construirParamsAnalise().toString()
@@ -2441,7 +2379,7 @@ function renderizarResumoAnalise(mensal) {
 }
 
 function renderizarGraficoMensal(mensal) {
-  mostrarGraficoOuVazio("grafico-mensal", mensal.length > 0, "Sem movimentos neste período.", () => {
+  mostrarGraficoOuVazio("grafico-mensal", mensal.length > 0, "Sem movimentos para analisar.", () => {
     destruirGrafico("mensal")
     graficos.mensal = new Chart(document.getElementById("grafico-mensal"), {
       type: "bar",
@@ -2473,7 +2411,7 @@ function renderizarGrupos() {
   const filtrados = gruposCache.filter(g => tipoAtual === "in" ? g.eh_recebimento : !g.eh_recebimento)
   const el = document.getElementById("lista-grupos")
   if (filtrados.length === 0) {
-    el.innerHTML = `<div class="estado-vazio"><div class="titulo">Sem ${tipoAtual === "in" ? "entradas" : "saídas"} neste período</div><div class="subtitulo">Experimenta alargar o período selecionado.</div></div>`
+    el.innerHTML = `<div class="estado-vazio"><div class="subtitulo">Sem ${tipoAtual === "in" ? "entradas" : "saídas"} para analisar.</div></div>`
     document.getElementById("total-tipo").textContent = fmt(0, moedaAnaliseGlobal)
     document.getElementById("label-tipo").textContent = tipoAtual === "in" ? "Entradas" : "Saídas"
     fecharDrillDown(); return
@@ -2640,13 +2578,12 @@ function renderizarTabelaRecorrentes() {
 // ═══════════════════════════════════════════════════════════
 async function carregarMovimentos() {
   document.getElementById("tabela-movimentos").innerHTML = linhasEsqueleto(6, 4)
-  const conta = document.getElementById("filtro-conta").value, direcao = direcaoAtualStr()
+  const contasSel = contasSelecionadas.mov
   const categorias = categoriasMovSelecionadas
   atualizarVisibilidadeLimparMovimentos()
-  guardarFiltrosPagina("movimentos", { conta, direcoes: [...filtroDirecoesSelecionadas], categorias: [...categorias], dataDe: movDataDe, dataAte: movDataAte })
+  guardarFiltrosPagina("movimentos", { contas: [...contasSel], categorias: [...categorias], dataDe: movDataDe, dataAte: movDataAte })
   const params = new URLSearchParams()
-  if (conta)     params.set("conta_id", conta)
-  if (direcao)   params.set("direcao", direcao)
+  if (contasSel.size > 0) params.set("conta_id", [...contasSel].join(","))
   if (categorias.size > 0) params.set("categoria_id", [...categorias].join(","))
   if (movDataDe)  params.set("data_de", movDataDe)
   if (movDataAte) params.set("data_ate", movDataAte)
@@ -2825,9 +2762,8 @@ async function recarregarCategoriasGlobais() {
   arvoreAnaliseCache = await api("/categorias/arvore")
   categoriasSelecionadas.clear()
   categoriasMovSelecionadas.clear()
-  renderizarFiltroCatPanel()
-  atualizarBtnFiltroCat()
-  renderizarFiltroCategoriaMov()
+  renderizarFiltroCategoriaEspaco("an")
+  renderizarFiltroCategoriaEspaco("mov")
 }
 async function aposMudarCategorias() { await carregarArvoreCategorias(); await recarregarCategoriasGlobais() }
 async function carregarArvoreCategorias() { arvoreCategoriasCache = await api("/categorias/arvore"); renderizarArvoreCategorias() }
@@ -2944,15 +2880,6 @@ document.addEventListener("click", e => {
   const panel = document.getElementById("filtro-cat-panel")
   if (!path.includes(btn) && !path.includes(panel)) fecharFiltroCat()
 
-  const ctTipoBtn = document.getElementById("ct-filtro-tipo-btn"), ctTipoPanel = document.getElementById("ct-filtro-tipo-panel")
-  if (ctTipoBtn && !path.includes(ctTipoBtn) && !path.includes(ctTipoPanel)) fecharFiltroTipo("ct")
-
-  const anTipoBtn = document.getElementById("an-filtro-tipo-btn"), anTipoPanel = document.getElementById("an-filtro-tipo-panel")
-  if (anTipoBtn && !path.includes(anTipoBtn) && !path.includes(anTipoPanel)) fecharFiltroTipo("an")
-
-  const direcaoBtn = document.getElementById("mov-filtro-direcao-btn"), direcaoPanel = document.getElementById("mov-filtro-direcao-panel")
-  if (direcaoBtn && !path.includes(direcaoBtn) && !path.includes(direcaoPanel)) fecharFiltroDirecao()
-
   const movCatBtn = document.getElementById("mov-filtro-categoria-btn"), movCatPanel = document.getElementById("mov-filtro-categoria-panel")
   if (movCatBtn && !path.includes(movCatBtn) && !path.includes(movCatPanel)) fecharFiltroCategoriaMov()
 
@@ -2964,6 +2891,15 @@ document.addEventListener("click", e => {
 
   const movTipoPanel = document.getElementById("mov-tipo-panel"), movTipoInput = document.getElementById("mov-tipo-display")
   if (movTipoPanel && !path.includes(movTipoPanel) && !path.includes(movTipoInput)) fecharSeletorTipoMovForm()
+
+  const ctContaBtn = document.getElementById("ct-filtro-conta-btn"), ctContaPanel = document.getElementById("ct-filtro-conta-panel")
+  if (ctContaBtn && !path.includes(ctContaBtn) && !path.includes(ctContaPanel)) fecharFiltroConta("ct")
+
+  const anContaBtn = document.getElementById("an-filtro-conta-btn"), anContaPanel = document.getElementById("an-filtro-conta-panel")
+  if (anContaBtn && !path.includes(anContaBtn) && !path.includes(anContaPanel)) fecharFiltroConta("an")
+
+  const movFiltroContaBtn = document.getElementById("mov-filtro-conta-btn"), movFiltroContaPanel = document.getElementById("mov-filtro-conta-panel")
+  if (movFiltroContaBtn && !path.includes(movFiltroContaBtn) && !path.includes(movFiltroContaPanel)) fecharFiltroConta("mov")
 })
 
 if (!verificarTokenReset() && TOKEN) iniciarApp()

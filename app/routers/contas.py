@@ -12,6 +12,10 @@ from app.services.reconciliacoes import atualizar_saldo_atual, primeiro_moviment
 router = APIRouter()
 
 
+def _fmt_data_pt(data_iso: str) -> str:
+    ano, mes, dia = data_iso.split("-")
+    return f"{dia}/{mes}/{ano}"
+
 # ─── contas ───────────────────────────────────────────────────────────────────
 
 @router.get("/contas")
@@ -181,7 +185,7 @@ def editar_ajuste_saldo(ajuste_id: int, dados: AjusteSaldoInput, utilizador: dic
         if primeiro_mov and nova_mais_antiga > primeiro_mov:
             raise HTTPException(
                 status_code=400,
-                detail=f"Esta conta tem movimentos a partir de {primeiro_mov}. A reconciliação mais antiga não pode ficar depois dessa data."
+                detail=f"Esta conta tem movimentos a partir de {_fmt_data_pt(primeiro_mov)}. A reconciliação mais antiga não pode ficar depois dessa data."
             )
 
         try:
@@ -226,7 +230,7 @@ def eliminar_ajuste_saldo(ajuste_id: int, utilizador: dict = Depends(utilizador_
         if primeiro_mov and nova_mais_antiga and nova_mais_antiga > primeiro_mov:
             raise HTTPException(
                 status_code=400,
-                detail=f"Não é possível eliminar: esta conta tem movimentos a partir de {primeiro_mov}, e a reconciliação mais antiga que restaria é de {nova_mais_antiga}."
+                detail=f"Não é possível eliminar: esta conta tem movimentos a partir de {_fmt_data_pt(primeiro_mov)}, e a reconciliação mais antiga que restaria é de {_fmt_data_pt(nova_mais_antiga)}."
             )
 
         cursor.execute("DELETE FROM ajustes_saldo WHERE id=%s", (ajuste_id,))

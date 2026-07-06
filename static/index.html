@@ -217,6 +217,7 @@
       border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.10);
       z-index: 60; min-width: 260px; max-height: 360px; overflow-y: auto; padding: 0rem 0;
     }
+    .campo-seletor .filtro-cat-panel { width: 100%; min-width: 0; }
     .filtro-cat-panel.aberto { display: block; }
     .filtro-cat-acoes {
       display: flex; gap: 0.75rem; padding: 0.5rem 0.75rem 0.4rem;
@@ -426,7 +427,7 @@
 
     .filtro-item-linha {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.45rem 0.9rem; font-size: 0.85rem; color: var(--color-text);
+      padding: 0.45rem 0.9rem; font-size: 0.875rem; color: var(--color-text);
       cursor: pointer;
     }
     .filtro-item-linha:hover { background: var(--color-surface); }
@@ -609,8 +610,8 @@
           <thead><tr id="cabecalho-contas">
             <th onclick="ordenarContas('nome')" data-campo="nome" style="cursor:pointer">Nome <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('banco')" data-campo="banco" style="cursor:pointer">Banco <span class="icone-ordenacao"></span></th>
-            <th onclick="ordenarContas('tipo')" data-campo="tipo" style="cursor:pointer">Tipo <span class="icone-ordenacao"></span></th>
-            <th onclick="ordenarContas('iban')" data-campo="iban" style="cursor:pointer">Identificador <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('tipo')" data-campo="tipo" style="cursor:pointer">Tipo de Conta <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('iban')" data-campo="iban" style="cursor:pointer">IBAN <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('saldo')" data-campo="saldo" style="text-align:right;cursor:pointer">Saldo <span class="icone-ordenacao"></span></th>
             <th></th>
           </tr></thead>
@@ -936,30 +937,29 @@
   <div class="modal">
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
     <input type="hidden" id="conta-id">
-    <div class="field"><label>Nome da Conta</label><input type="text" id="conta-nome" required></div>
+    <div class="field"><label>Nome da Conta</label><input type="text" id="conta-nome"></div>
     <div class="field campo-sugestoes">
-      <label>Banco</label>
-      <input type="text" id="conta-banco" autocomplete="off" required>
-      <div class="sugestoes-lista" id="conta-banco-sugestoes"></div>
+      <label>Banco <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
+      <input type="text" id="conta-banco" autocomplete="off">
     </div>
     <div class="field campo-sugestoes">
-      <label>Tipo</label>
-      <input type="text" id="conta-tipo" autocomplete="off" required>
-      <div class="sugestoes-lista" id="conta-tipo-sugestoes"></div>
+      <label>Tipo de Conta <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
+      <input type="text" id="conta-tipo" autocomplete="off">
     </div>
     <div class="field">
-      <label>Identificador <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
-      <input type="text" id="conta-iban" placeholder="IBAN, Número de Conta, ou Outro">
+      <label>IBAN <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
+      <input type="text" id="conta-iban">
     </div>
     <div class="field">
-      <label>Moeda</label>
-      <select id="conta-moeda">
-        <option value="EUR">EUR (€)</option>
-        <option value="USD">USD ($)</option>
-        <option value="GBP">GBP (£)</option>
-        <option value="CHF">CHF</option>
-        <option value="BRL">BRL (R$)</option>
-      </select>
+      <div class="field campo-seletor">
+        <label>Moeda</label>
+        <input type="text" id="conta-moeda-display" readonly required onclick="toggleSeletorMoeda(event)">
+        <input type="hidden" id="conta-moeda">
+        <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+        <div class="filtro-cat-panel" id="conta-moeda-panel">
+          <div id="conta-moeda-lista"></div>
+        </div>
+</div>
     </div>
     <div class="field">
       <label id="conta-saldo-label">Saldo Inicial</label>
@@ -1223,7 +1223,8 @@ function mostrarToast(mensagem, tipo = "info") {
   const icone = tipo === "sucesso" ? ICONE_TOAST_SUCESSO : tipo === "erro" ? ICONE_TOAST_ERRO : ""
   toast.innerHTML = `${icone ? `<span class="icone">${icone}</span>` : ""}<span class="texto">${mensagem}</span><button class="fechar" onclick="this.parentElement.remove()" aria-label="Fechar">✕</button>`
   container.appendChild(toast)
-  setTimeout(() => toast.remove(), 4000)
+  const duracao = Math.min(9000, Math.max(4000, mensagem.length * 100))
+  setTimeout(() => toast.remove(), duracao)
 }
 
 function confirmarAcao(mensagem, { textoConfirmar = "Confirmar", perigo = false } = {}) {
@@ -1581,35 +1582,24 @@ function alternarVisibilidadePassword(idCampo, botao) {
 // HELPERS: OPÇÕES DE CONTA E CATEGORIA
 // ═══════════════════════════════════════════════════════════
 
-function opcoesBancos() { return [...new Set([...BANCOS_PT_COMUNS, ...contasCache.map(c => c.banco)])].sort() }
-function opcoesTipos()  { return [...new Set([...TIPOS_CONTA_COMUNS, ...contasCache.map(c => c.tipo)])].sort() }
+function opcoesBancos() { return [...new Set([...BANCOS_PT_COMUNS, ...contasCache.map(c => c.banco).filter(b => b && b.trim())])].sort() }
+function opcoesTipos() { return [...new Set([...TIPOS_CONTA_COMUNS, ...contasCache.map(c => c.tipo).filter(t => t && t.trim())])].sort() }
 
-function ligarCampoComSugestoes(idInput, getOpcoes) {
+function ligarCampoComSugestoesInline(idInput, getOpcoes) {
   const input = document.getElementById(idInput)
-  const lista = document.getElementById(idInput + "-sugestoes")
-  let indiceAtivo = -1
-  function renderizar() {
-    const termo = input.value.trim().toLowerCase()
-    const opcoes = getOpcoes().filter(o => o.toLowerCase().includes(termo))
-    indiceAtivo = -1
-    lista.innerHTML = opcoes.length ? opcoes.map(o => `<div class="item">${o}</div>`).join("") : `<div class="vazio">Sem sugestões — o texto escrito será usado.</div>`
-    lista.classList.add("aberta")
-  }
-  function esconder() { lista.classList.remove("aberta") }
-  function selecionar(texto) { input.value = texto; esconder() }
-  input.addEventListener("focus", renderizar)
-  input.addEventListener("input", renderizar)
-  input.addEventListener("keydown", (e) => {
-    const itens = lista.querySelectorAll(".item")
-    if (e.key === "ArrowDown") { e.preventDefault(); indiceAtivo = Math.min(indiceAtivo + 1, itens.length - 1) }
-    else if (e.key === "ArrowUp") { e.preventDefault(); indiceAtivo = Math.max(indiceAtivo - 1, 0) }
-    else if (e.key === "Enter") { if (indiceAtivo >= 0 && itens[indiceAtivo]) { e.preventDefault(); selecionar(itens[indiceAtivo].textContent) }; return }
-    else if (e.key === "Escape") { esconder(); return }
-    else return
-    itens.forEach((el, i) => el.classList.toggle("destacado", i === indiceAtivo))
+  input.addEventListener("input", (e) => {
+    if (e.inputType && e.inputType.startsWith("delete")) return
+    const valor = input.value
+    if (!valor) return
+    const opcoes = getOpcoes()
+    const match = opcoes.find(o => o.toLowerCase().startsWith(valor.toLowerCase()) && o.toLowerCase() !== valor.toLowerCase())
+    if (!match) return
+    input.value = valor + match.slice(valor.length)
+    input.setSelectionRange(valor.length, input.value.length)
   })
-  lista.addEventListener("mousedown", (e) => { const item = e.target.closest(".item"); if (item) selecionar(item.textContent) })
-  document.addEventListener("click", (e) => { if (e.target !== input && !lista.contains(e.target)) esconder() })
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") input.value = input.value.slice(0, input.selectionStart)
+  })
 }
 
 function atualizarCategoriasPorTipo() {
@@ -1637,13 +1627,14 @@ function renderizarSeletorConta(selecionadoId) {
   const lista = document.getElementById("mov-conta-lista")
   lista.innerHTML = ""
   let bancoAtual = null
-  const contasOrdenadas = [...contasCache].sort((a, b) => a.banco.localeCompare(b.banco) || a.nome.localeCompare(b.nome))
+  const contasOrdenadas = [...contasCache].sort((a, b) => bancoOuSemBanco(a.banco).localeCompare(bancoOuSemBanco(b.banco)) || a.nome.localeCompare(b.nome))
   contasOrdenadas.forEach(c => {
-    if (c.banco !== bancoAtual) {
-      bancoAtual = c.banco
+    const chaveBanco = bancoOuSemBanco(c.banco)
+    if (chaveBanco !== bancoAtual) {
+      bancoAtual = chaveBanco
       const sep = document.createElement("div")
       sep.className = "seletor-grupo-label"
-      sep.textContent = c.banco
+      sep.textContent = chaveBanco
       lista.appendChild(sep)
     }
     const row = document.createElement("div")
@@ -1808,6 +1799,13 @@ function limparFiltrosMovimentos() {
   iniciarPickerMovimentos(); carregarMovimentos()
 }
 
+
+const SEM_BANCO = "Sem banco"
+function bancoOuSemBanco(banco) { return (banco && banco.trim()) ? banco : SEM_BANCO }
+function tipoOuSemTipo(tipo) { return (tipo && tipo.trim()) ? tipo : "Sem tipo" }
+function ibanOuSemIdentificador(iban) { return (iban && iban.trim()) ? iban : "Sem identificador" }
+function trOuTraco(v) { return (v && v.trim()) ? v : "—" }
+
 // ═══════════════════════════════════════════════════════════
 // FILTRO DE CONTAS
 // ═══════════════════════════════════════════════════════════
@@ -1830,12 +1828,15 @@ function fecharFiltroConta(prefixo) {
 
 function gruposContasPorBanco() {
   const bancos = {}
-  contasCache.forEach(c => { (bancos[c.banco] ||= []).push(c) })
-  return Object.keys(bancos).sort().map(banco => ({
+  contasCache.forEach(c => { const chave = bancoOuSemBanco(c.banco); (bancos[chave] ||= []).push(c) })
+  return Object.keys(bancos).sort((a, b) => {
+    if (a === SEM_BANCO) return 1
+    if (b === SEM_BANCO) return -1
+    return a.localeCompare(b)
+  }).map(banco => ({
     banco, contas: bancos[banco].sort((a, b) => a.nome.localeCompare(b.nome))
   }))
 }
-
 function renderizarFiltroConta(prefixo) {
   const lista = document.getElementById(prefixo + "-filtro-conta-lista")
   if (!lista) return
@@ -1879,7 +1880,7 @@ function colapsarContasSeTudoSelecionado(prefixo) {
 }
 
 function toggleGrupoContaFiltro(prefixo, banco) {
-  const idsGrupo = contasCache.filter(c => c.banco === banco).map(c => c.id)
+  const idsGrupo = contasCache.filter(c => bancoOuSemBanco(c.banco) === banco).map(c => c.id)
   const selecionadas = contasSelecionadas[prefixo]
   const todasJaSelecionadas = idsGrupo.every(id => selecionadas.has(id))
   if (todasJaSelecionadas) idsGrupo.forEach(id => selecionadas.delete(id))
@@ -1942,6 +1943,7 @@ function fecharTodosOsFiltros() {
   fecharSeletorContaForm()
   fecharSeletorCategoriaMovForm()
   fecharSeletorTipoMovForm()
+  fecharSeletorMoeda()
 }
 
 function toggleFiltroCat(e) {
@@ -2191,7 +2193,7 @@ function renderizarGraficoSaldo(saldoDiario, moeda) {
     destruirGrafico("saldoMensal")
     graficos.saldoMensal = new Chart(document.getElementById("grafico-saldo-mensal"), {
       type: "line",
-      data: { labels: saldoDiario.map(s => fmtDiaCurto(s.data)), datasets: [{ label: "Saldo", data: saldoDiario.map(s => s.saldo), borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)", fill: true, tension: 0.35, pointRadius: 0, pointHoverRadius: 5 }] },
+      data: { labels: saldoDiario.map(s => fmtDiaCurto(s.data)), datasets: [{ label: "Saldo", data: saldoDiario.map(s => s.saldo), borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)", fill: true, tension: 0, pointRadius: 0, pointHoverRadius: 5 }] },
       options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moeda)}` } } }, interaction: { mode: 'index', intersect: false }, scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 } } } }
     })
   })
@@ -2204,35 +2206,48 @@ function ordenarContas(campo) {
 function renderizarTabelaContas() {
   let lista = [...contasTabelaCache]
   const { campo, direcao } = ordenacaoContas
-  if (campo) lista.sort((a, b) => { let va = a[campo], vb = b[campo]; if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }; return va < vb ? -direcao : va > vb ? direcao : 0 })
+  if (campo) lista.sort((a, b) => {
+    let va = a[campo], vb = b[campo]
+    if (campo === "banco" || campo === "tipo") { va = (va && va.trim()) ? va : "\uFFFF"; vb = (vb && vb.trim()) ? vb : "\uFFFF" }
+    if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }
+    return va < vb ? -direcao : va > vb ? direcao : 0
+  })
+  atualizarIconesOrdenacao("cabecalho-contas", ordenacaoContas)
   atualizarIconesOrdenacao("cabecalho-contas", ordenacaoContas)
   const tb = document.getElementById("tabela-contas")
   if (lista.length === 0) { tb.innerHTML = linhaVazia(6, "Ainda não tens contas", "Adiciona a primeira conta para começares a registar movimentos.", `<button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>`); return }
   tb.innerHTML = ""
   lista.forEach(c => {
-    tb.innerHTML += `<tr><td data-label="Nome">${c.nome}</td><td data-label="Banco">${c.banco}</td><td data-label="Tipo"><span class="badge">${c.tipo}</span></td><td data-label="Identificador">${c.iban}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes" style="white-space:nowrap"><button class="btn-sm" onclick="abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
+    tb.innerHTML += `<tr><td data-label="Nome">${c.nome}</td><td data-label="Banco">${trOuTraco(c.banco)}</td><td data-label="Tipo de Conta">${trOuTraco(c.tipo)}</td><td data-label="IBAN">${trOuTraco(c.iban)}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes" style="white-space:nowrap"><button class="btn-sm" onclick="abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
   })
 }
 
 function abrirModalConta() {
   document.getElementById("modal-conta-titulo").textContent = "Adicionar conta"
   document.getElementById("conta-id").value = ""; document.getElementById("conta-nome").value = ""; document.getElementById("conta-banco").value = ""; document.getElementById("conta-tipo").value = ""; document.getElementById("conta-iban").value = ""
-  document.getElementById("conta-moeda").value = "EUR"; document.getElementById("conta-saldo").value = ""; document.getElementById("conta-saldo").disabled = false
+  document.getElementById("conta-moeda").value = ""; document.getElementById("conta-moeda-display").value = ""; renderizarSeletorMoeda(null)
+  document.getElementById("conta-saldo").value = ""; document.getElementById("conta-saldo").disabled = false
   document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"; document.getElementById("conta-saldo-ajustar").style.display = "none"
   document.getElementById("modal-conta").classList.add("open")
-  ligarCampoComSugestoes("conta-banco", opcoesBancos); ligarCampoComSugestoes("conta-tipo", opcoesTipos)
-  ligarValidacaoFormulario(["conta-nome", "conta-banco", "conta-tipo", "conta-saldo"], "btn-guardar-conta")
+  ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
+  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
 }
 function abrirEditarConta(id) {
   const c = contasCache.find(x => x.id === id)
   document.getElementById("modal-conta-titulo").textContent = "Editar conta"
-  document.getElementById("conta-id").value = c.id; document.getElementById("conta-nome").value = c.nome; document.getElementById("conta-banco").value = c.banco; document.getElementById("conta-tipo").value = c.tipo; document.getElementById("conta-iban").value = c.iban; document.getElementById("conta-moeda").value = c.moeda; document.getElementById("conta-saldo").value = c.saldo
+  document.getElementById("conta-id").value = c.id
+  document.getElementById("conta-nome").value = c.nome
+  document.getElementById("conta-banco").value = c.banco || ""
+  document.getElementById("conta-tipo").value = c.tipo || ""
+  document.getElementById("conta-iban").value = c.iban || ""
+  document.getElementById("conta-saldo").value = c.saldo
   document.getElementById("conta-saldo").disabled = true; document.getElementById("conta-saldo-label").textContent = "Saldo Atual"; document.getElementById("conta-saldo-ajustar").style.display = "block"
   document.getElementById("modal-conta").classList.add("open")
-  ligarValidacaoFormulario(["conta-nome", "conta-banco", "conta-tipo", "conta-saldo"], "btn-guardar-conta")
+  ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
+  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
 }
 async function guardarConta() {
-  if (!camposValidos("conta-nome", "conta-banco", "conta-tipo", "conta-saldo")) return
+  if (!camposValidos("conta-nome", "conta-moeda-display", "conta-saldo")) return
   const id = document.getElementById("conta-id").value
   const body = { nome: document.getElementById("conta-nome").value, banco: document.getElementById("conta-banco").value, tipo: document.getElementById("conta-tipo").value, iban: document.getElementById("conta-iban").value, moeda: document.getElementById("conta-moeda").value }
   let r
@@ -2246,10 +2261,52 @@ async function eliminarConta(id) {
   let r = await apiDelete("/contas/" + id)
   if (r.ok) { carregarContas(); return }
   const d = await r.json()
-  if (!(await confirmarAcao(mensagemDeErro(d) + " Continuar e eliminar tudo permanentemente?", { textoConfirmar: "Eliminar tudo", perigo: true }))) return
+  if (!(await confirmarAcao(mensagemDeErro(d), { textoConfirmar: "Eliminar tudo", perigo: true }))) return
   r = await apiDelete("/contas/" + id + "?forcar=true")
   if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
   carregarContas()
+}
+
+const OPCOES_MOEDA = [
+  { valor: "EUR", label: "EUR (€)" },
+  { valor: "USD", label: "USD ($)" },
+  { valor: "GBP", label: "GBP (£)" },
+  { valor: "CHF", label: "CHF" },
+  { valor: "BRL", label: "BRL (R$)" },
+]
+
+function toggleSeletorMoeda(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("conta-moeda-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  const abrir = !estavaAberto
+  painel.classList.toggle("aberto", abrir)
+  if (abrir) painel.scrollTop = 0
+}
+function fecharSeletorMoeda() {
+  document.getElementById("conta-moeda-panel")?.classList.remove("aberto")
+}
+
+function renderizarSeletorMoeda(selecionado) {
+  const lista = document.getElementById("conta-moeda-lista")
+  lista.innerHTML = ""
+  OPCOES_MOEDA.forEach(o => {
+    const row = document.createElement("div")
+    row.className = "filtro-item-linha" + (o.valor === selecionado ? " selecionado" : "")
+    row.innerHTML = `<span>${o.label}</span><span class="check">${ICONE_CHECK}</span>`
+    row.onclick = () => selecionarMoeda(o.valor)
+    lista.appendChild(row)
+  })
+}
+
+function selecionarMoeda(valor) {
+  document.getElementById("conta-moeda").value = valor
+  const opcao = OPCOES_MOEDA.find(o => o.valor === valor)
+  document.getElementById("conta-moeda-display").value = opcao ? opcao.label : ""
+  renderizarSeletorMoeda(valor)
+  fecharSeletorMoeda()
+  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2572,6 +2629,7 @@ function renderizarTabelaRecorrentes() {
     tb.innerHTML += `<tr><td data-label="Descrição">${r.descricao}</td><td data-label="Categoria">${r.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${r.grupo}</div></td><td data-label="Valor Médio" style="text-align:right" class="negativo">${fmt(r.valor_medio, moedaAnaliseGlobal)}</td><td data-label="Frequência" style="${r.regular ? '' : 'color:#aaa'}">${r.regular ? `~${r.intervalo_medio_dias} dias` : `${r.intervalo_medio_dias} dias (irregular)`}</td><td data-label="Próxima Data">${r.proxima_data_estimada}</td></tr>`
   })
 }
+
 
 // ═══════════════════════════════════════════════════════════
 // PÁGINA: MOVIMENTOS
@@ -2900,6 +2958,9 @@ document.addEventListener("click", e => {
 
   const movFiltroContaBtn = document.getElementById("mov-filtro-conta-btn"), movFiltroContaPanel = document.getElementById("mov-filtro-conta-panel")
   if (movFiltroContaBtn && !path.includes(movFiltroContaBtn) && !path.includes(movFiltroContaPanel)) fecharFiltroConta("mov")
+
+  const contaMoedaPanel = document.getElementById("conta-moeda-panel"), contaMoedaInput = document.getElementById("conta-moeda-display")
+  if (contaMoedaPanel && !path.includes(contaMoedaPanel) && !path.includes(contaMoedaInput)) fecharSeletorMoeda()
 })
 
 if (!verificarTokenReset() && TOKEN) iniciarApp()

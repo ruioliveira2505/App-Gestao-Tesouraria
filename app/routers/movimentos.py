@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.db.database import get_connection, release_connection, release_connection
+from app.db.database import get_connection, release_connection
 from app.core.deps import utilizador_atual
 from app.services.reconciliacoes import reconciliacao_mais_antiga_data
 from app.services.categorizacao import guardar_em_cache
@@ -12,17 +12,15 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-def fmt_data_pt(data_iso: str) -> str:
-    ano, mes, dia = data_iso.split("-")
-    return f"{dia}/{mes}/{ano}"
 
 def _validar_data_movimento(cursor, conta_id, data, acao):
     rec = reconciliacao_mais_antiga_data(cursor, conta_id)
-    if rec and data < rec:
+    if rec and data <= rec:
         raise HTTPException(
             status_code=400,
-            detail=f"Esta conta só tem reconciliações a partir de {fmt_data_pt(rec)}. Cria uma reconciliação anterior a {fmt_data_pt(data)} antes de {acao}."
+            detail=f"Esta conta tem uma reconciliação em {rec}, que já inclui os movimentos desse dia. Escolhe uma data posterior a {rec} antes de {acao}."
         )
+
 
 def _validar_categoria_direcao(cursor, categoria_id, valor, uid):
     cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))

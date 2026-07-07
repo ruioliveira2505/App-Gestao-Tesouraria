@@ -5,16 +5,12 @@ import psycopg2
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
-from app.db.database import get_connection, release_connection, release_connection
+from app.db.database import get_connection, release_connection
 from app.schemas.contas import AjusteSaldoInput, ContaEditInput, ContaInput
 from app.services.reconciliacoes import atualizar_saldo_atual, primeiro_movimento_data
 
 router = APIRouter()
 
-
-def _fmt_data_pt(data_iso: str) -> str:
-    ano, mes, dia = data_iso.split("-")
-    return f"{dia}/{mes}/{ano}"
 
 # ─── contas ───────────────────────────────────────────────────────────────────
 
@@ -25,9 +21,10 @@ def listar_contas(utilizador: dict = Depends(utilizador_atual)):
     try:
         cursor.execute("""
             SELECT c.id, c.nome, c.banco, c.iban, c.moeda, c.tipo,
+                   (SELECT MIN(data) FROM ajustes_saldo WHERE conta_id = c.id) AS inicio,
                    a.saldo_real + COALESCE((
                        SELECT SUM(m.valor) FROM movimentos m
-                       WHERE m.conta_id = c.id AND m.data >= a.data AND m.data <= CURRENT_DATE
+                       WHERE m.conta_id = c.id AND m.data > a.data AND m.data <= CURRENT_DATE
                    ), 0) AS saldo
             FROM contas c
             CROSS JOIN LATERAL (
@@ -43,7 +40,7 @@ def listar_contas(utilizador: dict = Depends(utilizador_atual)):
         cursor.close()
         release_connection(conn)
     return [
-        {"id": r[0], "nome": r[1], "banco": r[2], "iban": r[3], "moeda": r[4], "tipo": r[5], "saldo": float(r[6])}
+        {"id": r[0], "nome": r[1], "banco": r[2], "iban": r[3], "moeda": r[4], "tipo": r[5], "inicio": str(r[6]), "saldo": float(r[7])}
         for r in rows
     ]
 
@@ -53,14 +50,17 @@ def criar_conta(dados: ContaInput, utilizador: dict = Depends(utilizador_atual))
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        if dados.data > str(date.today()):
+            raise HTTPException(status_code=400, detail="Não é possível criar uma conta com data futura.")
+
         conta_id = str(uuid.uuid4())
         cursor.execute("""
             INSERT INTO contas (id, nome, banco, iban, moeda, saldo, tipo, utilizador_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (conta_id, dados.nome, dados.banco, dados.iban, dados.moeda, dados.saldo, dados.tipo, utilizador["sub"]))
         cursor.execute("""
-            INSERT INTO ajustes_saldo (conta_id, data, saldo_real) VALUES (%s, CURRENT_DATE, %s)
-        """, (conta_id, dados.saldo))
+            INSERT INTO ajustes_saldo (conta_id, data, saldo_real) VALUES (%s, %s, %s)
+        """, (conta_id, dados.data, dados.saldo))
         conn.commit()
     finally:
         cursor.close()
@@ -185,7 +185,7 @@ def editar_ajuste_saldo(ajuste_id: int, dados: AjusteSaldoInput, utilizador: dic
         if primeiro_mov and nova_mais_antiga > primeiro_mov:
             raise HTTPException(
                 status_code=400,
-                detail=f"Esta conta tem movimentos a partir de {_fmt_data_pt(primeiro_mov)}. A reconciliação mais antiga não pode ficar depois dessa data."
+                detail=f"Esta conta tem movimentos a partir de {primeiro_mov}. A reconciliação mais antiga não pode ficar depois dessa data."
             )
 
         try:
@@ -230,7 +230,7 @@ def eliminar_ajuste_saldo(ajuste_id: int, utilizador: dict = Depends(utilizador_
         if primeiro_mov and nova_mais_antiga and nova_mais_antiga > primeiro_mov:
             raise HTTPException(
                 status_code=400,
-                detail=f"Não é possível eliminar: esta conta tem movimentos a partir de {_fmt_data_pt(primeiro_mov)}, e a reconciliação mais antiga que restaria é de {_fmt_data_pt(nova_mais_antiga)}."
+                detail=f"Não é possível eliminar: esta conta tem movimentos a partir de {primeiro_mov}, e a reconciliação mais antiga que restaria é de {nova_mais_antiga}."
             )
 
         cursor.execute("DELETE FROM ajustes_saldo WHERE id=%s", (ajuste_id,))

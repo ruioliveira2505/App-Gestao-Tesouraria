@@ -8,6 +8,7 @@ class ContaInput(BaseModel):
     iban:  str | None = None
     moeda: str
     saldo: float
+    data:  str
 
 class ContaEditInput(BaseModel):
     nome:  str

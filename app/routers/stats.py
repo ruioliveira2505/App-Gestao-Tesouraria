@@ -312,7 +312,7 @@ def stats_saldo_diario(
                 SELECT d.dia, cf.id AS conta_id,
                        a.saldo_real + COALESCE((
                            SELECT SUM(m.valor) FROM movimentos m
-                           WHERE m.conta_id = cf.id AND m.data >= a.data AND m.data <= d.dia
+                           WHERE m.conta_id = cf.id AND m.data > a.data AND m.data <= d.dia
                        ), 0) AS saldo
                 FROM dias d
                 CROSS JOIN contas_filtradas cf

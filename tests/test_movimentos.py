@@ -134,3 +134,11 @@ def test_criar_movimento_com_categoria_da_direcao_errada_falha(client, headers_a
         "valor": -50.0, "categoria_id": categoria_entrada["id"],
     }, headers=headers_autenticado)
     assert r.status_code == 400
+
+
+def test_criar_movimento_no_mesmo_dia_da_reconciliacao_mais_antiga_falha(client, headers_autenticado, conta_id, categoria_id):
+    r = client.post("/movimentos", json={
+        "conta_id": conta_id, "data": hoje(), "descricao": "Teste",
+        "valor": -10.0, "categoria_id": categoria_id,
+    }, headers=headers_autenticado)
+    assert r.status_code == 400

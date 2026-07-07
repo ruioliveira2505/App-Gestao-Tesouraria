@@ -357,6 +357,7 @@
 
     .chart-full { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; margin-bottom: 1.5rem; }
     .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    #grafico-saldo-mensal { height: 340px !important; }
 
     
     /* ═══════════════════════════════════════════════════════
@@ -485,6 +486,7 @@
 
     .btn-filtros-mobile { display: none; }
     .btn-aplicar-filtros { display: none; }
+    .ordenacao-mobile { display: none; }
     .btn-aplicar-filtros.escondido { display: none; }
     .filtros-sheet-acoes { display: none; }
     @media (max-width: 768px) {
@@ -504,6 +506,11 @@
       .table-wrap.cards-mobile td.td-acoes::before { content: none; }
       .table-wrap.cards-mobile .valor-com-sub { flex-direction: row; align-items: baseline; gap: 4px; }
       .table-wrap.cards-mobile .separador-mobile { display: inline; }
+      .table-wrap.cards-mobile tr.linha-conta-mobile { cursor: pointer; }
+      .table-wrap.cards-mobile td.td-expandido { display: none; }
+      .table-wrap.cards-mobile tr.expandido td.td-expandido { display: flex; }
+      .ordenacao-mobile { display: block; }
+      #grafico-saldo-mensal { height: 280px !important; }
 
       .btn-filtros-mobile {
       display: inline-flex; align-items: center; gap: 6px;
@@ -684,6 +691,17 @@
         <canvas id="grafico-saldo-mensal"></canvas>
       </div>
 
+      <div class="field ordenacao-mobile">
+        <label>Ordenar por</label>
+        <select id="ct-ordenacao-select" onchange="ordenarContasMobile(this.value)">
+          <option value="nome">Nome (A→Z)</option>
+          <option value="saldo_desc">Saldo (maior→menor)</option>
+          <option value="saldo_asc">Saldo (menor→maior)</option>
+          <option value="inicio_asc">Data (antigo → recente)</option>
+          <option value="inicio_desc">Data (recente → antigo)</option>
+        </select>
+      </div>
+
       <div class="table-wrap cards-mobile">
         <table>
           <thead><tr id="cabecalho-contas">
@@ -691,6 +709,7 @@
             <th onclick="ordenarContas('banco')" data-campo="banco" style="cursor:pointer">Banco <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('tipo')" data-campo="tipo" style="cursor:pointer">Tipo de Conta <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('iban')" data-campo="iban" style="cursor:pointer">IBAN <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('inicio')" data-campo="inicio" style="cursor:pointer">Data Inicial <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('saldo')" data-campo="saldo" style="text-align:right;cursor:pointer">Saldo <span class="icone-ordenacao"></span></th>
             <th></th>
           </tr></thead>
@@ -1060,7 +1079,7 @@
   <div class="modal">
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
     <input type="hidden" id="conta-id">
-    <div class="field"><label>Nome da Conta</label><input type="text" id="conta-nome"></div>
+    <div class="field"><label>Nome</label><input type="text" id="conta-nome"></div>
     <div class="field campo-sugestoes">
       <label>Banco <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
       <input type="text" id="conta-banco" autocomplete="off">
@@ -1073,23 +1092,29 @@
       <label>IBAN <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
       <input type="text" id="conta-iban">
     </div>
-    <div class="field">
-      <div class="field campo-seletor">
-        <label>Moeda</label>
-        <input type="text" id="conta-moeda-display" readonly required onclick="toggleSeletorMoeda(event)">
-        <input type="hidden" id="conta-moeda">
-        <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
-        <div class="filtro-cat-panel" id="conta-moeda-panel">
-          <div id="conta-moeda-lista"></div>
-        </div>
-</div>
+    <div class="field campo-seletor">
+      <label>Moeda</label>
+      <input type="text" id="conta-moeda-display" readonly required onclick="toggleSeletorMoeda(event)">
+      <input type="hidden" id="conta-moeda">
+      <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+      <div class="filtro-cat-panel" id="conta-moeda-panel">
+        <div id="conta-moeda-lista"></div>
+      </div>
     </div>
     <div class="field">
-      <label id="conta-saldo-label">Saldo Inicial</label>
+      <label><span id="conta-saldo-label">Saldo Inicial</span> <span class="icone-protegida" id="conta-saldo-ajuda" title="Saldo da conta no final do dia selecionado."></span></label>
       <input type="number" id="conta-saldo" step="0.01" required>
-      <div id="conta-saldo-ajustar" style="display:none;margin-top:0.4rem">
-        <a href="#" onclick="abrirModalAjusteSaldo(); return false" style="font-size:0.8rem;color:#888">Ajustar saldo →</a>
-      </div>
+    </div>
+    <div class="field" id="conta-data-campo-adicionar">
+      <label>Data Inicial</label>
+      <input type="text" id="conta-data" placeholder="Selecionar data" required readonly>
+    </div>
+    <div class="field" id="conta-data-campo-editar" style="display:none">
+      <label>Data Inicial</label>
+      <input type="text" id="conta-data-display" readonly disabled>
+    </div>
+    <div id="conta-reconciliacoes-link" style="display:none;margin-top:-0.75rem;margin-bottom:1rem">
+      <a href="#" onclick="abrirModalAjusteSaldo(); return false" style="font-size:0.8rem;color:#888">Ver reconciliações →</a>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
@@ -1113,7 +1138,10 @@
       <input type="hidden" id="reconc-id">
      <!-- Modal: Reconciliações -->
     <div class="field"><label>Data</label><input type="text" id="reconc-data" placeholder="Selecionar data" required readonly></div>
-      <div class="field"><label>Saldo Reconciliado</label><input type="number" id="reconc-valor" step="0.01" required></div>
+      <div class="field">
+        <label>Saldo Reconciliado <span class="icone-protegida" id="reconc-valor-ajuda" title="Saldo da conta no final do dia selecionado."></span></label>
+        <input type="number" id="reconc-valor" step="0.01" required>
+      </div>
       <div style="display:flex;gap:8px">
         <button class="btn-secondary" onclick="esconderFormReconciliacao()">Cancelar</button>
         <button class="btn-primary" id="btn-guardar-reconciliacao" onclick="guardarReconciliacao()">Guardar</button>
@@ -1265,6 +1293,7 @@ let recorrentesTabelaCache = []
 let elimAtual = null
 let pickerMovData = null
 let pickerReconc  = null
+let pickerContaData = null
 let pickerContas  = null
 
 let drilldownAtual = null
@@ -1295,6 +1324,7 @@ const ICONE_PERFIL_GERAL      = `<svg width="16" height="16" viewBox="0 0 24 24"
 const ICONE_PERFIL_CATEGORIAS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83Z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg>`
 const ICONE_SETA_BAIXO        = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`
 const ICONE_SETA_CIMA         = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>`
+const ICONE_INFO              = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
 const ICONE_ARRASTAR          = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>`
 const ICONE_GRAFICO           = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
 const ICONE_CHECK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
@@ -1571,6 +1601,13 @@ function iniciarPickerReconciliacao() {
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
   })
 }
+function iniciarPickerContaData() {
+  pickerContaData = new Litepicker({
+    element: document.getElementById('conta-data'),
+    singleMode: true, format: 'YYYY-MM-DD', maxDate: new Date(),
+    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
+  })
+}
 
 // ═══════════════════════════════════════════════════════════
 // AUTENTICAÇÃO
@@ -1673,6 +1710,7 @@ async function iniciarApp() {
   iniciarPickerMovimentos()
   iniciarPickerMovData()
   iniciarPickerReconciliacao()
+  iniciarPickerContaData()
   carregarPagina(pagina)
   atualizarBadgePendentes()
   iniciarDetecaoInatividade()
@@ -2389,7 +2427,7 @@ function renderizarGraficoSaldo(saldoDiario, moeda) {
     graficos.saldoMensal = new Chart(document.getElementById("grafico-saldo-mensal"), {
       type: "line",
       data: { labels: saldoDiario.map(s => fmtDiaCurto(s.data)), datasets: [{ label: "Saldo", data: saldoDiario.map(s => s.saldo), borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)", fill: true, tension: 0, pointRadius: 0, pointHoverRadius: 5 }] },
-      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moeda)}` } } }, interaction: { mode: 'index', intersect: false }, scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 } } } }
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moeda)}` } } }, interaction: { mode: 'index', intersect: false }, scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 } } } }
     })
   })
 }
@@ -2409,11 +2447,28 @@ function renderizarTabelaContas() {
   })
   atualizarIconesOrdenacao("cabecalho-contas", ordenacaoContas)
   const tb = document.getElementById("tabela-contas")
-  if (lista.length === 0) { tb.innerHTML = linhaVazia(6, "Ainda não tens contas", "Adiciona a primeira conta para começares a registar movimentos.", `<button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>`); return }
+  if (lista.length === 0) {
+    tb.innerHTML = contasSelecionadas.ct.size > 0
+      ? linhaVazia(7, "Nenhuma conta encontrada", "Experimenta ajustar ou limpar o filtro.", `<button class="btn-sm" onclick="limparFiltrosContas()">Limpar filtro</button>`)
+      : linhaVazia(7, "Ainda não tens contas", "Adiciona a primeira conta para começares a registar movimentos.", `<button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>`)
+    return
+  }
   tb.innerHTML = ""
   lista.forEach(c => {
-    tb.innerHTML += `<tr><td data-label="Nome">${c.nome}</td><td data-label="Banco">${trOuTraco(c.banco)}</td><td data-label="Tipo de Conta">${trOuTraco(c.tipo)}</td><td data-label="IBAN">${trOuTraco(c.iban)}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes" style="white-space:nowrap"><button class="btn-sm" onclick="abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
+    tb.innerHTML += `<tr class="linha-conta-mobile" onclick="toggleCardConta(this)"><td data-label="Nome">${c.nome}</td><td data-label="Banco">${trOuTraco(c.banco)}</td><td data-label="Tipo de Conta" class="td-expandido">${trOuTraco(c.tipo)}</td><td data-label="IBAN" class="td-expandido">${trOuTraco(c.iban)}</td><td data-label="Data Inicial" class="td-expandido">${c.inicio}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes td-expandido" style="white-space:nowrap"><button class="btn-sm" onclick="event.stopPropagation(); abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="event.stopPropagation(); eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
   })
+}
+function toggleCardConta(tr) { tr.classList.toggle("expandido") }
+function ordenarContasMobile(valor) {
+  const mapa = {
+    nome:        { campo: "nome",   direcao: 1  },
+    saldo_desc:  { campo: "saldo",  direcao: -1 },
+    saldo_asc:   { campo: "saldo",  direcao: 1  },
+    inicio_asc:  { campo: "inicio", direcao: 1  },
+    inicio_desc: { campo: "inicio", direcao: -1 },
+  }
+  ordenacaoContas = mapa[valor]
+  renderizarTabelaContas()
 }
 
 function abrirModalConta() {
@@ -2421,10 +2476,14 @@ function abrirModalConta() {
   document.getElementById("conta-id").value = ""; document.getElementById("conta-nome").value = ""; document.getElementById("conta-banco").value = ""; document.getElementById("conta-tipo").value = ""; document.getElementById("conta-iban").value = ""
   document.getElementById("conta-moeda").value = ""; document.getElementById("conta-moeda-display").value = ""; renderizarSeletorMoeda(null)
   document.getElementById("conta-saldo").value = ""; document.getElementById("conta-saldo").disabled = false
-  document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"; document.getElementById("conta-saldo-ajustar").style.display = "none"
+  document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"; document.getElementById("conta-reconciliacoes-link").style.display = "none"
+  document.getElementById("conta-saldo-ajuda").style.display = "inline-flex"
+  pickerContaData.setDate(new Date())
+  document.getElementById("conta-data-campo-adicionar").style.display = "block"
+  document.getElementById("conta-data-campo-editar").style.display = "none"
   document.getElementById("modal-conta").classList.add("open")
   ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
-  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
+  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"], "btn-guardar-conta")
 }
 function abrirEditarConta(id) {
   const c = contasCache.find(x => x.id === id)
@@ -2439,18 +2498,23 @@ function abrirEditarConta(id) {
   document.getElementById("conta-moeda-display").value = opcaoMoeda ? opcaoMoeda.label : (c.moeda || "")
   renderizarSeletorMoeda(c.moeda)
   document.getElementById("conta-saldo").value = c.saldo
-  document.getElementById("conta-saldo").disabled = true; document.getElementById("conta-saldo-label").textContent = "Saldo Atual"; document.getElementById("conta-saldo-ajustar").style.display = "block"
+  document.getElementById("conta-saldo").disabled = true; document.getElementById("conta-saldo-label").textContent = "Saldo Atual"; document.getElementById("conta-reconciliacoes-link").style.display = "block"
+  document.getElementById("conta-saldo-ajuda").style.display = "none"
+  document.getElementById("conta-data-campo-adicionar").style.display = "none"
+  document.getElementById("conta-data-campo-editar").style.display = "block"
+  document.getElementById("conta-data-display").value = c.inicio
   document.getElementById("modal-conta").classList.add("open")
   ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
   ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
 }
 async function guardarConta() {
-  if (!camposValidos("conta-nome", "conta-moeda-display", "conta-saldo")) return
   const id = document.getElementById("conta-id").value
+  const camposObrigatorios = id ? ["conta-nome", "conta-moeda-display", "conta-saldo"] : ["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"]
+  if (!camposValidos(...camposObrigatorios)) return
   const body = { nome: document.getElementById("conta-nome").value, banco: document.getElementById("conta-banco").value, tipo: document.getElementById("conta-tipo").value, iban: document.getElementById("conta-iban").value, moeda: document.getElementById("conta-moeda").value }
   let r
   if (id) { r = await apiPut("/contas/" + id, body) }
-  else     { body.saldo = parseFloat(document.getElementById("conta-saldo").value); r = await apiPost("/contas", body) }
+  else     { body.saldo = parseFloat(document.getElementById("conta-saldo").value); body.data = document.getElementById("conta-data").value; r = await apiPost("/contas", body) }
   if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
   fecharModal(); carregarContas()
 }
@@ -2531,8 +2595,10 @@ function renderizarTabelaReconciliacoes(comAcoes) {
   const conta = contasCache.find(c => c.id === contaId)
   const tb = document.getElementById("tabela-reconciliacoes")
   tb.innerHTML = ""
+  const dataMaisAntiga = reconciliacoesCache.reduce((min, a) => (!min || a.data < min) ? a.data : min, null)
   reconciliacoesCache.forEach(a => {
-    tb.innerHTML += `<tr><td>${a.data}</td><td style="text-align:right">${fmt(a.saldo_real, conta?.moeda)}</td><td style="white-space:nowrap"><span style="visibility:${comAcoes ? 'visible' : 'hidden'}"><button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button><button class="btn-danger" onclick="eliminarReconciliacao(${a.id})">✕</button></span></td></tr>`
+    const tagInicio = a.data === dataMaisAntiga ? `<span class="icone-protegida" title="Esta é a reconciliação mais antiga da conta — corresponde à Data Inicial. Só há movimentos registados no sistema a partir do dia seguinte." style="margin-left:6px">${ICONE_INFO}</span>` : ""
+    tb.innerHTML += `<tr><td style="white-space:nowrap">${a.data}${tagInicio}</td><td style="text-align:right">${fmt(a.saldo_real, conta?.moeda)}</td><td style="white-space:nowrap"><span style="visibility:${comAcoes ? 'visible' : 'hidden'}"><button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button><button class="btn-danger" onclick="eliminarReconciliacao(${a.id})">✕</button></span></td></tr>`
   })
 }
 function mostrarFormReconciliacao(id, data, valor) {
@@ -3184,6 +3250,8 @@ document.getElementById("icone-sidebar-categorias").innerHTML = ICONE_PERFIL_CAT
 document.getElementById("icone-sidebar-preferencias").innerHTML = ICONE_PREFERENCIAS
 document.getElementById("icone-menu-config").innerHTML = ICONE_PERFIL_GERAL
 document.getElementById("icone-menu-sair").innerHTML = ICONE_SAIR
+document.getElementById("conta-saldo-ajuda").innerHTML = ICONE_INFO
+document.getElementById("reconc-valor-ajuda").innerHTML = ICONE_INFO
 mostrarAjudaAoEscrever("reg-password", "ajuda-reg-password")
 mostrarAjudaAoEscrever("perfil-pw-nova", "ajuda-perfil-pw-nova")
 mostrarAjudaAoEscrever("reset-password-nova", "ajuda-reset-password-nova")

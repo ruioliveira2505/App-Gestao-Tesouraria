@@ -12,15 +12,17 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+def fmt_data_pt(data_iso: str) -> str:
+    ano, mes, dia = data_iso.split("-")
+    return f"{dia}/{mes}/{ano}"
 
 def _validar_data_movimento(cursor, conta_id, data, acao):
     rec = reconciliacao_mais_antiga_data(cursor, conta_id)
     if rec and data < rec:
         raise HTTPException(
             status_code=400,
-            detail=f"Esta conta só tem reconciliações a partir de {rec}. Cria uma reconciliação anterior a {data} antes de {acao}."
+            detail=f"Esta conta só tem reconciliações a partir de {fmt_data_pt(rec)}. Cria uma reconciliação anterior a {fmt_data_pt(data)} antes de {acao}."
         )
-
 
 def _validar_categoria_direcao(cursor, categoria_id, valor, uid):
     cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))

@@ -11,6 +11,7 @@
     /* ═══════════════════════════════════════════════════════
        VARIÁVEIS
     ═══════════════════════════════════════════════════════ */
+
     :root {
       --color-bg: #f5f5f3;
       --color-text: #1a1a1a;
@@ -56,9 +57,20 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; background: var(--color-bg); color: var(--color-text); min-height: 100vh; }
 
+    
+    /* ═══════════════════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════════════════ */
+
+    main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    
     /* ═══════════════════════════════════════════════════════
        AUTH
     ═══════════════════════════════════════════════════════ */
+
     #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     .auth-card { background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid var(--color-border); padding: 2rem; width: 100%; max-width: 380px; }
     .auth-card h1 { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
@@ -67,9 +79,11 @@
     .auth-tab.active { border-bottom-color: var(--color-text); color: var(--color-text); font-weight: 500; }
     .auth-error { font-size: 0.8rem; color: var(--color-negativo); margin-top: 0.75rem; text-align: center; }
 
+    
     /* ═══════════════════════════════════════════════════════
        NAV
     ═══════════════════════════════════════════════════════ */
+
     #app-screen { display: none; }
     nav { background: var(--color-white); border-bottom: 1px solid var(--color-border); padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 52px; position: sticky; top: 0; z-index: 50; }
     .nav-brand { font-size: 0.95rem; font-weight: 600; }
@@ -81,16 +95,11 @@
     .btn-logout { font-size: 0.8rem; color: var(--color-text-secondary); background: none; border: none; cursor: pointer; }
     .btn-logout:hover { color: var(--color-text); }
 
-    /* ═══════════════════════════════════════════════════════
-       LAYOUT
-    ═══════════════════════════════════════════════════════ */
-    main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-    .page { display: none; }
-    .page.active { display: block; }
-
+    
     /* ═══════════════════════════════════════════════════════
        CAMPOS DE FORMULÁRIO
     ═══════════════════════════════════════════════════════ */
+
     .field { margin-bottom: 1rem; }
     .field label { display: block; font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 4px; }
     .field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; outline: none; background: var(--color-white); }
@@ -100,9 +109,14 @@
     .field .ajuda { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 4px; display: none; }
     .toggle-password { position: absolute; right: 0.6rem; top: 30px; background: none; border: none; cursor: pointer; padding: 0.5px; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); }
 
+    
+    .campo-sugestoes { position: relative; }
+
+    
     /* ═══════════════════════════════════════════════════════
        BOTÕES
     ═══════════════════════════════════════════════════════ */
+
     .btn-primary { padding: 0.6rem 1.25rem; background: var(--color-primary); color: var(--color-white); border: none; border-radius: var(--radius-sm); font-size: 0.875rem; cursor: pointer; }
     .btn-primary:hover { background: var(--color-primary-hover); }
     .btn-primary:disabled { background: var(--color-disabled); cursor: not-allowed; }
@@ -114,9 +128,11 @@
     .btn-danger { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid var(--color-negativo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-negativo); }
     .btn-danger:hover { background: var(--color-negativo-bg); }
 
+    
     /* ═══════════════════════════════════════════════════════
        CARDS
     ═══════════════════════════════════════════════════════ */
+
     .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
     .card { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; }
     .card .label { font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 0.4rem; }
@@ -130,9 +146,11 @@
     .summary-card .valor { font-size: 1.3rem; font-weight: 500; }
     .summary-card .sub { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 0.3rem; }
 
+    
     /* ═══════════════════════════════════════════════════════
        SECÇÕES E TABELAS
     ═══════════════════════════════════════════════════════ */
+
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
     .section-title { font-size: 0.75rem; font-weight: 600; color: var(--color-text-secondary); letter-spacing: 0.05em; text-transform: uppercase; }
 
@@ -149,38 +167,11 @@
     .positivo { color: var(--color-positivo); }
     .negativo { color: var(--color-negativo); }
 
-    /* ═══════════════════════════════════════════════════════
-       MOVIMENTOS — PENDENTES
-    ═══════════════════════════════════════════════════════ */
-    .badge-pendentes {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-width: 18px; height: 18px; padding: 0 5px;
-      background: var(--color-negativo); color: var(--color-white); border-radius: 999px;
-      font-size: 0.65rem; font-weight: 600; margin-left: 6px;
-    }
-    .banner-pendentes {
-      background: var(--color-aviso-bg); border: 1px solid var(--color-aviso-border); border-radius: var(--radius-lg);
-      padding: 0.9rem 1.1rem; margin-bottom: 1rem;
-      display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
-    }
-    .banner-pendentes .texto { font-size: 0.875rem; color: var(--color-aviso-text); display: flex; align-items: center; gap: 6px; }
-    .banner-pendentes .acoes { display: flex; gap: 0.5rem; flex-shrink: 0; }
-    .icone-auto { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
-    .icone-auto.llm svg { color: var(--color-aviso-icone); }
-    .icone-auto.sem-match svg { color: var(--color-negativo); }
-    .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--color-text-secondary); cursor: help; }
-    .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: var(--color-positivo-bg); border: 1px solid var(--color-positivo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-positivo-text); }
-    .btn-confirmar:hover { background: var(--color-positivo-bg-hover); }
-
-    /* ═══════════════════════════════════════════════════════
-       GRÁFICOS
-    ═══════════════════════════════════════════════════════ */
-    .chart-full { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; margin-bottom: 1.5rem; }
-    .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
-
+    
     /* ═══════════════════════════════════════════════════════
        FILTROS
     ═══════════════════════════════════════════════════════ */
+
     .filtros { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; flex-wrap: wrap; align-items: flex-end; }
     .filtros .field { margin-bottom: 0; min-width: 140px; }
     .filtros select, .filtros input { padding: 0.5rem 0.75rem; }
@@ -188,6 +179,8 @@
     .filtros-limpar-linha.escondido { visibility: hidden; }
     .filtros-limpar { font-size: 0.8rem; color: var(--color-text-secondary); cursor: pointer; }
     .filtros-limpar:hover { color: var(--color-text); text-decoration: underline; }
+    .filtros-conteudo { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-end; }
+    .filtros-conteudo .field { margin-bottom: 0; min-width: 140px; }
 
     /* ── Filtro de categorias (análise) ── */
     .filtro-cat-wrapper {
@@ -219,25 +212,6 @@
     }
     .campo-seletor .filtro-cat-panel { width: 100%; min-width: 0; }
     .filtro-cat-panel.aberto { display: block; }
-    .filtro-cat-acoes {
-      display: flex; gap: 0.75rem; padding: 0.5rem 0.75rem 0.4rem;
-      border-bottom: 1px solid var(--color-border); margin-bottom: 0.25rem;
-    }
-    .filtro-cat-acoes span { font-size: 0.75rem; color: var(--color-text-secondary); cursor: pointer; text-decoration: underline; }
-    .filtro-cat-acoes span:hover { color: var(--color-text); }
-    .filtro-cat-separador { font-size: 0.65rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 0.75rem 0.2rem; }
-    .filtro-cat-grupo-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 500;
-    }
-    .filtro-cat-grupo-row:hover { background: var(--color-surface); }
-    .filtro-cat-item-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 0.3rem 0.75rem 0.3rem 1.75rem;
-      font-size: 0.82rem; color: var(--color-text-tertiary);
-    }
-    .filtro-cat-item-row:hover { background: var(--color-surface); }
-    .filtro-cat-item-row input, .filtro-cat-grupo-row input { cursor: pointer; flex-shrink: 0; }
 
     .filtro-topo-sticky {
       position: sticky; top: 0; z-index: 2;
@@ -258,6 +232,7 @@
     }
     .filtro-esfera-linha.nova-esfera { border-top: 1px solid var(--color-border-light); margin-top: 6px; padding-top: 0.6rem; }
     
+
     /* ── Seletor de período (contas) ── */
     .campo-com-icone { position: relative; display: inline-flex; align-items: center; }
     .campo-com-icone .icone-calendario { position: absolute; left: 0.7rem; color: var(--color-text-secondary); pointer-events: none; }
@@ -272,15 +247,57 @@
     .seletor-periodo:focus { outline: 2px solid var(--color-text); outline-offset: 1px; background: var(--color-surface); }
 
     .campo-seletor { position: relative; }
-    .campo-seletor input[readonly] { cursor: pointer; caret-color: transparent; }
+    .campo-seletor input[readonly] { cursor: pointer; caret-color: transparent; padding-right: 2.2rem; }
     .seletor-grupo-label {
       font-weight: 600; color: var(--color-text-tertiary);
       text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.04em;
       padding: 0.5rem 0.9rem 0.2rem; cursor: default;
     }
+    
+    .filtro-opcao-todas {
+      padding: 0.55rem 0.9rem; font-size: 0.85rem; color: var(--color-text-secondary);
+      cursor: pointer;
+    }
+    .filtro-opcao-todas:hover { background: var(--color-surface); }
+
+    .filtro-item-linha {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.45rem 0.9rem; font-size: 0.875rem; color: var(--color-text);
+      cursor: pointer;
+    }
+    .filtro-item-linha:hover { background: var(--color-surface); }
+    .filtro-item-linha .check {
+      opacity: 0; color: var(--color-text-faint); display: flex; flex-shrink: 0;
+    }
+    .filtro-item-linha.selecionado .check,
+    .filtro-item-linha.indeterminado .check { opacity: 1; }
+    .filtro-item-linha.indeterminado .check { color: var(--color-text-secondary); }
+
+    .filtro-grupo-linha {
+      font-weight: 600; color: var(--color-text-tertiary);
+      text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.04em;
+    }
+    .filtro-item-indentado { padding-left: 1.5rem; }
+
+    .filtro-item-linha.indeterminado .check { opacity: 1; color: var(--color-text-secondary); }
+
+    .seta-dropdown-btn { display: flex; flex-shrink: 0; color: var(--color-text-secondary); transition: transform 0.15s; }
+    .filtro-cat-btn.ativo .seta-dropdown-btn { transform: rotate(180deg); }
+
+    .campo-seletor .seta-dropdown-input {
+      position: absolute; right: 0.75rem; top: 30px; pointer-events: none;
+      color: var(--color-text-secondary); display: flex; align-items: center;
+    }
+
+    .valor-com-sub { display: flex; flex-direction: column; gap: 2px; }
+    .sub-linha { font-size: 0.78rem; color: var(--color-text-secondary); font-weight: 400; }
+    .separador-mobile { display: none; }
+    
+    
     /* ═══════════════════════════════════════════════════════
        TOGGLE ENTRADAS/SAÍDAS
     ═══════════════════════════════════════════════════════ */
+
     .toggle-tipo { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
     .toggle-tipo button { padding: 0.4rem 1rem; border: none; background: var(--color-white); font-size: 0.8rem; cursor: pointer; color: var(--color-text-secondary); }
     .toggle-tipo button.active.out { background: var(--color-negativo-bg); color: var(--color-negativo); font-weight: 500; }
@@ -288,9 +305,11 @@
     .toggle-tipo button.active:not(.in):not(.out) { background: var(--color-badge-bg); color: var(--color-text); font-weight: 500; }
     .toggle-tipo-sm button { padding: 0.3rem 0.7rem; font-size: 0.72rem; }
 
+    
     /* ═══════════════════════════════════════════════════════
        DETALHE POR GRUPO (barras + subcategorias)
     ═══════════════════════════════════════════════════════ */
+
     .grupo-bar-row { padding: 0.85rem 0; border-bottom: 1px solid var(--color-border-light); }
     .grupo-bar-row:last-child { border-bottom: none; }
     .linha-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
@@ -316,9 +335,30 @@
     .linha-topo:hover .btn-drilldown,
     .sub-item:hover .btn-drilldown { opacity: 1; }
 
+    
+    /* ═══════════════════════════════════════════════════════
+       GRÁFICOS
+    ═══════════════════════════════════════════════════════ */
+
+    .chart-full { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    
+    /* ═══════════════════════════════════════════════════════
+       ANÁLISE — ABAS
+    ═══════════════════════════════════════════════════════ */
+
+    .analise-tabs { display: flex; border-bottom: 1px solid var(--color-border); margin-bottom: 1.5rem; }
+    .analise-tab { padding: 0.6rem 0.25rem; margin-right: 1.5rem; font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
+    .analise-tab.active { color: var(--color-text); border-bottom-color: var(--color-text); font-weight: 500; }
+    .analise-secao { display: none; }
+    .analise-secao.active { display: block; }
+
+    
     /* ═══════════════════════════════════════════════════════
        MODAL (genérico)
     ═══════════════════════════════════════════════════════ */
+
     .modal-overlay { display: none; position: fixed; inset: 0; background: var(--color-overlay); align-items: center; justify-content: center; z-index: 100; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--color-white); border-radius: var(--radius-xl); padding: 1.5rem; width: 100%; max-width: 440px; }
@@ -331,9 +371,11 @@
     .modal-drilldown-header-texto { display: flex; flex-direction: column; gap: 2px; }
     .drilldown-titulo-label { font-size: 0.65rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
 
+    
     /* ═══════════════════════════════════════════════════════
        TOASTS
     ═══════════════════════════════════════════════════════ */
+
     #toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; max-width: 360px; }
     .toast {
       background: var(--color-white); border: 1px solid var(--color-border);
@@ -351,9 +393,36 @@
     .toast .fechar { cursor: pointer; color: var(--color-text-secondary); background: none; border: none; padding: 0; flex-shrink: 0; }
     @keyframes toast-entrada { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
+    
+    /* ═══════════════════════════════════════════════════════
+       MOVIMENTOS — PENDENTES
+    ═══════════════════════════════════════════════════════ */
+
+    .badge-pendentes {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      background: var(--color-negativo); color: var(--color-white); border-radius: 999px;
+      font-size: 0.65rem; font-weight: 600; margin-left: 6px;
+    }
+    .banner-pendentes {
+      background: var(--color-aviso-bg); border: 1px solid var(--color-aviso-border); border-radius: var(--radius-lg);
+      padding: 0.9rem 1.1rem; margin-bottom: 1rem;
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .banner-pendentes .texto { font-size: 0.875rem; color: var(--color-aviso-text); display: flex; align-items: center; gap: 6px; }
+    .banner-pendentes .acoes { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .icone-auto { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
+    .icone-auto.llm svg { color: var(--color-aviso-icone); }
+    .icone-auto.sem-match svg { color: var(--color-negativo); }
+    .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--color-text-secondary); cursor: help; }
+    .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: var(--color-positivo-bg); border: 1px solid var(--color-positivo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-positivo-text); }
+    .btn-confirmar:hover { background: var(--color-positivo-bg-hover); }
+
+    
     /* ═══════════════════════════════════════════════════════
        PERFIL E GESTÃO DE CATEGORIAS
     ═══════════════════════════════════════════════════════ */
+
     .grupo-gestao { border-bottom: 1px solid var(--color-border-light); padding: 0.75rem 0; }
     .grupo-gestao:last-child { border-bottom: none; }
     .grupo-gestao-header { display: flex; justify-content: space-between; align-items: center; }
@@ -375,9 +444,11 @@
     .perfil-secao-titulo { font-size: 1.1rem; font-weight: 600; }
     .perfil-secao-subtitulo { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.2rem; }
 
+    
     /* ═══════════════════════════════════════════════════════
        ESTADOS VAZIOS E SKELETONS
     ═══════════════════════════════════════════════════════ */
+
     .estado-vazio { padding: 2.5rem 1rem; text-align: center; color: var(--color-text-secondary); }
     .estado-vazio .titulo { font-size: 0.9rem; color: var(--color-text); font-weight: 500; margin-bottom: 0.25rem; }
     .estado-vazio .subtitulo { font-size: 0.8rem; margin-bottom: 1rem; }
@@ -387,82 +458,15 @@
     .skeleton-bar { height: 14px; border-radius: 4px; background: linear-gradient(90deg, var(--color-border-light) 25%, var(--color-border) 50%, var(--color-border-light) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.4s ease-in-out infinite; }
     @keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-    /* ═══════════════════════════════════════════════════════
-       AUTOCOMPLETE (sugestões)
-    ═══════════════════════════════════════════════════════ */
-    .campo-sugestoes { position: relative; }
-    .sugestoes-lista { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-top: 4px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08); z-index: 60; }
-    .sugestoes-lista.aberta { display: block; }
-    .sugestoes-lista .item { padding: 0.5rem 0.75rem; font-size: 0.875rem; cursor: pointer; }
-    .sugestoes-lista .item:hover, .sugestoes-lista .item.destacado { background: var(--color-surface); }
-    .sugestoes-lista .vazio { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--color-text-secondary); }
-
-    /* ═══════════════════════════════════════════════════════
-       ANÁLISE — ABAS
-    ═══════════════════════════════════════════════════════ */
-    .analise-tabs { display: flex; border-bottom: 1px solid var(--color-border); margin-bottom: 1.5rem; }
-    .analise-tab { padding: 0.6rem 0.25rem; margin-right: 1.5rem; font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
-    .analise-tab.active { color: var(--color-text); border-bottom-color: var(--color-text); font-weight: 500; }
-    .analise-secao { display: none; }
-    .analise-secao.active { display: block; }
-
-    /* ═══════════════════════════════════════════════════════
-      FILTROS — painel partilhado (Conta / Tipo / Direção / Categoria)
-    ═══════════════════════════════════════════════════════ */
-    .filtro-opcao-todas {
-      padding: 0.55rem 0.9rem; font-size: 0.85rem; color: var(--color-text-secondary);
-      cursor: pointer;
-    }
-    .filtro-opcao-todas:hover { background: var(--color-surface); }
-
-    .filtro-grupo-label {
-      font-size: 0.68rem; font-weight: 600; color: var(--color-text-tertiary);
-      text-transform: uppercase; letter-spacing: 0.06em;
-      padding: 0.6rem 0.9rem 0.3rem;
-    }
-    /* separador entre "esferas" (Entradas/Saídas), em vez das setas coloridas */
-    .filtro-grupo-label.nova-esfera {
-      border-top: 1px solid var(--color-border-light); margin-top: 6px;
-    }
-
-    .filtro-item-linha {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0.45rem 0.9rem; font-size: 0.875rem; color: var(--color-text);
-      cursor: pointer;
-    }
-    .filtro-item-linha:hover { background: var(--color-surface); }
-    .filtro-item-linha .check {
-      opacity: 0; color: var(--color-text-faint); display: flex; flex-shrink: 0;
-    }
-    .filtro-item-linha.selecionado .check,
-    .filtro-item-linha.indeterminado .check { opacity: 1; }
-    .filtro-item-linha.indeterminado .check { color: var(--color-text-secondary); }
-    .filtro-esfera-label {
-      font-size: 0.65rem; font-weight: 700; color: var(--color-text);
-      text-transform: uppercase; letter-spacing: 0.07em;
-      padding: 0.5rem 0.9rem 0.3rem;
-    }
-    .filtro-esfera-label.nova-esfera { border-top: 1px solid var(--color-border-light); margin-top: 6px; padding-top: 0.6rem; }
-
-    .filtro-grupo-linha {
-      font-weight: 600; color: var(--color-text-tertiary);
-      text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.04em;
-    }
-    .filtro-item-indentado { padding-left: 1.5rem; }
-
-    .filtro-item-linha.indeterminado .check { opacity: 1; color: var(--color-text-secondary); }
-
-    .seta-dropdown-btn { display: flex; flex-shrink: 0; color: var(--color-text-secondary); transition: transform 0.15s; }
-    .filtro-cat-btn.ativo .seta-dropdown-btn { transform: rotate(180deg); }
-
-    .campo-seletor input[readonly] { padding-right: 2.2rem; }
-    .campo-seletor .seta-dropdown-input {
-      position: absolute; right: 0.75rem; top: 30px; pointer-events: none;
-      color: var(--color-text-secondary); display: flex; align-items: center;
-    }
+    
     /* ═══════════════════════════════════════════════════════
        RESPONSIVO (MOBILE)
     ═══════════════════════════════════════════════════════ */
+
+    .btn-filtros-mobile { display: none; }
+    .btn-aplicar-filtros { display: none; }
+    .btn-aplicar-filtros.escondido { display: none; }
+    .filtros-sheet-acoes { display: none; }
     @media (max-width: 768px) {
       .summary-grid { grid-template-columns: 1fr; }
       nav { padding: 0 1rem; }
@@ -478,8 +482,47 @@
       .table-wrap.cards-mobile td::before { content: attr(data-label); font-size: 0.7rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; text-align: left; flex-shrink: 0; }
       .table-wrap.cards-mobile td.td-acoes { justify-content: flex-end; padding-top: 0.6rem; margin-top: 0.25rem; border-top: 1px solid var(--color-border-light); }
       .table-wrap.cards-mobile td.td-acoes::before { content: none; }
+      .table-wrap.cards-mobile .valor-com-sub { flex-direction: row; align-items: baseline; gap: 4px; }
+      .table-wrap.cards-mobile .separador-mobile { display: inline; }
+
+      .btn-filtros-mobile {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.5rem 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+      background: var(--color-white); font-size: 0.85rem; cursor: pointer; color: var(--color-text);
+      }
+      .badge-filtros-mobile {
+        background: var(--color-text); color: var(--color-white); border-radius: 999px;
+        font-size: 0.7rem; padding: 1px 6px; display: none;
+      }
+      .btn-aplicar-filtros { display: block; width: 100%; margin-top: 0.5rem; }
+
+      .filtros-conteudo { display: none; }
+      .filtros-conteudo.aberta {
+        display: flex; flex-direction: column; gap: 1rem;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+        background: var(--color-white); border-radius: 16px 16px 0 0;
+        padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+        max-height: 80vh; overflow-y: auto;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      }
+      .filtros-conteudo.aberta .filtro-cat-panel {
+        position: static; width: 100%; margin-top: 0.5rem;
+        box-shadow: none; z-index: auto;
+      }
+      .filtros-conteudo .filtro-cat-wrapper { width: 100%; min-width: 0; }
+      .filtros-conteudo .field { width: 100%; }
+
+      .folha-filtros-overlay { display: none; }
+      .folha-filtros-overlay.aberta {
+        display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 190;
+      }
+      .filtros-sheet-acoes { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+
     }
+  
+
   </style>
+
 </head>
 <body>
 
@@ -569,25 +612,36 @@
     ────────────────────────────────────────────── -->
     <div class="page active" id="page-contas">
       <div class="filtros">
-        <div class="filtro-cat-wrapper">
-          <label>Contas</label>
-          <button class="filtro-cat-btn" id="ct-filtro-conta-btn" onclick="toggleFiltroConta('ct', event)">
-            <span style="display:flex;align-items:center;gap:6px">
-              <span id="ct-filtro-conta-label">Todas</span>
-              <span class="filtro-cat-badge" id="ct-filtro-conta-badge" style="display:none"></span>
-            </span>
-            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
-          </button>
-          <div class="filtro-cat-panel" id="ct-filtro-conta-panel">
-            <div class="filtro-topo-sticky">
-              <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('ct')">Todas</div>
-              <input type="text" class="filtro-pesquisa-input" id="ct-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('ct'); document.getElementById('ct-filtro-conta-panel').scrollTop = 0">
+        <button class="btn-filtros-mobile" onclick="toggleFolhaFiltros('ct')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"></path></svg>
+          Filtros <span class="badge-filtros-mobile" id="ct-badge-filtros-mobile"></span>
+        </button>
+        <div class="filtros-conteudo" id="ct-filtros-conteudo">
+          <div class="filtro-cat-wrapper">
+            <label>Contas</label>
+            <button class="filtro-cat-btn" id="ct-filtro-conta-btn" onclick="toggleFiltroConta('ct', event)">
+              <span style="display:flex;align-items:center;gap:6px">
+                <span id="ct-filtro-conta-label">Todas</span>
+                <span class="filtro-cat-badge" id="ct-filtro-conta-badge" style="display:none"></span>
+              </span>
+              <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+            </button>
+            <div class="filtro-cat-panel" id="ct-filtro-conta-panel">
+              <div class="filtro-topo-sticky">
+                <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('ct')">Todas</div>
+                <input type="text" class="filtro-pesquisa-input" id="ct-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('ct'); document.getElementById('ct-filtro-conta-panel').scrollTop = 0">
+              </div>
+              <div id="ct-filtro-conta-lista"></div>
             </div>
-            <div id="ct-filtro-conta-lista"></div>
+          </div>
+          <div class="filtros-sheet-acoes">
+            <button class="btn-secondary btn-aplicar-filtros" id="ct-limpar-filtros-sheet" onclick="limparFiltrosContas()">Limpar filtros</button>
+            <button class="btn-primary btn-aplicar-filtros" onclick="fecharFolhaFiltros('ct')">Concluir</button>
           </div>
         </div>
         <button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>
       </div>
+      <div class="folha-filtros-overlay" id="ct-folha-overlay" onclick="fecharFolhaFiltros('ct')"></div>
       <div class="filtros-limpar-linha" id="ct-filtros-limpar-linha">
         <span class="filtros-limpar" onclick="limparFiltrosContas()">Limpar filtros</span>
       </div>
@@ -625,45 +679,56 @@
     ────────────────────────────────────────────── -->
     <div class="page" id="page-analise">
       <div class="filtros">
-        <div class="filtro-cat-wrapper">
-          <label>Contas</label>
-          <button class="filtro-cat-btn" id="an-filtro-conta-btn" onclick="toggleFiltroConta('an', event)">
-            <span style="display:flex;align-items:center;gap:6px">
-              <span id="an-filtro-conta-label">Todas</span>
-              <span class="filtro-cat-badge" id="an-filtro-conta-badge" style="display:none"></span>
-            </span>
-            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
-          </button>
-          <div class="filtro-cat-panel" id="an-filtro-conta-panel">
-            <div class="filtro-topo-sticky">
-              <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('an')">Todas</div>
-              <input type="text" class="filtro-pesquisa-input" id="an-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('an'); document.getElementById('an-filtro-conta-panel').scrollTop = 0">
+        <button class="btn-filtros-mobile" onclick="toggleFolhaFiltros('an')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"></path></svg>
+          Filtros <span class="badge-filtros-mobile" id="an-badge-filtros-mobile"></span>
+        </button>
+        <div class="filtros-conteudo" id="an-filtros-conteudo">
+          <div class="filtro-cat-wrapper">
+            <label>Contas</label>
+            <button class="filtro-cat-btn" id="an-filtro-conta-btn" onclick="toggleFiltroConta('an', event)">
+              <span style="display:flex;align-items:center;gap:6px">
+                <span id="an-filtro-conta-label">Todas</span>
+                <span class="filtro-cat-badge" id="an-filtro-conta-badge" style="display:none"></span>
+              </span>
+              <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+            </button>
+            <div class="filtro-cat-panel" id="an-filtro-conta-panel">
+              <div class="filtro-topo-sticky">
+                <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('an')">Todas</div>
+                <input type="text" class="filtro-pesquisa-input" id="an-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('an'); document.getElementById('an-filtro-conta-panel').scrollTop = 0">
+              </div>
+              <div id="an-filtro-conta-lista"></div>
             </div>
-            <div id="an-filtro-conta-lista"></div>
           </div>
-        </div>
-        <div class="filtro-cat-wrapper">
-          <label>Categorias</label>
-          <button class="filtro-cat-btn" id="filtro-cat-btn" onclick="toggleFiltroCat(event)">
-            <span style="display:flex;align-items:center;gap:6px">
-              <span id="filtro-cat-label">Todas</span>
-              <span class="filtro-cat-badge" id="filtro-cat-badge" style="display:none"></span>
-            </span>
-            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
-          </button>
-          <div class="filtro-cat-panel" id="filtro-cat-panel">
-            <div class="filtro-topo-sticky">
-              <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriaFiltroArvore('an')">Todas</div>
-              <input type="text" class="filtro-pesquisa-input" id="filtro-cat-pesquisa" placeholder="Pesquisar categoria..." oninput="renderizarFiltroCategoriaEspaco('an'); document.getElementById('filtro-cat-panel').scrollTop = 0">
+          <div class="filtro-cat-wrapper">
+            <label>Categorias</label>
+            <button class="filtro-cat-btn" id="filtro-cat-btn" onclick="toggleFiltroCat(event)">
+              <span style="display:flex;align-items:center;gap:6px">
+                <span id="filtro-cat-label">Todas</span>
+                <span class="filtro-cat-badge" id="filtro-cat-badge" style="display:none"></span>
+              </span>
+              <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+            </button>
+            <div class="filtro-cat-panel" id="filtro-cat-panel">
+              <div class="filtro-topo-sticky">
+                <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriaFiltroArvore('an')">Todas</div>
+                <input type="text" class="filtro-pesquisa-input" id="filtro-cat-pesquisa" placeholder="Pesquisar categoria..." oninput="renderizarFiltroCategoriaEspaco('an'); document.getElementById('filtro-cat-panel').scrollTop = 0">
+              </div>
+              <div id="filtro-cat-lista"></div>
             </div>
-            <div id="filtro-cat-lista"></div>
           </div>
-        </div>
-        <div class="field">
-          <label>Período</label>
-          <input type="text" id="an-periodo" placeholder="Selecionar datas" readonly>
+          <div class="field">
+            <label>Período</label>
+            <input type="text" id="an-periodo" placeholder="Selecionar datas" readonly>
+          </div>
+          <div class="filtros-sheet-acoes">
+            <button class="btn-secondary btn-aplicar-filtros" id="an-limpar-filtros-sheet" onclick="limparFiltrosAnalise()">Limpar filtros</button>
+            <button class="btn-primary btn-aplicar-filtros" onclick="fecharFolhaFiltros('an')">Concluir</button>
+          </div>
         </div>
       </div>
+      <div class="folha-filtros-overlay" id="an-folha-overlay" onclick="fecharFolhaFiltros('an')"></div>
       <div class="filtros-limpar-linha" id="an-filtros-limpar-linha">
         <span class="filtros-limpar" onclick="limparFiltrosAnalise()">Limpar filtros</span>
       </div>
@@ -729,46 +794,55 @@
       </div>
 
       <div class="filtros">
-        <div class="filtro-cat-wrapper">
-          <label>Contas</label>
-          <button class="filtro-cat-btn" id="mov-filtro-conta-btn" onclick="toggleFiltroConta('mov', event)">
-            <span style="display:flex;align-items:center;gap:6px">
-              <span id="mov-filtro-conta-label">Todas</span>
-              <span class="filtro-cat-badge" id="mov-filtro-conta-badge" style="display:none"></span>
-            </span>
-            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
-          </button>
-          <div class="filtro-cat-panel" id="mov-filtro-conta-panel">
-            <div class="filtro-topo-sticky">
-              <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('mov')">Todas</div>
-              <input type="text" class="filtro-pesquisa-input" id="mov-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('mov'); document.getElementById('mov-filtro-conta-panel').scrollTop = 0">
+        <button class="btn-filtros-mobile" onclick="toggleFolhaFiltros('mov')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"></path></svg>
+          Filtros <span class="badge-filtros-mobile" id="mov-badge-filtros-mobile"></span>
+        </button>
+        <div class="filtros-conteudo" id="mov-filtros-conteudo">
+          <div class="filtro-cat-wrapper">
+            <label>Contas</label>
+            <button class="filtro-cat-btn" id="mov-filtro-conta-btn" onclick="toggleFiltroConta('mov', event)">
+              <span style="display:flex;align-items:center;gap:6px">
+                <span id="mov-filtro-conta-label">Todas</span>
+                <span class="filtro-cat-badge" id="mov-filtro-conta-badge" style="display:none"></span>
+              </span>
+              <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+            </button>
+            <div class="filtro-cat-panel" id="mov-filtro-conta-panel">
+              <div class="filtro-topo-sticky">
+                <div class="filtro-opcao-todas" onclick="selecionarTodasContasFiltro('mov')">Todas</div>
+                <input type="text" class="filtro-pesquisa-input" id="mov-filtro-conta-pesquisa" placeholder="Pesquisar conta ou banco..." oninput="renderizarFiltroConta('mov'); document.getElementById('mov-filtro-conta-panel').scrollTop = 0">
+              </div>
+              <div id="mov-filtro-conta-lista"></div>
             </div>
-            <div id="mov-filtro-conta-lista"></div>
+          </div>
+          <div class="filtro-cat-wrapper">
+            <label>Categorias</label>
+            <button class="filtro-cat-btn" id="mov-filtro-categoria-btn" onclick="toggleFiltroCategoriaMov(event)">
+              <span style="display:flex;align-items:center;gap:6px">
+                <span id="mov-filtro-categoria-label">Todas</span>
+                <span class="filtro-cat-badge" id="mov-filtro-categoria-badge" style="display:none"></span>
+              </span>
+              <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+            </button>
+            <div class="filtro-cat-panel" id="mov-filtro-categoria-panel">
+              <div class="filtro-topo-sticky">
+                <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriaFiltroArvore('mov')">Todas</div>
+                <input type="text" class="filtro-pesquisa-input" id="mov-filtro-categoria-pesquisa" placeholder="Pesquisar categoria..." oninput="renderizarFiltroCategoriaEspaco('mov'); document.getElementById('mov-filtro-categoria-panel').scrollTop = 0">
+              </div>
+              <div id="mov-filtro-categoria-lista"></div>
+            </div>
+          </div>
+          <div class="field"><label>Período</label><input type="text" id="mov-periodo" placeholder="Selecionar datas" readonly></div>
+          <div class="field"><label>Procurar</label><input type="text" id="filtro-pesquisa" placeholder="Pesquisar descrição..." oninput="renderizarTabelaMovimentos()"></div>
+          <div class="filtros-sheet-acoes">
+            <button class="btn-secondary btn-aplicar-filtros" id="mov-limpar-filtros-sheet" onclick="limparFiltrosMovimentos()">Limpar filtros</button>
+            <button class="btn-primary btn-aplicar-filtros" onclick="fecharFolhaFiltros('mov')">Concluir</button>
           </div>
         </div>
-        <div class="filtro-cat-wrapper">
-          <label>Categorias</label>
-          <button class="filtro-cat-btn" id="mov-filtro-categoria-btn" onclick="toggleFiltroCategoriaMov(event)">
-            <span style="display:flex;align-items:center;gap:6px">
-              <span id="mov-filtro-categoria-label">Todas</span>
-              <span class="filtro-cat-badge" id="mov-filtro-categoria-badge" style="display:none"></span>
-            </span>
-            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
-          </button>
-          <div class="filtro-cat-panel" id="mov-filtro-categoria-panel">
-            <div class="filtro-topo-sticky">
-              <div class="filtro-opcao-todas" onclick="selecionarTodasCategoriaFiltroArvore('mov')">Todas</div>
-              <input type="text" class="filtro-pesquisa-input" id="mov-filtro-categoria-pesquisa" placeholder="Pesquisar categoria..." oninput="renderizarFiltroCategoriaEspaco('mov'); document.getElementById('mov-filtro-categoria-panel').scrollTop = 0">
-            </div>
-            <div id="mov-filtro-categoria-lista"></div>
-          </div>
-        </div>
-
-        <!-- Página Movimentos -->
-<div class="field"><label>Período</label><input type="text" id="mov-periodo" placeholder="Selecionar datas" readonly></div>
-        <div class="field"><label>Procurar</label><input type="text" id="filtro-pesquisa" placeholder="Pesquisar descrição..." oninput="renderizarTabelaMovimentos()"></div>
         <button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>
       </div>
+      <div class="folha-filtros-overlay" id="mov-folha-overlay" onclick="fecharFolhaFiltros('mov')"></div>
       <div class="filtros-limpar-linha" id="mov-filtros-limpar-linha">
         <span class="filtros-limpar" onclick="limparFiltrosMovimentos()">Limpar filtros</span>
       </div>
@@ -897,7 +971,7 @@
     <input type="hidden" id="mov-id">
     <div class="field campo-seletor">
       <label>Conta</label>
-      <input type="text" id="mov-conta-display" readonly required placeholder="Selecionar conta" onclick="toggleSeletorConta(event)">
+      <input type="text" id="mov-conta-display" readonly required onclick="toggleSeletorConta(event)">
       <input type="hidden" id="mov-conta">
       <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
       <div class="filtro-cat-panel" id="mov-conta-panel">
@@ -908,7 +982,7 @@
     <div class="field"><label>Descrição</label><input type="text" id="mov-descricao" required></div>
     <div class="field campo-seletor">
       <label>Tipo</label>
-      <input type="text" id="mov-tipo-display" readonly required placeholder="Selecionar tipo" onclick="toggleSeletorTipoMovForm(event)">
+      <input type="text" id="mov-tipo-display" readonly required onclick="toggleSeletorTipoMovForm(event)">
       <input type="hidden" id="mov-tipo" value="out">
       <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
       <div class="filtro-cat-panel" id="mov-tipo-panel">
@@ -918,7 +992,7 @@
     <div class="field"><label>Valor</label><input type="number" id="mov-valor" step="0.01" min="0" required></div>
     <div class="field campo-seletor">
       <label>Categoria</label>
-      <input type="text" id="mov-categoria-display" readonly required placeholder="Selecionar categoria" onclick="toggleSeletorCategoriaMovForm(event)">
+      <input type="text" id="mov-categoria-display" readonly required onclick="toggleSeletorCategoriaMovForm(event)">
       <input type="hidden" id="mov-categoria">
       <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
       <div class="filtro-cat-panel" id="mov-categoria-panel">
@@ -1360,6 +1434,7 @@ function iniciarPickerContas() {
     endDate:   new Date(ctDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'], ranges: rangesPadrao(),
+    mobileFriendly: true,
     setup: (picker) => {
       picker.on('selected', (d1, d2) => { ctDataDe = d1.format('YYYY-MM-DD'); ctDataAte = d2.format('YYYY-MM-DD'); carregarContas() })
     }
@@ -1373,6 +1448,7 @@ function iniciarPickerAnalise() {
     endDate:   new Date(anDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'], ranges: rangesPadrao(),
+    mobileFriendly: true,
     setup: (picker) => {
       picker.on('selected', (d1, d2) => { anDataDe = d1.format('YYYY-MM-DD'); anDataAte = d2.format('YYYY-MM-DD'); carregarAnalise() })
     }
@@ -1386,6 +1462,7 @@ function iniciarPickerMovimentos() {
     endDate:   new Date(movDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'], ranges: rangesPadrao(),
+    mobileFriendly: true,
     setup: (picker) => {
       picker.on('selected', (d1, d2) => { movDataDe = d1.format('YYYY-MM-DD'); movDataAte = d2.format('YYYY-MM-DD'); carregarMovimentos() })
     }
@@ -1741,22 +1818,41 @@ function selecionarCategoriaMovForm(categoriaId) {
   ligarValidacaoMovimento()
 }
 
+
+function toggleFolhaFiltros(prefixo) {
+  document.getElementById(prefixo + "-filtros-conteudo").classList.add("aberta")
+  document.getElementById(prefixo + "-folha-overlay").classList.add("aberta")
+}
+function fecharFolhaFiltros(prefixo) {
+  document.getElementById(prefixo + "-filtros-conteudo").classList.remove("aberta")
+  document.getElementById(prefixo + "-folha-overlay").classList.remove("aberta")
+}
+function atualizarBadgeFiltrosMobile(prefixo, ativo) {
+  const badge = document.getElementById(prefixo + "-badge-filtros-mobile")
+  if (badge) badge.style.display = ativo ? "inline-flex" : "none"
+}
+
 // ─── Visibilidade do botão "Limpar filtros" ───────────────
 function atualizarVisibilidadeLimparContas() {
   const ehDefeito = contasSelecionadas.ct.size === 0 && ctDataDe === isoDateStr(primeiroDiaMes()) && ctDataAte === isoDateStr(new Date())
   document.getElementById("ct-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
+  atualizarBadgeFiltrosMobile("ct", !ehDefeito)
+  document.getElementById("ct-limpar-filtros-sheet").classList.toggle("escondido", ehDefeito)
 }
 function atualizarVisibilidadeLimparAnalise() {
   const ehDefeito = contasSelecionadas.an.size === 0 && categoriasSelecionadas.size === 0 && anDataDe === isoDateStr(primeiroDiaMes()) && anDataAte === isoDateStr(new Date())
   document.getElementById("an-filtros-limpar-linha").classList.toggle("escondido", ehDefeito)
+  atualizarBadgeFiltrosMobile("an", !ehDefeito)
+  document.getElementById("an-limpar-filtros-sheet").classList.toggle("escondido", ehDefeito)
 }
 function temFiltrosMovimentosAtivos() {
   return !!(contasSelecionadas.mov.size > 0 || categoriasMovSelecionadas.size > 0 || document.getElementById("filtro-pesquisa").value.trim() || pendentesAtivo || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
 }
 function atualizarVisibilidadeLimparMovimentos() {
   document.getElementById("mov-filtros-limpar-linha").classList.toggle("escondido", !temFiltrosMovimentosAtivos())
+  atualizarBadgeFiltrosMobile("mov", temFiltrosMovimentosAtivos())
+  document.getElementById("mov-limpar-filtros-sheet").classList.toggle("escondido", !temFiltrosMovimentosAtivos())
 }
-
 
 
 
@@ -1802,8 +1898,6 @@ function limparFiltrosMovimentos() {
 
 const SEM_BANCO = "Sem banco"
 function bancoOuSemBanco(banco) { return (banco && banco.trim()) ? banco : SEM_BANCO }
-function tipoOuSemTipo(tipo) { return (tipo && tipo.trim()) ? tipo : "Sem tipo" }
-function ibanOuSemIdentificador(iban) { return (iban && iban.trim()) ? iban : "Sem identificador" }
 function trOuTraco(v) { return (v && v.trim()) ? v : "—" }
 
 // ═══════════════════════════════════════════════════════════
@@ -1948,10 +2042,10 @@ function fecharTodosOsFiltros() {
 
 function toggleFiltroCat(e) {
   e.stopPropagation()
+  const painel = document.getElementById("filtro-cat-panel")
   const estavaAberto = filtroCatAberto
   fecharTodosOsFiltros()
   filtroCatAberto = !estavaAberto
-  const painel = document.getElementById("filtro-cat-panel")
   painel.classList.toggle("aberto", filtroCatAberto)
   document.getElementById("filtro-cat-btn").classList.toggle("ativo", filtroCatAberto)
   if (filtroCatAberto) painel.scrollTop = 0
@@ -2176,16 +2270,9 @@ async function carregarContas() {
 }
 
 function renderizarCardSaldoTotal(lista) {
-  const moedas = [...new Set(lista.map(c => c.moeda))]
-  let html
-  if (moedas.length <= 1) {
-    const total = lista.reduce((s, c) => s + c.saldo, 0)
-    html = `<div class="card destaque"><div class="label">Saldo Total Consolidado</div><div class="valor positivo">${fmt(total, moedas[0] || "EUR")}</div><div class="sub">${lista.length} conta(s)</div></div>`
-  } else {
-    const subtotais = moedas.map(m => `<div class="valor positivo" style="font-size:1.1rem">${fmt(lista.filter(c => c.moeda === m).reduce((s, c) => s + c.saldo, 0), m)}</div>`).join("")
-    html = `<div class="card destaque"><div class="label">Saldo Total Consolidado (por moeda)</div>${subtotais}<div class="sub">${lista.length} conta(s) em ${moedas.length} moedas</div></div>`
-  }
-  document.getElementById("ct-card-total").innerHTML = html
+  const moeda = moedaPredominante(lista)
+  const total = lista.reduce((s, c) => s + c.saldo, 0)
+  document.getElementById("ct-card-total").innerHTML = `<div class="card destaque"><div class="label">Saldo Total Consolidado</div><div class="valor positivo">${fmt(total, moeda)}</div><div class="sub">${lista.length} conta(s)</div></div>`
 }
 
 function renderizarGraficoSaldo(saldoDiario, moeda) {
@@ -2213,7 +2300,6 @@ function renderizarTabelaContas() {
     return va < vb ? -direcao : va > vb ? direcao : 0
   })
   atualizarIconesOrdenacao("cabecalho-contas", ordenacaoContas)
-  atualizarIconesOrdenacao("cabecalho-contas", ordenacaoContas)
   const tb = document.getElementById("tabela-contas")
   if (lista.length === 0) { tb.innerHTML = linhaVazia(6, "Ainda não tens contas", "Adiciona a primeira conta para começares a registar movimentos.", `<button class="btn-primary" onclick="abrirModalConta()">+ Adicionar Conta</button>`); return }
   tb.innerHTML = ""
@@ -2240,6 +2326,10 @@ function abrirEditarConta(id) {
   document.getElementById("conta-banco").value = c.banco || ""
   document.getElementById("conta-tipo").value = c.tipo || ""
   document.getElementById("conta-iban").value = c.iban || ""
+  document.getElementById("conta-moeda").value = c.moeda
+  const opcaoMoeda = OPCOES_MOEDA.find(o => o.valor === c.moeda)
+  document.getElementById("conta-moeda-display").value = opcaoMoeda ? opcaoMoeda.label : (c.moeda || "")
+  renderizarSeletorMoeda(c.moeda)
   document.getElementById("conta-saldo").value = c.saldo
   document.getElementById("conta-saldo").disabled = true; document.getElementById("conta-saldo-label").textContent = "Saldo Atual"; document.getElementById("conta-saldo-ajustar").style.display = "block"
   document.getElementById("modal-conta").classList.add("open")
@@ -2626,7 +2716,7 @@ function renderizarTabelaRecorrentes() {
   if (lista.length === 0) { tb.innerHTML = linhaVazia(5, "Sem padrões recorrentes detetados", "Precisas de pelo menos 2 movimentos com a mesma descrição para um padrão aparecer aqui."); return }
   tb.innerHTML = ""
   lista.forEach(r => {
-    tb.innerHTML += `<tr><td data-label="Descrição">${r.descricao}</td><td data-label="Categoria">${r.categoria}<div style="font-size:0.7rem;color:#888;margin-top:2px">${r.grupo}</div></td><td data-label="Valor Médio" style="text-align:right" class="negativo">${fmt(r.valor_medio, moedaAnaliseGlobal)}</td><td data-label="Frequência" style="${r.regular ? '' : 'color:#aaa'}">${r.regular ? `~${r.intervalo_medio_dias} dias` : `${r.intervalo_medio_dias} dias (irregular)`}</td><td data-label="Próxima Data">${r.proxima_data_estimada}</td></tr>`
+    tb.innerHTML += `<tr><td data-label="Descrição">${r.descricao}</td><td data-label="Categoria"><div class="valor-com-sub"><span>${r.categoria}</span><span class="sub-linha"><span class="separador-mobile">· </span>${r.grupo}</span></div></td><td data-label="Valor Médio" style="text-align:right" class="negativo">${fmt(r.valor_medio, moedaAnaliseGlobal)}</td><td data-label="Frequência" style="${r.regular ? '' : 'color:#aaa'}">${r.regular ? `~${r.intervalo_medio_dias} dias` : `${r.intervalo_medio_dias} dias (irregular)`}</td><td data-label="Próxima Data">${r.proxima_data_estimada}</td></tr>`
   })
 }
 
@@ -2681,7 +2771,7 @@ function renderizarTabelaMovimentos() {
     const conta = contasCache.find(c => c.id === m.conta_id)
     const pendente = !m.confirmado
     const iconePendente = !pendente ? "" : (m.sem_categoria ? `<span class="icone-auto sem-match" title="Categoria genérica. Recomenda-se validação.">${ICONE_SEM_MATCH}</span>` : `<span class="icone-auto llm" title="Categoria automática. Recomenda-se confirmação.">${ICONE_SUGESTAO_LLM}</span>`)
-    tb.innerHTML += `<tr><td data-label="Data">${m.data}</td><td data-label="Descrição">${m.descricao}</td><td data-label="Conta">${conta ? `${conta.nome}<div style="font-size:0.7rem;color:#888;margin-top:2px">${conta.banco}</div>` : m.conta_id}</td><td data-label="Categoria">${m.categoria}${iconePendente}<div style="font-size:0.7rem;color:#888;margin-top:2px">${m.grupo}</div></td><td data-label="Valor" style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta?.moeda)}</td><td class="td-acoes" style="white-space:nowrap">${pendente ? `<button class="btn-confirmar" onclick="confirmarMovimento('${m.id}')">✓ confirmar</button>` : ""}<button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button><button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button></td></tr>`
+    tb.innerHTML += `<tr><td data-label="Data">${m.data}</td><td data-label="Descrição">${m.descricao}</td><td data-label="Conta"><div class="valor-com-sub"><span>${conta ? conta.nome : m.conta_id}</span>${conta && conta.banco ? `<span class="sub-linha"><span class="separador-mobile">· </span>${conta.banco}</span>` : ""}</div></td><td data-label="Categoria"><div class="valor-com-sub"><span>${m.categoria}${iconePendente}</span>${m.grupo ? `<span class="sub-linha"><span class="separador-mobile">· </span>${m.grupo}</span>` : ""}</div></td><td data-label="Valor" style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta?.moeda)}</td><td class="td-acoes" style="white-space:nowrap">${pendente ? `<button class="btn-confirmar" onclick="confirmarMovimento('${m.id}')">✓ confirmar</button>` : ""}<button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button><button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button></td></tr>`
   })
 }
 
@@ -2715,6 +2805,7 @@ function abrirEditarMovimento(id) {
   selecionarContaMovForm(m.conta_id)
   pickerMovData.setDate(m.data)
   document.getElementById("mov-descricao").value = m.descricao
+  document.getElementById("mov-valor").value = Math.abs(m.valor)
   const tipo = m.valor > 0 ? "in" : "out"
   selecionarTipoMovForm(tipo)
   selecionarCategoriaMovForm(m.categoria_id)

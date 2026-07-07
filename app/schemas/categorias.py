@@ -5,3 +5,6 @@ class CategoriaGestaoInput(BaseModel):
     nome:           str
     parent_id:      int  | None = None
     eh_recebimento: bool | None = None
+
+class ReordenarCategoriasInput(BaseModel):
+    ids: list[int]

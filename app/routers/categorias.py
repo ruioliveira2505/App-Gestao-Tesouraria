@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
-from app.db.database import get_connection, release_connection, release_connection
-from app.schemas.categorias import CategoriaGestaoInput
+from app.db.database import get_connection, release_connection
+from app.schemas.categorias import CategoriaGestaoInput, ReordenarCategoriasInput
 
 router = APIRouter()
 
@@ -146,6 +146,43 @@ def criar_categoria(dados: CategoriaGestaoInput, utilizador: dict = Depends(util
     return {"ok": True}
 
 
+@router.put("/categorias/reordenar")
+def reordenar_categorias(dados: ReordenarCategoriasInput, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+    try:
+        if not dados.ids:
+            raise HTTPException(status_code=400, detail="Lista de categorias vazia.")
+
+        placeholders = ",".join(["%s"] * len(dados.ids))
+
+        cursor.execute(
+            f"SELECT id, parent_id, eh_recebimento FROM categorias WHERE id IN ({placeholders}) AND utilizador_id=%s",
+            (*dados.ids, uid)
+        )
+        rows = cursor.fetchall()
+        if len(rows) != len(dados.ids):
+            raise HTTPException(status_code=404, detail="Uma ou mais categorias não foram encontradas.")
+
+        parents = {r[1] for r in rows}
+        if len(parents) > 1:
+            raise HTTPException(status_code=400, detail="Só podes reordenar categorias que pertencem ao mesmo grupo.")
+
+        if None in parents:
+            direcoes = {r[2] for r in rows}
+            if len(direcoes) > 1:
+                raise HTTPException(status_code=400, detail="Só podes reordenar grupos da mesma direção (Entrada ou Saída).")
+
+        for posicao, categoria_id in enumerate(dados.ids, start=1):
+            cursor.execute("UPDATE categorias SET ordem=%s WHERE id=%s AND utilizador_id=%s", (posicao, categoria_id, uid))
+        conn.commit()
+    finally:
+        cursor.close()
+        release_connection(conn)
+    return {"ok": True}
+
+
 @router.put("/categorias/{categoria_id}")
 def editar_categoria(categoria_id: int, dados: CategoriaGestaoInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
@@ -215,46 +252,6 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
             _eliminar_folha(cursor, categoria_id, migrar_para_id, forcar)
 
         conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
-    return {"ok": True}
-
-
-@router.post("/categorias/{categoria_id}/mover")
-def mover_categoria(categoria_id: int, direcao: str, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-    try:
-        cursor.execute("SELECT parent_id, ordem, eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Categoria não encontrada")
-        parent_id, ordem, eh_recebimento = row
-
-        operador  = ">" if direcao == "down" else "<"
-        ordenacao = "ASC" if direcao == "down" else "DESC"
-
-        if parent_id is None:
-            cursor.execute(f"""
-                SELECT id, ordem FROM categorias
-                WHERE utilizador_id=%s AND parent_id IS NULL AND eh_recebimento=%s AND ordem {operador} %s
-                ORDER BY ordem {ordenacao} LIMIT 1
-            """, (uid, eh_recebimento, ordem))
-        else:
-            cursor.execute(f"""
-                SELECT id, ordem FROM categorias
-                WHERE parent_id=%s AND ordem {operador} %s
-                ORDER BY ordem {ordenacao} LIMIT 1
-            """, (parent_id, ordem))
-        vizinho = cursor.fetchone()
-
-        if vizinho:
-            vizinho_id, vizinho_ordem = vizinho
-            cursor.execute("UPDATE categorias SET ordem=%s WHERE id=%s", (vizinho_ordem, categoria_id))
-            cursor.execute("UPDATE categorias SET ordem=%s WHERE id=%s", (ordem, vizinho_id))
-            conn.commit()
     finally:
         cursor.close()
         release_connection(conn)

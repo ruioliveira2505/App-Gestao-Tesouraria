@@ -431,6 +431,13 @@
     .icone-auto.llm svg { color: var(--color-aviso-icone); }
     .icone-auto.sem-match svg { color: var(--color-negativo); }
     .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--color-text-secondary); cursor: help; }
+    .mini-timeline { display: flex; align-items: flex-start; margin: 0.25rem 0 1.25rem; }
+    .mini-timeline-ponto { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 1; min-width: 0; max-width: 45%; }
+    .mini-timeline-ponto::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--color-text); }
+    .mini-timeline-data { font-size: 0.75rem; font-weight: 600; color: var(--color-text); white-space: nowrap; }
+    .mini-timeline-titulo { font-size: 0.65rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+    .mini-timeline-valor { font-size: 0.68rem; color: var(--color-text-secondary); text-align: center; word-break: break-word; }
+    .mini-timeline-linha { flex: 1; height: 1px; background: var(--color-border); margin: 4px 8px 0; }
     .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: var(--color-positivo-bg); border: 1px solid var(--color-positivo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-positivo-text); }
     .btn-confirmar:hover { background: var(--color-positivo-bg-hover); }
 
@@ -707,9 +714,9 @@
           <thead><tr id="cabecalho-contas">
             <th onclick="ordenarContas('nome')" data-campo="nome" style="cursor:pointer">Nome <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('banco')" data-campo="banco" style="cursor:pointer">Banco <span class="icone-ordenacao"></span></th>
-            <th onclick="ordenarContas('tipo')" data-campo="tipo" style="cursor:pointer">Tipo de Conta <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('tipo')" data-campo="tipo" style="cursor:pointer">Tipo <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('iban')" data-campo="iban" style="cursor:pointer">IBAN <span class="icone-ordenacao"></span></th>
-            <th onclick="ordenarContas('inicio')" data-campo="inicio" style="cursor:pointer">Data Inicial <span class="icone-ordenacao"></span></th>
+            <th onclick="ordenarContas('inicio')" data-campo="inicio" style="cursor:pointer">Data <span class="icone-ordenacao"></span></th>
             <th onclick="ordenarContas('saldo')" data-campo="saldo" style="text-align:right;cursor:pointer">Saldo <span class="icone-ordenacao"></span></th>
             <th></th>
           </tr></thead>
@@ -1079,13 +1086,13 @@
   <div class="modal">
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
     <input type="hidden" id="conta-id">
-    <div class="field"><label>Nome</label><input type="text" id="conta-nome"></div>
+    <div class="field"><label>Nome</label><input type="text" id="conta-nome" required></div>
     <div class="field campo-sugestoes">
       <label>Banco <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
       <input type="text" id="conta-banco" autocomplete="off">
     </div>
     <div class="field campo-sugestoes">
-      <label>Tipo de Conta <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
+      <label>Tipo <span style="color:var(--color-text-secondary);font-weight:400">(opcional)</span></label>
       <input type="text" id="conta-tipo" autocomplete="off">
     </div>
     <div class="field">
@@ -1101,17 +1108,30 @@
         <div id="conta-moeda-lista"></div>
       </div>
     </div>
-    <div class="field">
-      <label><span id="conta-saldo-label">Saldo Inicial</span> <span class="icone-protegida" id="conta-saldo-ajuda" title="Saldo da conta no final do dia selecionado."></span></label>
-      <input type="number" id="conta-saldo" step="0.01" required>
-    </div>
     <div class="field" id="conta-data-campo-adicionar">
-      <label>Data Inicial</label>
+      <label>Data Início de Movimentos <span class="icone-protegida" id="conta-data-ajuda" title="Dia a partir do qual vais registar movimentos desta conta no sistema."></span></label>
       <input type="text" id="conta-data" placeholder="Selecionar data" required readonly>
     </div>
     <div class="field" id="conta-data-campo-editar" style="display:none">
-      <label>Data Inicial</label>
+      <label>Data de Reconciliação <span class="icone-protegida" id="conta-data-ajuda-editar" title="Corresponde à reconciliação de saldo mais antiga desta conta."></span></label>
       <input type="text" id="conta-data-display" readonly disabled>
+    </div>
+    <div class="field">
+      <label><span id="conta-saldo-label">Saldo Inicial</span> <span class="icone-protegida" id="conta-saldo-ajuda" title="Saldo da conta nesse dia, antes de começares a registar movimentos."></span></label>
+      <input type="number" id="conta-saldo" step="0.01" required oninput="atualizarMiniTimeline()">
+    </div>
+    <div class="mini-timeline" id="conta-mini-timeline" style="display:none">
+      <div class="mini-timeline-ponto">
+        <div class="mini-timeline-titulo">Reconciliação</div>
+        <div class="mini-timeline-data" id="conta-timeline-data-antes"></div>
+        <div class="mini-timeline-valor" id="conta-timeline-saldo-antes"></div>
+      </div>
+      <div class="mini-timeline-linha"></div>
+      <div class="mini-timeline-ponto">
+        <div class="mini-timeline-titulo">Início de Movimentos</div>
+        <div class="mini-timeline-data" id="conta-timeline-data-depois"></div>
+        <div class="mini-timeline-valor" id="conta-timeline-saldo-depois"></div>
+      </div>
     </div>
     <div id="conta-reconciliacoes-link" style="display:none;margin-top:-0.75rem;margin-bottom:1rem">
       <a href="#" onclick="abrirModalAjusteSaldo(); return false" style="font-size:0.8rem;color:#888">Ver reconciliações →</a>
@@ -1130,17 +1150,30 @@
     <input type="hidden" id="reconc-conta-id">
     <div class="table-wrap" style="margin-bottom:1rem;max-height:300px;overflow-y:auto">
       <table>
-        <thead><tr><th>Data</th><th style="text-align:right">Saldo Reconciliado</th><th></th></tr></thead>
+        <thead><tr><th>Data de Reconciliação</th><th style="text-align:right">Saldo Reconciliado</th><th></th></tr></thead>
         <tbody id="tabela-reconciliacoes"></tbody>
       </table>
     </div>
     <div id="form-reconciliacao" style="display:none;border-top:1px solid #e5e5e5;padding-top:1rem;margin-bottom:1rem">
       <input type="hidden" id="reconc-id">
      <!-- Modal: Reconciliações -->
-    <div class="field"><label>Data</label><input type="text" id="reconc-data" placeholder="Selecionar data" required readonly></div>
+    <div class="field"><label>Data de Reconciliação <span class="icone-protegida" id="reconc-data-ajuda" title="Dia em que registas esta reconciliação, já depois de todos os movimentos desse dia."></span></label><input type="text" id="reconc-data" placeholder="Selecionar data" required readonly></div>
       <div class="field">
-        <label>Saldo Reconciliado <span class="icone-protegida" id="reconc-valor-ajuda" title="Saldo da conta no final do dia selecionado."></span></label>
-        <input type="number" id="reconc-valor" step="0.01" required>
+        <label>Saldo Reconciliado <span class="icone-protegida" id="reconc-valor-ajuda" title="Saldo da conta nesse dia, depois de todos os movimentos já ocorridos."></span></label>
+        <input type="number" id="reconc-valor" step="0.01" required oninput="atualizarMiniTimelineReconciliacao()">
+      </div>
+      <div class="mini-timeline" id="reconc-mini-timeline" style="display:none">
+        <div class="mini-timeline-ponto">
+          <div class="mini-timeline-titulo">Reconciliação</div>
+          <div class="mini-timeline-data" id="reconc-timeline-data-antes"></div>
+          <div class="mini-timeline-valor" id="reconc-timeline-saldo-antes"></div>
+        </div>
+        <div class="mini-timeline-linha"></div>
+        <div class="mini-timeline-ponto">
+          <div class="mini-timeline-titulo" id="reconc-timeline-titulo-depois"></div>
+          <div class="mini-timeline-data" id="reconc-timeline-data-depois"></div>
+          <div class="mini-timeline-valor" id="reconc-timeline-saldo-depois"></div>
+        </div>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn-secondary" onclick="esconderFormReconciliacao()">Cancelar</button>
@@ -1358,6 +1391,16 @@ function fmtDiaCurto(iso) {
 }
 function isoDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+function somarDiasIso(dataStr, dias) {
+  const [ano, mes, dia] = dataStr.split('-').map(Number)
+  const d = new Date(Date.UTC(ano, mes - 1, dia))
+  d.setUTCDate(d.getUTCDate() + dias)
+  return d.toISOString().slice(0, 10)
+}
+function fmtDataPt(dataStr) {
+  const [ano, mes, dia] = dataStr.split('-')
+  return `${dia}/${mes}/${ano}`
 }
 
 function api(path) {
@@ -1599,6 +1642,7 @@ function iniciarPickerReconciliacao() {
     element: document.getElementById('reconc-data'),
     singleMode: true, format: 'YYYY-MM-DD', maxDate: new Date(),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
+    setup: (picker) => { picker.on('selected', () => atualizarMiniTimelineReconciliacao()) },
   })
 }
 function iniciarPickerContaData() {
@@ -1606,6 +1650,7 @@ function iniciarPickerContaData() {
     element: document.getElementById('conta-data'),
     singleMode: true, format: 'YYYY-MM-DD', maxDate: new Date(),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
+    setup: (picker) => { picker.on('selected', () => atualizarMiniTimeline()) },
   })
 }
 
@@ -2455,7 +2500,7 @@ function renderizarTabelaContas() {
   }
   tb.innerHTML = ""
   lista.forEach(c => {
-    tb.innerHTML += `<tr class="linha-conta-mobile" onclick="toggleCardConta(this)"><td data-label="Nome">${c.nome}</td><td data-label="Banco">${trOuTraco(c.banco)}</td><td data-label="Tipo de Conta" class="td-expandido">${trOuTraco(c.tipo)}</td><td data-label="IBAN" class="td-expandido">${trOuTraco(c.iban)}</td><td data-label="Data Inicial" class="td-expandido">${c.inicio}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes td-expandido" style="white-space:nowrap"><button class="btn-sm" onclick="event.stopPropagation(); abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="event.stopPropagation(); eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
+    tb.innerHTML += `<tr class="linha-conta-mobile" onclick="toggleCardConta(this)"><td data-label="Nome">${c.nome}</td><td data-label="Banco">${trOuTraco(c.banco)}</td><td data-label="Tipo" class="td-expandido">${trOuTraco(c.tipo)}</td><td data-label="IBAN" class="td-expandido">${trOuTraco(c.iban)}</td><td data-label="Data" class="td-expandido">${c.inicio}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes td-expandido" style="white-space:nowrap"><button class="btn-sm" onclick="event.stopPropagation(); abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="event.stopPropagation(); eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
   })
 }
 function toggleCardConta(tr) { tr.classList.toggle("expandido") }
@@ -2484,6 +2529,7 @@ function abrirModalConta() {
   document.getElementById("modal-conta").classList.add("open")
   ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
   ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"], "btn-guardar-conta")
+  atualizarMiniTimeline()
 }
 function abrirEditarConta(id) {
   const c = contasCache.find(x => x.id === id)
@@ -2502,10 +2548,43 @@ function abrirEditarConta(id) {
   document.getElementById("conta-saldo-ajuda").style.display = "none"
   document.getElementById("conta-data-campo-adicionar").style.display = "none"
   document.getElementById("conta-data-campo-editar").style.display = "block"
-  document.getElementById("conta-data-display").value = c.inicio
+  document.getElementById("conta-data-display").value = fmtDataPt(c.inicio)
+  document.getElementById("conta-mini-timeline").style.display = "none"
   document.getElementById("modal-conta").classList.add("open")
   ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
   ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
+}
+function atualizarMiniTimelineGenerico(prefixo, dataReconciliacaoStr, saldoStr, moeda) {
+  const timeline = document.getElementById(prefixo + "-mini-timeline")
+  if (!dataReconciliacaoStr || saldoStr === "" || saldoStr === undefined || saldoStr === null) { timeline.style.display = "none"; return }
+  const dataDepois = somarDiasIso(dataReconciliacaoStr, 1)
+  const saldoFormatado = moeda ? fmt(parseFloat(saldoStr), moeda) : saldoStr
+  document.getElementById(prefixo + "-timeline-data-antes").textContent = fmtDataPt(dataReconciliacaoStr)
+  document.getElementById(prefixo + "-timeline-saldo-antes").textContent = `Saldo: ${saldoFormatado}`
+  document.getElementById(prefixo + "-timeline-data-depois").textContent = fmtDataPt(dataDepois)
+  document.getElementById(prefixo + "-timeline-saldo-depois").textContent = `Saldo: ${saldoFormatado}`
+  timeline.style.display = "flex"
+}
+function atualizarMiniTimeline() {
+  if (document.getElementById("conta-id").value) { document.getElementById("conta-mini-timeline").style.display = "none"; return }
+  const dataInicioMovimentos = document.getElementById("conta-data").value
+  const saldoStr = document.getElementById("conta-saldo").value
+  const moeda = document.getElementById("conta-moeda").value
+  const dataReconciliacao = dataInicioMovimentos ? somarDiasIso(dataInicioMovimentos, -1) : ""
+  atualizarMiniTimelineGenerico("conta", dataReconciliacao, saldoStr, moeda)
+}
+function atualizarMiniTimelineReconciliacao() {
+  const id = document.getElementById("reconc-id").value
+  const dataReconciliacao = document.getElementById("reconc-data").value
+  const saldoStr = document.getElementById("reconc-valor").value
+  const contaId = document.getElementById("reconc-conta-id").value
+  const conta = contasCache.find(c => c.id === contaId)
+  const outras = reconciliacoesCache.filter(a => String(a.id) !== String(id))
+  const dataMaisAntigaOutras = outras.reduce((min, a) => (!min || a.data < min) ? a.data : min, null)
+  const ehMaisAntiga = !dataMaisAntigaOutras || (dataReconciliacao && dataReconciliacao < dataMaisAntigaOutras)
+  const tituloEl = document.getElementById("reconc-timeline-titulo-depois")
+  if (tituloEl) tituloEl.textContent = ehMaisAntiga ? "Início de Movimentos" : "Registo de Movimentos"
+  atualizarMiniTimelineGenerico("reconc", dataReconciliacao, saldoStr, conta?.moeda)
 }
 async function guardarConta() {
   const id = document.getElementById("conta-id").value
@@ -2514,7 +2593,7 @@ async function guardarConta() {
   const body = { nome: document.getElementById("conta-nome").value, banco: document.getElementById("conta-banco").value, tipo: document.getElementById("conta-tipo").value, iban: document.getElementById("conta-iban").value, moeda: document.getElementById("conta-moeda").value }
   let r
   if (id) { r = await apiPut("/contas/" + id, body) }
-  else     { body.saldo = parseFloat(document.getElementById("conta-saldo").value); body.data = document.getElementById("conta-data").value; r = await apiPost("/contas", body) }
+  else     { body.saldo = parseFloat(document.getElementById("conta-saldo").value); body.data = somarDiasIso(document.getElementById("conta-data").value, -1); r = await apiPost("/contas", body) }
   if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
   fecharModal(); carregarContas()
 }
@@ -2568,7 +2647,10 @@ function selecionarMoeda(valor) {
   document.getElementById("conta-moeda-display").value = opcao ? opcao.label : ""
   renderizarSeletorMoeda(valor)
   fecharSeletorMoeda()
-  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
+  const id = document.getElementById("conta-id").value
+  const camposObrigatorios = id ? ["conta-nome", "conta-moeda-display", "conta-saldo"] : ["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"]
+  ligarValidacaoFormulario(camposObrigatorios, "btn-guardar-conta")
+  atualizarMiniTimeline()
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2595,10 +2677,8 @@ function renderizarTabelaReconciliacoes(comAcoes) {
   const conta = contasCache.find(c => c.id === contaId)
   const tb = document.getElementById("tabela-reconciliacoes")
   tb.innerHTML = ""
-  const dataMaisAntiga = reconciliacoesCache.reduce((min, a) => (!min || a.data < min) ? a.data : min, null)
   reconciliacoesCache.forEach(a => {
-    const tagInicio = a.data === dataMaisAntiga ? `<span class="icone-protegida" title="Esta é a reconciliação mais antiga da conta — corresponde à Data Inicial. Só há movimentos registados no sistema a partir do dia seguinte." style="margin-left:6px">${ICONE_INFO}</span>` : ""
-    tb.innerHTML += `<tr><td style="white-space:nowrap">${a.data}${tagInicio}</td><td style="text-align:right">${fmt(a.saldo_real, conta?.moeda)}</td><td style="white-space:nowrap"><span style="visibility:${comAcoes ? 'visible' : 'hidden'}"><button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button><button class="btn-danger" onclick="eliminarReconciliacao(${a.id})">✕</button></span></td></tr>`
+    tb.innerHTML += `<tr><td style="white-space:nowrap">${a.data}</td><td style="text-align:right">${fmt(a.saldo_real, conta?.moeda)}</td><td style="white-space:nowrap"><span style="visibility:${comAcoes ? 'visible' : 'hidden'}"><button class="btn-sm" onclick="mostrarFormReconciliacao(${a.id},'${a.data}',${a.saldo_real})">editar</button><button class="btn-danger" onclick="eliminarReconciliacao(${a.id})">✕</button></span></td></tr>`
   })
 }
 function mostrarFormReconciliacao(id, data, valor) {
@@ -2609,6 +2689,7 @@ function mostrarFormReconciliacao(id, data, valor) {
   document.getElementById("btn-add-reconciliacao").style.display = "none"
   renderizarTabelaReconciliacoes(false)
   ligarValidacaoFormulario(["reconc-data", "reconc-valor"], "btn-guardar-reconciliacao")
+  atualizarMiniTimelineReconciliacao()
 }
 function esconderFormReconciliacao() {
   document.getElementById("form-reconciliacao").style.display = "none"
@@ -3252,6 +3333,9 @@ document.getElementById("icone-menu-config").innerHTML = ICONE_PERFIL_GERAL
 document.getElementById("icone-menu-sair").innerHTML = ICONE_SAIR
 document.getElementById("conta-saldo-ajuda").innerHTML = ICONE_INFO
 document.getElementById("reconc-valor-ajuda").innerHTML = ICONE_INFO
+document.getElementById("reconc-data-ajuda").innerHTML = ICONE_INFO
+document.getElementById("conta-data-ajuda").innerHTML = ICONE_INFO
+document.getElementById("conta-data-ajuda-editar").innerHTML = ICONE_INFO
 mostrarAjudaAoEscrever("reg-password", "ajuda-reg-password")
 mostrarAjudaAoEscrever("perfil-pw-nova", "ajuda-perfil-pw-nova")
 mostrarAjudaAoEscrever("reset-password-nova", "ajuda-reset-password-nova")

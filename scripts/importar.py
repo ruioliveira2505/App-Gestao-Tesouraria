@@ -1,11 +1,19 @@
 import json
+from datetime import date, timedelta
 
 from app.db.database import get_connection, release_connection
 from app.services.categorizacao import categorizar
 
 
-def importar_contas(cursor, contas):
+def importar_contas(cursor, contas, movimentos):
     print("A inserir contas...")
+
+    # data mais antiga de movimentos, por conta, para calcular a reconciliação inicial
+    data_mais_antiga_por_conta = {}
+    for m in movimentos:
+        conta_id = m["conta_id"]
+        if conta_id not in data_mais_antiga_por_conta or m["data"] < data_mais_antiga_por_conta[conta_id]:
+            data_mais_antiga_por_conta[conta_id] = m["data"]
 
     for conta in contas:
         cursor.execute(
@@ -34,6 +42,15 @@ def importar_contas(cursor, contas):
             f"{conta['iban']}"
         )
 
+        # A reconciliação inicial fica um dia antes do movimento mais antigo desta conta
+        # (se não houver movimentos para esta conta, usa-se hoje como fallback)
+        primeiro_movimento = data_mais_antiga_por_conta.get(conta["id"])
+        if primeiro_movimento:
+            ano, mes, dia = map(int, primeiro_movimento.split("-"))
+            data_reconciliacao = (date(ano, mes, dia) - timedelta(days=1)).isoformat()
+        else:
+            data_reconciliacao = date.today().isoformat()
+
         # Apenas cria a reconciliação inicial quando a conta é inserida
         if cursor.rowcount == 1:
             cursor.execute(
@@ -48,10 +65,11 @@ def importar_contas(cursor, contas):
                 """,
                 (
                     conta["id"],
-                    "2026-04-30",
+                    data_reconciliacao,
                     conta["saldo"],
                 ),
             )
+            print(f"    → reconciliação inicial em {data_reconciliacao}")
 
 
 def importar_movimentos(cursor, conn, movimentos):
@@ -108,7 +126,7 @@ def main():
     try:
         cursor = conn.cursor()
 
-        importar_contas(cursor, dados["contas"])
+        importar_contas(cursor, dados["contas"], dados["movimentos"])
         importar_movimentos(cursor, conn, dados["movimentos"])
 
         conn.commit()
@@ -126,4 +144,4 @@ if __name__ == "__main__":
 
 # antes de implementar este script deve haver 1 user registado
 # correr para importar os dados_mock para base de dados (user_id 1):
-# python -m scripts.importat
+# python -m scripts.importar

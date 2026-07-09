@@ -1,7 +1,7 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tesouraria</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
@@ -33,6 +33,22 @@
       --color-negativo-bg: #fef2f2;
       --color-negativo-border: #fca5a5;
       --color-negativo-text: #991b1b;
+
+      --litepicker-container-months-bg-color: #ffffff;
+      --litepicker-container-months-color: #1a1a1a;
+      --litepicker-month-header-color: #1a1a1a;
+      --litepicker-button-prev-month-color: #1a1a1a;
+      --litepicker-button-next-month-color: #1a1a1a;
+      --litepicker-is-today-color: #1a1a1a;
+      --litepicker-is-in-range-color: #f5f5f3;
+      --litepicker-is-start-color-bg: #1a1a1a;
+      --litepicker-is-start-color: #ffffff;
+      --litepicker-is-end-color-bg: #1a1a1a;
+      --litepicker-is-end-color: #ffffff;
+      --litepicker-highlighted-day-color: #1a1a1a;
+      --litepicker-button-cancel-color-bg: transparent;
+      --litepicker-button-cancel-color: #1a1a1a;
+      --litepicker-button-apply-color-bg: #1a1a1a;
 
       --color-aviso-bg: #fff7e6;
       --color-aviso-border: #f0c36d;
@@ -154,6 +170,7 @@
     .card .valor { font-size: 1.5rem; font-weight: 500; }
     .card .sub { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.25rem; }
     .card.destaque { border-color: var(--color-positivo); }
+    .card.destaque.negativo { border-color: var(--color-negativo); }
 
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .summary-card { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1rem 1.25rem; }
@@ -166,7 +183,7 @@
        SECÇÕES E TABELAS
     ═══════════════════════════════════════════════════════ */
 
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
     .section-title { font-size: 0.75rem; font-weight: 600; color: var(--color-text-secondary); letter-spacing: 0.05em; text-transform: uppercase; }
 
     .table-wrap { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); overflow-x: auto; overflow-y: hidden; margin-bottom: 1.5rem; }
@@ -250,7 +267,7 @@
 
     /* ── Seletor de período (contas) ── */
     .campo-com-icone { position: relative; display: inline-flex; align-items: center; }
-    .campo-com-icone .icone-calendario { position: absolute; left: 0.7rem; color: var(--color-text-secondary); pointer-events: none; }
+    .campo-com-icone .icone-calendario { position: absolute; left: 0.7rem; top: 50%; transform: translateY(-50%); color: var(--color-text-secondary); pointer-events: none; }
     .seletor-periodo {
       width: 200px; padding: 0.45rem 0.8rem 0.45rem 2.1rem;
       border: 1px solid var(--color-border); border-radius: var(--radius-md);
@@ -260,6 +277,15 @@
     }
     .seletor-periodo:hover { background: var(--color-surface); border-color: var(--color-text-secondary); }
     .seletor-periodo:focus { outline: 2px solid var(--color-text); outline-offset: 1px; background: var(--color-surface); }
+    .litepicker .container__predefined-ranges button,
+    .litepicker .container__predefined-ranges a {
+      color: var(--color-text) !important;
+      text-decoration-color: var(--color-text) !important;
+    }
+    .litepicker .container__predefined-ranges .active {
+      background: var(--color-bg) !important;
+      color: var(--color-text) !important;
+    }
 
     .campo-seletor { position: relative; }
     .campo-seletor input[readonly] { cursor: pointer; caret-color: transparent; padding-right: 2.2rem; }
@@ -362,8 +388,6 @@
 
     .chart-full { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; margin-bottom: 1.5rem; }
     .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    #grafico-saldo-mensal { height: 340px !important; width: 100% !important; }
-    #grafico-mensal, #grafico-drilldown { height: 320px !important; width: 100% !important; }
 
     
     /* ═══════════════════════════════════════════════════════
@@ -503,11 +527,15 @@
     .btn-aplicar-filtros.escondido { display: none; }
     .filtros-sheet-acoes { display: none; }
     @media (max-width: 768px) {
+      .modal-tela-cheia { align-items: stretch; justify-content: stretch; padding: 0; }
+      .modal-tela-cheia .modal { max-width: none; width: 100%; height: 100%; border-radius: 0; overflow-y: auto; }
       .summary-grid { grid-template-columns: 1fr; }
       nav { padding: 0 1rem; gap: 0.75rem; }
       .nav-brand { display: none; }
       .nav-link { padding: 0 0.6rem; font-size: 0.8rem; }
       .nav-right { gap: 0.5rem; }
+      .seletor-periodo { width: 44px; padding: 0.5rem; color: transparent; }
+      .campo-com-icone .icone-calendario { left: 50%; transform: translate(-50%, -50%); }
       main { padding: 1rem; }
       .perfil-layout { flex-direction: column; }
       .perfil-sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
@@ -528,8 +556,6 @@
       .table-wrap.cards-mobile td.td-expandido { display: none; }
       .table-wrap.cards-mobile tr.expandido td.td-expandido { display: flex; }
       .ordenacao-mobile { display: block; }
-      #grafico-saldo-mensal { height: 280px !important; width: 100% !important; }
-      #grafico-mensal, #grafico-drilldown { height: 260px !important; width: 100% !important; }
 
       .btn-filtros-mobile {
       display: inline-flex; align-items: center; gap: 6px;
@@ -1059,13 +1085,13 @@
 ═══════════════════════════════════════════════════════ -->
 
 <!-- Modal: Movimento -->
-<div class="modal-overlay" id="modal-movimento">
+<div class="modal-overlay modal-tela-cheia" id="modal-movimento">
   <div class="modal">
     <h2 id="modal-movimento-titulo">Adicionar movimento</h2>
     <input type="hidden" id="mov-id">
     <div class="field campo-seletor">
       <label>Conta</label>
-      <input type="text" id="mov-conta-display" readonly required onclick="toggleSeletorConta(event)">
+      <input type="text" id="mov-conta-display" readonly required autocomplete="off" onclick="toggleSeletorConta(event)">
       <input type="hidden" id="mov-conta">
       <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
       <div class="filtro-cat-panel" id="mov-conta-panel">
@@ -1076,7 +1102,7 @@
     <div class="field"><label>Descrição</label><input type="text" id="mov-descricao" required></div>
     <div class="field campo-seletor">
       <label>Tipo</label>
-      <input type="text" id="mov-tipo-display" readonly required onclick="toggleSeletorTipoMovForm(event)">
+      <input type="text" id="mov-tipo-display" readonly required autocomplete="off" onclick="toggleSeletorTipoMovForm(event)">
       <input type="hidden" id="mov-tipo" value="out">
       <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
       <div class="filtro-cat-panel" id="mov-tipo-panel">
@@ -1086,7 +1112,7 @@
     <div class="field"><label>Valor</label><input type="number" id="mov-valor" step="0.01" min="0" required></div>
     <div class="field campo-seletor">
       <label>Categoria</label>
-      <input type="text" id="mov-categoria-display" readonly required onclick="toggleSeletorCategoriaMovForm(event)">
+      <input type="text" id="mov-categoria-display" readonly required autocomplete="off" onclick="toggleSeletorCategoriaMovForm(event)">
       <input type="hidden" id="mov-categoria">
       <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
       <div class="filtro-cat-panel" id="mov-categoria-panel">
@@ -1101,7 +1127,7 @@
 </div>
 
 <!-- Modal: Conta -->
-<div class="modal-overlay" id="modal-conta">
+<div class="modal-overlay modal-tela-cheia" id="modal-conta">
   <div class="modal">
     <h2 id="modal-conta-titulo">Adicionar conta</h2>
     <input type="hidden" id="conta-id">
@@ -1120,7 +1146,7 @@
     </div>
     <div class="field campo-seletor">
       <label>Moeda</label>
-      <input type="text" id="conta-moeda-display" readonly required onclick="toggleSeletorMoeda(event)">
+      <input type="text" id="conta-moeda-display" readonly required autocomplete="off" onclick="toggleSeletorMoeda(event)">
       <input type="hidden" id="conta-moeda">
       <span class="seta-dropdown-input"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
       <div class="filtro-cat-panel" id="conta-moeda-panel">
@@ -1163,7 +1189,7 @@
 </div>
 
 <!-- Modal: Reconciliações -->
-<div class="modal-overlay" id="modal-reconciliacoes">
+<div class="modal-overlay modal-tela-cheia" id="modal-reconciliacoes">
   <div class="modal">
     <h2>Reconciliações de Saldo</h2>
     <input type="hidden" id="reconc-conta-id">
@@ -1329,6 +1355,24 @@ let categoriasMovSelecionadas = new Set()
 let contasSelecionadas = { ct: new Set(), an: new Set(), mov: new Set() }
 
 let graficos = {}
+const linhaVerticalPlugin = {
+  id: "linhaVertical",
+  afterDraw: (chart) => {
+    const ativo = chart.tooltip?.getActiveElements()
+    if (!ativo || !ativo.length) return
+    const { ctx, chartArea } = chart
+    const x = ativo[0].element.x
+    ctx.save()
+    ctx.beginPath()
+    ctx.setLineDash([4, 4])
+    ctx.moveTo(x, chartArea.top)
+    ctx.lineTo(x, chartArea.bottom)
+    ctx.lineWidth = 1
+    ctx.strokeStyle = "rgba(26,26,26,0.25)"
+    ctx.stroke()
+    ctx.restore()
+  }
+}
 let analiseCache = { mensal: null }
 
 let anDataDe, anDataAte
@@ -1347,6 +1391,8 @@ let pickerMovData = null
 let pickerReconc  = null
 let pickerContaData = null
 let pickerContas  = null
+let pickerAnalise = null
+let pickerMovimentos = null
 
 let drilldownAtual = null
 
@@ -1408,6 +1454,11 @@ function fmtDiaCurto(iso) {
   const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
   return `${d} ${nomes[parseInt(m)-1]}`
 }
+function fmtDiaCompleto(iso) {
+  const [y, m, d] = iso.split("-")
+  const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
+  return `${d} ${nomes[parseInt(m)-1]} ${y}`
+}
 function isoDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
@@ -1453,6 +1504,15 @@ function apiDelete(path) {
 function destruirGrafico(nome) {
   if (graficos[nome]) { graficos[nome].destroy(); delete graficos[nome] }
 }
+document.addEventListener('touchstart', (e) => {
+  if (e.target.closest('canvas')) return
+  Object.values(graficos).forEach(chart => {
+    if (!chart) return
+    chart.setActiveElements([])
+    chart.tooltip?.setActiveElements([], { x: 0, y: 0 })
+    chart.update()
+  })
+}, { passive: true })
 function carregarFiltrosSalvos(pagina) {
   try { return JSON.parse(localStorage.getItem("filtros_" + pagina)) } catch { return null }
 }
@@ -1615,35 +1675,32 @@ function iniciarPickerContas() {
     endDate:   new Date(ctDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'], ranges: rangesPadrao(),
-    mobileFriendly: true,
     setup: (picker) => {
       picker.on('selected', (d1, d2) => { ctDataDe = d1.format('YYYY-MM-DD'); ctDataAte = d2.format('YYYY-MM-DD'); carregarContas() })
     }
   })
 }
 function iniciarPickerAnalise() {
-  new Litepicker({
+  pickerAnalise = new Litepicker({
     element: document.getElementById('an-periodo'),
     singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
     startDate: new Date(anDataDe + 'T00:00:00'),
     endDate:   new Date(anDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'], ranges: rangesPadrao(),
-    mobileFriendly: true,
     setup: (picker) => {
       picker.on('selected', (d1, d2) => { anDataDe = d1.format('YYYY-MM-DD'); anDataAte = d2.format('YYYY-MM-DD'); carregarAnalise() })
     }
   })
 }
 function iniciarPickerMovimentos() {
-  new Litepicker({
+  pickerMovimentos = new Litepicker({
     element: document.getElementById('mov-periodo'),
     singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
     startDate: new Date(movDataDe + 'T00:00:00'),
     endDate:   new Date(movDataAte + 'T00:00:00'),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
     plugins: ['ranges'], ranges: rangesPadrao(),
-    mobileFriendly: true,
     setup: (picker) => {
       picker.on('selected', (d1, d2) => { movDataDe = d1.format('YYYY-MM-DD'); movDataAte = d2.format('YYYY-MM-DD'); carregarMovimentos() })
     }
@@ -2485,20 +2542,27 @@ async function carregarContas() {
 function renderizarCardSaldoTotal(lista) {
   const moeda = moedaPredominante(lista)
   const total = lista.reduce((s, c) => s + c.saldo, 0)
-  document.getElementById("ct-card-total").innerHTML = `<div class="card destaque"><div class="label">Saldo Total Consolidado</div><div class="valor positivo">${fmt(total, moeda)}</div><div class="sub">${lista.length} conta(s)</div></div>`
+  const classe = total >= 0 ? "positivo" : "negativo"
+  document.getElementById("ct-card-total").innerHTML = `<div class="card destaque ${classe}"><div class="label">Saldo Total Consolidado</div><div class="valor ${classe}">${fmt(total, moeda)}</div><div class="sub">${lista.length} conta(s)</div></div>`
 }
 
 function renderizarGraficoSaldo(saldoDiario, moeda) {
   mostrarGraficoOuVazio("grafico-saldo-mensal", saldoDiario.length > 0, "Sem dados de saldo para mostrar.", () => {
     destruirGrafico("saldoMensal")
+    const corSaldo = saldoDiario.length && saldoDiario[saldoDiario.length - 1].saldo < 0 ? "#c0392b" : "#1a7a4a"
+    const maxTicksX = window.innerWidth < 769 ? 4 : 8
+    const passoX = Math.max(1, Math.round(saldoDiario.length / maxTicksX))
+    const inicioX = Math.floor(passoX / 2)
+    const indicesEtiquetaX = new Set()
+    for (let i = inicioX; i < saldoDiario.length; i += passoX) indicesEtiquetaX.add(i)
     graficos.saldoMensal = new Chart(document.getElementById("grafico-saldo-mensal"), {
       type: "line",
-      data: { labels: saldoDiario.map(s => fmtDiaCurto(s.data)), datasets: [{ label: "Saldo", data: saldoDiario.map(s => s.saldo), borderColor: "#1a7a4a", backgroundColor: "rgba(26,122,74,0.08)", fill: true, tension: 0, pointRadius: 0, pointHoverRadius: 5 }] },
-      options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw, moeda)}` } } }, interaction: { mode: 'index', intersect: false }, scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 } } } }
+      plugins: [linhaVerticalPlugin],
+      data: { labels: saldoDiario.map(s => fmtDiaCurto(s.data)), datasets: [{ label: "Saldo", data: saldoDiario.map(s => s.saldo), borderColor: corSaldo, backgroundColor: corSaldo + "14", fill: true, tension: 0, pointRadius: 0, pointHoverRadius: 5 }] },
+      options: { aspectRatio: window.innerWidth < 769 ? 1.3 : 2, layout: { padding: window.innerWidth < 769 ? { left: 0, right: 0, top: 0, bottom: 0 } : {} }, plugins: { legend: { display: false }, tooltip: { callbacks: { title: ctx => fmtDiaCompleto(saldoDiario[ctx[0].dataIndex].data), label: ctx => ` ${fmt(ctx.raw, moeda)}` } } }, interaction: { mode: 'index', intersect: false }, scales: { x: { offset: false, grid: { display: false }, ticks: { autoSkip: false, callback: function(valor, indice) { return indicesEtiquetaX.has(indice) ? this.getLabelForValue(valor) : null } } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 769 ? 4 : 6 } } } }
     })
   })
 }
-
 function ordenarContas(campo) {
   ordenacaoContas.campo === campo ? ordenacaoContas.direcao *= -1 : (ordenacaoContas.campo = campo, ordenacaoContas.direcao = 1)
   renderizarTabelaContas()
@@ -2809,7 +2873,8 @@ function renderizarGraficoMensal(mensal) {
       type: "bar",
       data: { labels: mensal.map(m => fmtMes(m.mes)), datasets: [{ label: "Entradas", data: mensal.map(m => m.entradas), backgroundColor: "#1a7a4a" }, { label: "Saídas", data: mensal.map(m => m.saidas), backgroundColor: "#c0392b" }] },
       options: {
-        maintainAspectRatio: false,
+        aspectRatio: window.innerWidth < 769 ? 1.3 : 2,
+        layout: { padding: window.innerWidth < 769 ? { left: 0, right: 0, top: 0, bottom: 0 } : {} },
         plugins: {
           legend: { labels: { font: { size: 11 } } },
           tooltip: { callbacks: { label: (ctx) => {
@@ -2819,7 +2884,7 @@ function renderizarGraficoMensal(mensal) {
             return linha
           }}}
         },
-        scales: { x: { grid: { display: false } } }
+        scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
       }
     })
   })
@@ -2915,13 +2980,14 @@ function renderizarGraficoDrilldownTotal(dados) {
     type: "bar",
     data: { labels: totaisPorMes.map(m => fmtMes(m.mes)), datasets: [{ data: totaisPorMes.map(m => m.total), backgroundColor: cor }] },
     options: {
-      maintainAspectRatio: false,
+      aspectRatio: window.innerWidth < 769 ? 1.3 : 2,
+      layout: { padding: window.innerWidth < 769 ? { left: 0, right: 0, top: 0, bottom: 0 } : {} },
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
         const idx = ctx.dataIndex; let linha = ` ${fmt(ctx.raw, moedaAnaliseGlobal)}`
         if (idx > 0) { const ant = totaisPorMes[idx-1].total; if (ant > 0) { const v = ((totaisPorMes[idx].total - ant) / ant) * 100; linha += ` (${v >= 0 ? '+' : ''}${v.toFixed(0)}% mês anterior)` } }
         return linha
       }}}},
-      scales: { x: { grid: { display: false } } }
+      scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
     }
   })
 }
@@ -2941,7 +3007,8 @@ function renderizarGraficoDrilldownEmpilhado(dados, grupoId) {
     type: "bar",
     data: { labels: dados.meses.map(m => fmtMes(m.mes)), datasets },
     options: {
-      maintainAspectRatio: false,
+      aspectRatio: window.innerWidth < 769 ? 1.3 : 2,
+      layout: { padding: window.innerWidth < 769 ? { left: 0, right: 0, top: 0, bottom: 0 } : {} },
       plugins: {
         legend: { position: "bottom", labels: { font: { size: 10 }, boxWidth: 10 } },
         tooltip: { callbacks: { label: ctx => {
@@ -2950,7 +3017,7 @@ function renderizarGraficoDrilldownEmpilhado(dados, grupoId) {
           return ` ${ctx.dataset.label}: ${fmt(ctx.raw, moedaAnaliseGlobal)} (${pct.toFixed(0)}% do grupo)`
         }}}
       },
-      scales: { x: { grid: { display: false }, stacked: true }, y: { stacked: true } }
+      scales: { x: { grid: { display: false }, stacked: true, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { stacked: true, display: window.innerWidth >= 769, border: { display: false } } }
     }
   })
 }
@@ -2968,13 +3035,14 @@ async function abrirDrillDownCategoria(categoriaId, nomeCategoria, nomeGrupo) {
     type: "bar",
     data: { labels: dados.map(m => fmtMes(m.mes)), datasets: [{ data: dados.map(m => m.total), backgroundColor: cor }] },
     options: {
-      maintainAspectRatio: false,
+      aspectRatio: window.innerWidth < 769 ? 1.3 : 2,
+      layout: { padding: window.innerWidth < 769 ? { left: 0, right: 0, top: 0, bottom: 0 } : {} },
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
         const idx = ctx.dataIndex; let linha = ` ${fmt(ctx.raw, moedaAnaliseGlobal)}`
         if (idx > 0) { const ant = dados[idx-1].total; if (ant > 0) { const v = ((dados[idx].total - ant) / ant) * 100; linha += ` (${v >= 0 ? '+' : ''}${v.toFixed(0)}% mês anterior)` } }
         return linha
       }}}},
-      scales: { x: { grid: { display: false } } }
+      scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
     }
   })
 }
@@ -3423,6 +3491,29 @@ document.addEventListener("click", e => {
   if (contaMoedaPanel && !path.includes(contaMoedaPanel) && !path.includes(contaMoedaInput)) fecharSeletorMoeda()
 })
 
+let scrollAntesDoBloqueio = 0
+const observadorModaisTelaCheia = new MutationObserver(() => {
+  const algumAberto = document.querySelector(".modal-tela-cheia.open") !== null
+  if (algumAberto && document.body.style.position !== "fixed") {
+    scrollAntesDoBloqueio = window.scrollY
+    document.body.style.position = "fixed"
+    document.body.style.top = `-${scrollAntesDoBloqueio}px`
+    document.body.style.width = "100%"
+  } else if (!algumAberto && document.body.style.position === "fixed") {
+    document.body.style.position = ""
+    document.body.style.top = ""
+    document.body.style.width = ""
+    window.scrollTo(0, scrollAntesDoBloqueio)
+  }
+})
+document.querySelectorAll(".modal-tela-cheia").forEach(m => {
+  observadorModaisTelaCheia.observe(m, { attributes: true, attributeFilter: ["class"] })
+})
+document.addEventListener("blur", (e) => {
+  if (!e.target.matches?.("input, select, textarea")) return
+  if (!e.target.closest(".modal-tela-cheia")) return
+  setTimeout(() => window.scrollTo(window.scrollX, window.scrollY), 100)
+}, true)
 if (!verificarTokenReset() && TOKEN) iniciarApp()
 </script>
 </body>

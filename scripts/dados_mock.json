@@ -6,7 +6,7 @@
       "banco": "Millennium BCP",
       "iban": "PT50 0010 0000 1234 5678 9015 4",
       "moeda": "EUR",
-      "saldo": 3240.50
+      "saldo": 3240.5
     },
     {
       "id": "conta_002",
@@ -14,42 +14,373 @@
       "banco": "Caixa Geral de Depósitos",
       "iban": "PT50 0035 0000 9876 5432 1015 8",
       "moeda": "EUR",
-      "saldo": 1180.00
+      "saldo": 1180.0
     }
   ],
   "movimentos": [
-    {"id": "m001", "conta_id": "conta_001", "data": "2026-05-01", "descricao": "SALARIO MAIO EMPRESA XYZ",           "valor":  2800.00},
-    {"id": "m002", "conta_id": "conta_001", "data": "2026-05-02", "descricao": "EDP COMERCIAL 111111111",            "valor":  -142.30},
-    {"id": "m003", "conta_id": "conta_001", "data": "2026-05-03", "descricao": "CONTINENTE 0234 BRAGA",             "valor":   -87.65},
-    {"id": "m004", "conta_id": "conta_001", "data": "2026-05-05", "descricao": "NOS COMUNICACOES SA",               "valor":   -45.00},
-    {"id": "m005", "conta_id": "conta_001", "data": "2026-05-07", "descricao": "NETFLIX AMSTERDAM",                 "valor":   -17.99},
-    {"id": "m006", "conta_id": "conta_001", "data": "2026-05-08", "descricao": "SPOTIFY PORTUGAL",                  "valor":   -10.99},
-    {"id": "m007", "conta_id": "conta_001", "data": "2026-05-10", "descricao": "GALP BRAGA NORTE",                  "valor":   -65.00},
-    {"id": "m008", "conta_id": "conta_001", "data": "2026-05-10", "descricao": "VIA VERDE PORTAGENS ABRIL",         "valor":   -18.40},
-    {"id": "m009", "conta_id": "conta_001", "data": "2026-05-12", "descricao": "FARMACIA CENTRAL BRAGA",            "valor":   -23.50},
-    {"id": "m010", "conta_id": "conta_001", "data": "2026-05-14", "descricao": "PINGO DOCE BRAGA RETAIL",           "valor":   -54.20},
-    {"id": "m011", "conta_id": "conta_001", "data": "2026-05-15", "descricao": "FIDELIDADE SEGURO AUTOMOVEL",       "valor":   -38.00},
-    {"id": "m012", "conta_id": "conta_001", "data": "2026-05-18", "descricao": "RESTAURANTE O ESCONDIDINHO",        "valor":   -42.00},
-    {"id": "m013", "conta_id": "conta_001", "data": "2026-05-20", "descricao": "TRANSFERENCIA PARA CONTA_002",      "valor":  -300.00},
-    {"id": "m014", "conta_id": "conta_002", "data": "2026-05-20", "descricao": "TRANSFERENCIA DE CONTA_001",        "valor":   300.00},
-    {"id": "m015", "conta_id": "conta_001", "data": "2026-05-22", "descricao": "LIDL BRAGA",                        "valor":   -31.80},
-    {"id": "m016", "conta_id": "conta_001", "data": "2026-05-25", "descricao": "MULTICARE SAUDE MAIO",              "valor":   -28.00},
-    {"id": "m017", "conta_id": "conta_001", "data": "2026-05-28", "descricao": "MB WAY 919123456",                  "valor":   -25.00},
-    {"id": "m018", "conta_id": "conta_002", "data": "2026-05-30", "descricao": "RENDA APARTAMENTO MAIO",            "valor":  -650.00},
-    {"id": "m019", "conta_id": "conta_001", "data": "2026-06-01", "descricao": "SALARIO JUNHO EMPRESA XYZ",         "valor":  2800.00},
-    {"id": "m020", "conta_id": "conta_001", "data": "2026-06-02", "descricao": "EDP COMERCIAL 987654321",           "valor":  -142.30},
-    {"id": "m021", "conta_id": "conta_001", "data": "2026-06-03", "descricao": "CONTINENTE 0234 BRAGA",             "valor":   -92.10},
-    {"id": "m022", "conta_id": "conta_001", "data": "2026-06-05", "descricao": "NOS COMUNICACOES SA",               "valor":   -45.00},
-    {"id": "m023", "conta_id": "conta_001", "data": "2026-06-07", "descricao": "FORNECEDOR GRAFICA SILVA LDA",      "valor":  -320.00},
-    {"id": "m024", "conta_id": "conta_001", "data": "2026-06-08", "descricao": "NETFLIX AMSTERDAM",                 "valor":   -17.99},
-    {"id": "m025", "conta_id": "conta_001", "data": "2026-06-08", "descricao": "SPOTIFY PORTUGAL",                  "valor":   -10.99},
-    {"id": "m026", "conta_id": "conta_001", "data": "2026-06-10", "descricao": "AT PAGAMENTO IVA 2T2026",           "valor":  -890.00},
-    {"id": "m027", "conta_id": "conta_001", "data": "2026-06-10", "descricao": "GALP BRAGA NORTE",                  "valor":   -60.00},
-    {"id": "m028", "conta_id": "conta_001", "data": "2026-06-12", "descricao": "MB WAY 919123456",                  "valor":   -25.00},
-    {"id": "m029", "conta_id": "conta_001", "data": "2026-06-14", "descricao": "PINGO DOCE BRAGA RETAIL",           "valor":   -61.30},
-    {"id": "m030", "conta_id": "conta_001", "data": "2026-06-15", "descricao": "FIDELIDADE SEGURO AUTOMOVEL",       "valor":   -38.00},
-    {"id": "m031", "conta_id": "conta_001", "data": "2026-06-16", "descricao": "VIA VERDE PORTAGENS MAIO",          "valor":   -21.60},
-    {"id": "m032", "conta_id": "conta_001", "data": "2026-06-18", "descricao": "RESTAURANTE BRAC BRAGA",            "valor":   -55.00},
-    {"id": "m033", "conta_id": "conta_002", "data": "2026-06-30", "descricao": "RENDA APARTAMENTO JUNHO",           "valor":  -650.00}
+    {
+      "id": "m001",
+      "conta_id": "conta_001",
+      "data": "2025-08-01",
+      "descricao": "SALARIO AGOSTO EMPRESA XYZ",
+      "valor": 2382.38
+    },
+    {
+      "id": "m003",
+      "conta_id": "conta_001",
+      "data": "2025-08-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m004",
+      "conta_id": "conta_001",
+      "data": "2025-08-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -232.07
+    },
+    {
+      "id": "m002",
+      "conta_id": "conta_002",
+      "data": "2025-08-30",
+      "descricao": "RENDA APARTAMENTO AGOSTO",
+      "valor": -900.0
+    },
+    {
+      "id": "m005",
+      "conta_id": "conta_001",
+      "data": "2025-09-01",
+      "descricao": "SALARIO SETEMBRO EMPRESA XYZ",
+      "valor": 2415.09
+    },
+    {
+      "id": "m007",
+      "conta_id": "conta_001",
+      "data": "2025-09-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m008",
+      "conta_id": "conta_001",
+      "data": "2025-09-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -225.79
+    },
+    {
+      "id": "m049",
+      "conta_id": "conta_001",
+      "data": "2025-09-20",
+      "descricao": "FARMACIA CENTRAL BRAGA",
+      "valor": -23.5
+    },
+    {
+      "id": "m006",
+      "conta_id": "conta_002",
+      "data": "2025-09-30",
+      "descricao": "RENDA APARTAMENTO SETEMBRO",
+      "valor": -900.0
+    },
+    {
+      "id": "m009",
+      "conta_id": "conta_001",
+      "data": "2025-10-01",
+      "descricao": "SALARIO OUTUBRO EMPRESA XYZ",
+      "valor": 2403.59
+    },
+    {
+      "id": "m011",
+      "conta_id": "conta_001",
+      "data": "2025-10-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m012",
+      "conta_id": "conta_001",
+      "data": "2025-10-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -249.26
+    },
+    {
+      "id": "m010",
+      "conta_id": "conta_002",
+      "data": "2025-10-30",
+      "descricao": "RENDA APARTAMENTO OUTUBRO",
+      "valor": -900.0
+    },
+    {
+      "id": "m013",
+      "conta_id": "conta_001",
+      "data": "2025-11-01",
+      "descricao": "SALARIO NOVEMBRO EMPRESA XYZ",
+      "valor": 2355.8
+    },
+    {
+      "id": "m015",
+      "conta_id": "conta_001",
+      "data": "2025-11-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m016",
+      "conta_id": "conta_001",
+      "data": "2025-11-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -260.59
+    },
+    {
+      "id": "m014",
+      "conta_id": "conta_002",
+      "data": "2025-11-30",
+      "descricao": "RENDA APARTAMENTO NOVEMBRO",
+      "valor": -900.0
+    },
+    {
+      "id": "m017",
+      "conta_id": "conta_001",
+      "data": "2025-12-01",
+      "descricao": "SALARIO DEZEMBRO EMPRESA XYZ",
+      "valor": 2353.75
+    },
+    {
+      "id": "m019",
+      "conta_id": "conta_001",
+      "data": "2025-12-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m020",
+      "conta_id": "conta_001",
+      "data": "2025-12-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -254.69
+    },
+    {
+      "id": "m050",
+      "conta_id": "conta_001",
+      "data": "2025-12-18",
+      "descricao": "RESTAURANTE O ESCONDIDINHO",
+      "valor": -85.0
+    },
+    {
+      "id": "m018",
+      "conta_id": "conta_002",
+      "data": "2025-12-30",
+      "descricao": "RENDA APARTAMENTO DEZEMBRO",
+      "valor": -900.0
+    },
+    {
+      "id": "m021",
+      "conta_id": "conta_001",
+      "data": "2026-01-01",
+      "descricao": "SALARIO JANEIRO EMPRESA XYZ",
+      "valor": 2356.99
+    },
+    {
+      "id": "m023",
+      "conta_id": "conta_001",
+      "data": "2026-01-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m024",
+      "conta_id": "conta_001",
+      "data": "2026-01-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -227.26
+    },
+    {
+      "id": "m022",
+      "conta_id": "conta_002",
+      "data": "2026-01-30",
+      "descricao": "RENDA APARTAMENTO JANEIRO",
+      "valor": -900.0
+    },
+    {
+      "id": "m025",
+      "conta_id": "conta_001",
+      "data": "2026-02-01",
+      "descricao": "SALARIO FEVEREIRO EMPRESA XYZ",
+      "valor": 2392.45
+    },
+    {
+      "id": "m027",
+      "conta_id": "conta_001",
+      "data": "2026-02-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m028",
+      "conta_id": "conta_001",
+      "data": "2026-02-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -286.15
+    },
+    {
+      "id": "m026",
+      "conta_id": "conta_002",
+      "data": "2026-02-28",
+      "descricao": "RENDA APARTAMENTO FEVEREIRO",
+      "valor": -900.0
+    },
+    {
+      "id": "m029",
+      "conta_id": "conta_001",
+      "data": "2026-03-01",
+      "descricao": "SALARIO MARÇO EMPRESA XYZ",
+      "valor": 2362.38
+    },
+    {
+      "id": "m031",
+      "conta_id": "conta_001",
+      "data": "2026-03-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m032",
+      "conta_id": "conta_001",
+      "data": "2026-03-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -237.86
+    },
+    {
+      "id": "m051",
+      "conta_id": "conta_001",
+      "data": "2026-03-22",
+      "descricao": "FIDELIDADE SEGURO AUTOMOVEL",
+      "valor": -180.0
+    },
+    {
+      "id": "m030",
+      "conta_id": "conta_002",
+      "data": "2026-03-30",
+      "descricao": "RENDA APARTAMENTO MARÇO",
+      "valor": -900.0
+    },
+    {
+      "id": "m033",
+      "conta_id": "conta_001",
+      "data": "2026-04-01",
+      "descricao": "SALARIO ABRIL EMPRESA XYZ",
+      "valor": 2412.74
+    },
+    {
+      "id": "m035",
+      "conta_id": "conta_001",
+      "data": "2026-04-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m036",
+      "conta_id": "conta_001",
+      "data": "2026-04-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -295.82
+    },
+    {
+      "id": "m034",
+      "conta_id": "conta_002",
+      "data": "2026-04-30",
+      "descricao": "RENDA APARTAMENTO ABRIL",
+      "valor": -900.0
+    },
+    {
+      "id": "m037",
+      "conta_id": "conta_001",
+      "data": "2026-05-01",
+      "descricao": "SALARIO MAIO EMPRESA XYZ",
+      "valor": 2407.71
+    },
+    {
+      "id": "m039",
+      "conta_id": "conta_001",
+      "data": "2026-05-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m040",
+      "conta_id": "conta_001",
+      "data": "2026-05-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -251.73
+    },
+    {
+      "id": "m038",
+      "conta_id": "conta_002",
+      "data": "2026-05-30",
+      "descricao": "RENDA APARTAMENTO MAIO",
+      "valor": -900.0
+    },
+    {
+      "id": "m041",
+      "conta_id": "conta_001",
+      "data": "2026-06-01",
+      "descricao": "SALARIO JUNHO EMPRESA XYZ",
+      "valor": 2447.63
+    },
+    {
+      "id": "m052",
+      "conta_id": "conta_001",
+      "data": "2026-06-08",
+      "descricao": "NETFLIX AMSTERDAM",
+      "valor": -17.99
+    },
+    {
+      "id": "m043",
+      "conta_id": "conta_001",
+      "data": "2026-06-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m044",
+      "conta_id": "conta_001",
+      "data": "2026-06-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -223.73
+    },
+    {
+      "id": "m042",
+      "conta_id": "conta_002",
+      "data": "2026-06-30",
+      "descricao": "RENDA APARTAMENTO JUNHO",
+      "valor": -900.0
+    },
+    {
+      "id": "m045",
+      "conta_id": "conta_001",
+      "data": "2026-07-01",
+      "descricao": "SALARIO JULHO EMPRESA XYZ",
+      "valor": 2435.85
+    },
+    {
+      "id": "m047",
+      "conta_id": "conta_001",
+      "data": "2026-07-10",
+      "descricao": "PRESTACAO AUTOMOVEL BANCO",
+      "valor": -310.0
+    },
+    {
+      "id": "m048",
+      "conta_id": "conta_001",
+      "data": "2026-07-15",
+      "descricao": "CONTINENTE 0234 BRAGA",
+      "valor": -243.17
+    },
+    {
+      "id": "m046",
+      "conta_id": "conta_002",
+      "data": "2026-07-30",
+      "descricao": "RENDA APARTAMENTO JULHO",
+      "valor": -900.0
+    }
   ]
 }

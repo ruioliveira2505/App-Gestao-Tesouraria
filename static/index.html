@@ -405,7 +405,7 @@
        MODAL (genérico)
     ═══════════════════════════════════════════════════════ */
 
-    .modal-overlay { display: none; position: fixed; inset: 0; background: var(--color-overlay); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: var(--color-overlay); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 100; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--color-white); border-radius: var(--radius-xl); padding: 1.5rem; width: 100%; max-width: 440px; }
     .modal h2 { font-size: 1rem; font-weight: 500; margin-bottom: 1.25rem; }
@@ -527,8 +527,6 @@
     .btn-aplicar-filtros.escondido { display: none; }
     .filtros-sheet-acoes { display: none; }
     @media (max-width: 768px) {
-      .modal-tela-cheia { align-items: stretch; justify-content: stretch; padding: 0; }
-      .modal-tela-cheia .modal { max-width: none; width: 100%; height: 100%; border-radius: 0; overflow-y: auto; }
       .summary-grid { grid-template-columns: 1fr; }
       nav { padding: 0 1rem; gap: 0.75rem; }
       .nav-brand { display: none; }
@@ -586,7 +584,7 @@
 
       .folha-filtros-overlay { display: none; }
       .folha-filtros-overlay.aberta {
-        display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 190;
+        display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 190;
       }
       .filtros-sheet-acoes { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
 
@@ -3493,7 +3491,7 @@ document.addEventListener("click", e => {
 
 let scrollAntesDoBloqueio = 0
 const observadorModaisTelaCheia = new MutationObserver(() => {
-  const algumAberto = document.querySelector(".modal-tela-cheia.open") !== null
+  const algumAberto = document.querySelector(".modal-tela-cheia.open") !== null || document.querySelector(".folha-filtros-overlay.aberta") !== null
   if (algumAberto && document.body.style.position !== "fixed") {
     scrollAntesDoBloqueio = window.scrollY
     document.body.style.position = "fixed"
@@ -3506,7 +3504,7 @@ const observadorModaisTelaCheia = new MutationObserver(() => {
     window.scrollTo(0, scrollAntesDoBloqueio)
   }
 })
-document.querySelectorAll(".modal-tela-cheia").forEach(m => {
+document.querySelectorAll(".modal-tela-cheia, .folha-filtros-overlay").forEach(m => {
   observadorModaisTelaCheia.observe(m, { attributes: true, attributeFilter: ["class"] })
 })
 document.addEventListener("blur", (e) => {

@@ -157,6 +157,12 @@
     .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text); -webkit-appearance: none; }
     .btn-sm:hover { background: var(--color-border-light); }
     .btn-danger { padding: 0.3rem 0.75rem; font-size: 0.75rem; background: none; border: 1px solid var(--color-negativo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-negativo); -webkit-appearance: none; }
+    .acoes-mobile { display: none; }
+    .acoes-desktop { display: inline-flex; }
+    .menu-acoes-lista { position: fixed; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 160px; z-index: 210; flex-direction: column; padding: 0.3rem; }
+    .menu-acoes-lista button { text-align: left; padding: 0.5rem 0.7rem; border: none; background: none; cursor: pointer; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--color-text); -webkit-appearance: none; }
+    .menu-acoes-lista button:hover { background: var(--color-surface); }
+    .menu-acoes-lista button.perigo { color: var(--color-negativo); }
     .btn-danger:hover { background: var(--color-negativo-bg); }
 
     
@@ -460,7 +466,8 @@
     .icone-auto { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
     .icone-auto.llm svg { color: var(--color-aviso-icone); }
     .icone-auto.sem-match svg { color: var(--color-negativo); }
-    .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--color-text-secondary); cursor: help; }
+    .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--color-text-secondary); cursor: pointer; }
+    .balao-ajuda { position: fixed; max-width: 240px; background: var(--color-text); color: var(--color-white); font-size: 0.8rem; line-height: 1.4; padding: 0.6rem 0.75rem; border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 220; }
     .mini-timeline { display: flex; align-items: flex-start; margin: 0.25rem 0 1.25rem; }
     .mini-timeline-ponto { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 1; min-width: 0; max-width: 45%; }
     .mini-timeline-ponto::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--color-text); }
@@ -548,6 +555,8 @@
       .table-wrap.cards-mobile td[colspan]::before { content: none; }
       .table-wrap.cards-mobile td.td-acoes { justify-content: flex-end; padding-top: 0.6rem; margin-top: 0.25rem; border-top: 1px solid var(--color-border-light); }
       .table-wrap.cards-mobile td.td-acoes::before { content: none; }
+      .acoes-desktop { display: none; }
+      .acoes-mobile { display: flex; gap: 0.4rem; }
       .table-wrap.cards-mobile .valor-com-sub { flex-direction: row; align-items: baseline; gap: 4px; }
       .table-wrap.cards-mobile .separador-mobile { display: inline; }
       .table-wrap.cards-mobile tr.linha-expandivel { cursor: pointer; }
@@ -745,6 +754,7 @@
         </select>
       </div>
 
+      <div class="menu-acoes-lista" id="menu-acoes-flutuante" style="display:none;position:fixed"></div>
       <div class="table-wrap cards-mobile">
         <table>
           <thead><tr id="cabecalho-contas">
@@ -1152,32 +1162,12 @@
       </div>
     </div>
     <div class="field" id="conta-data-campo-adicionar">
-      <label>Data Início de Movimentos <span class="icone-protegida" id="conta-data-ajuda" title="Dia a partir do qual vais registar movimentos desta conta no sistema."></span></label>
+      <label>Data Início de Movimentos <span class="icone-protegida" id="conta-data-ajuda" data-ajuda="Dia a partir do qual vais registar movimentos desta conta no sistema."></span></label>
       <input type="text" id="conta-data" placeholder="Selecionar data" required readonly>
     </div>
-    <div class="field" id="conta-data-campo-editar" style="display:none">
-      <label>Data de Reconciliação <span class="icone-protegida" id="conta-data-ajuda-editar" title="Corresponde à reconciliação de saldo mais antiga desta conta."></span></label>
-      <input type="text" id="conta-data-display" readonly disabled>
-    </div>
-    <div class="field">
-      <label><span id="conta-saldo-label">Saldo Inicial</span> <span class="icone-protegida" id="conta-saldo-ajuda" title="Saldo da conta nesse dia, antes de começares a registar movimentos."></span></label>
-      <input type="number" id="conta-saldo" step="0.01" required oninput="atualizarMiniTimeline()">
-    </div>
-    <div class="mini-timeline" id="conta-mini-timeline" style="display:none">
-      <div class="mini-timeline-ponto">
-        <div class="mini-timeline-titulo">Reconciliação</div>
-        <div class="mini-timeline-data" id="conta-timeline-data-antes"></div>
-        <div class="mini-timeline-valor" id="conta-timeline-saldo-antes"></div>
-      </div>
-      <div class="mini-timeline-linha"></div>
-      <div class="mini-timeline-ponto">
-        <div class="mini-timeline-titulo">Início de Movimentos</div>
-        <div class="mini-timeline-data" id="conta-timeline-data-depois"></div>
-        <div class="mini-timeline-valor" id="conta-timeline-saldo-depois"></div>
-      </div>
-    </div>
-    <div id="conta-reconciliacoes-link" style="display:none;margin-top:-0.75rem;margin-bottom:1rem">
-      <a href="#" onclick="abrirModalAjusteSaldo(); return false" style="font-size:0.8rem;color:#888">Ver reconciliações →</a>
+    <div class="field" id="conta-saldo-campo">
+      <label><span id="conta-saldo-label">Saldo Inicial</span> <span class="icone-protegida" id="conta-saldo-ajuda" data-ajuda="Saldo da conta nesse dia, antes de começares a registar movimentos."></span></label>
+      <input type="number" id="conta-saldo" step="0.01" required>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
@@ -1200,9 +1190,9 @@
     <div id="form-reconciliacao" style="display:none;border-top:1px solid #e5e5e5;padding-top:1rem;margin-bottom:1rem">
       <input type="hidden" id="reconc-id">
      <!-- Modal: Reconciliações -->
-    <div class="field"><label>Data de Reconciliação <span class="icone-protegida" id="reconc-data-ajuda" title="Dia em que registas esta reconciliação, já depois de todos os movimentos desse dia."></span></label><input type="text" id="reconc-data" placeholder="Selecionar data" required readonly></div>
+    <div class="field"><label>Data de Reconciliação <span class="icone-protegida" id="reconc-data-ajuda" data-ajuda="Dia em que registas esta reconciliação, já depois de todos os movimentos desse dia."></span></label><input type="text" id="reconc-data" placeholder="Selecionar data" required readonly></div>
       <div class="field">
-        <label>Saldo Reconciliado <span class="icone-protegida" id="reconc-valor-ajuda" title="Saldo da conta nesse dia, depois de todos os movimentos já ocorridos."></span></label>
+        <label>Saldo Reconciliado <span class="icone-protegida" id="reconc-valor-ajuda" data-ajuda="Saldo da conta nesse dia, depois de todos os movimentos já ocorridos."></span></label>
         <input type="number" id="reconc-valor" step="0.01" required oninput="atualizarMiniTimelineReconciliacao()">
       </div>
       <div class="mini-timeline" id="reconc-mini-timeline" style="display:none">
@@ -1724,7 +1714,6 @@ function iniciarPickerContaData() {
     element: document.getElementById('conta-data'),
     singleMode: true, format: 'YYYY-MM-DD', maxDate: new Date(),
     dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    setup: (picker) => { picker.on('selected', () => atualizarMiniTimeline()) },
   })
 }
 
@@ -2295,6 +2284,55 @@ function atualizarBtnFiltroConta(prefixo) {
 // ═══════════════════════════════════════════════════════════
 // FILTRO DE CATEGORIAS (ANÁLISE)
 // ═══════════════════════════════════════════════════════════
+function toggleMenuAcoesConta(event, id) {
+  const menu = document.getElementById("menu-acoes-flutuante")
+  const jaAbertoParaEsta = menu.style.display !== "none" && menu.dataset.contaId === id
+  fecharMenusAcoes()
+  if (jaAbertoParaEsta) return
+  menu.innerHTML = `
+    <button onclick="fecharMenusAcoes(); abrirModalAjusteSaldo('${id}')">Reconciliações</button>
+    <button onclick="fecharMenusAcoes(); abrirEditarConta('${id}')">Editar</button>
+    <button class="perigo" onclick="fecharMenusAcoes(); eliminarConta('${id}')">Eliminar</button>
+  `
+  const rect = event.currentTarget.getBoundingClientRect()
+  menu.style.display = "flex"
+  menu.style.left = "auto"
+  menu.style.right = (window.innerWidth - rect.right) + "px"
+  menu.style.bottom = (window.innerHeight - rect.top + 4) + "px"
+  menu.style.top = "auto"
+  menu.dataset.contaId = id
+}
+function toggleAjudaIcone(icone) {
+  const jaAberto = document.querySelector(".balao-ajuda")?.dataset.para === icone.id
+  fecharBalaoAjuda()
+  if (jaAberto) return
+  const balao = document.createElement("div")
+  balao.className = "balao-ajuda"
+  balao.dataset.para = icone.id
+  balao.textContent = icone.dataset.ajuda
+  document.body.appendChild(balao)
+  const rect = icone.getBoundingClientRect()
+  const larguraBalao = 240
+  balao.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - larguraBalao - 8)) + "px"
+  balao.style.top = (rect.bottom + 6) + "px"
+}
+function fecharBalaoAjuda() {
+  document.querySelectorAll(".balao-ajuda").forEach(b => b.remove())
+}
+document.addEventListener("click", (e) => {
+  const icone = e.target.closest(".icone-protegida")
+  if (icone) { toggleAjudaIcone(icone); return }
+  if (!e.target.closest(".balao-ajuda")) fecharBalaoAjuda()
+})
+window.addEventListener("scroll", () => fecharBalaoAjuda(), { passive: true, capture: true })
+function fecharMenusAcoes() {
+  const menu = document.getElementById("menu-acoes-flutuante")
+  if (menu) { menu.style.display = "none"; menu.dataset.contaId = "" }
+}
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".menu-acoes-lista") && !e.target.closest("[onclick*='toggleMenuAcoesConta']")) fecharMenusAcoes()
+})
+window.addEventListener("scroll", () => fecharMenusAcoes(), { passive: true, capture: true })
 function fecharTodosOsFiltros() {
   fecharFiltroCat()
   fecharFiltroCategoriaMov()
@@ -2584,7 +2622,16 @@ function renderizarTabelaContas() {
   }
   tb.innerHTML = ""
   lista.forEach(c => {
-    tb.innerHTML += `<tr class="linha-expandivel" onclick="toggleLinhaExpandida(this)"><td data-label="Nome">${c.nome}</td><td data-label="Banco">${trOuTraco(c.banco)}</td><td data-label="Tipo" class="td-expandido">${trOuTraco(c.tipo)}</td><td data-label="IBAN" class="td-expandido">${trOuTraco(c.iban)}</td><td data-label="Data" class="td-expandido">${c.inicio}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes td-expandido" style="white-space:nowrap"><button class="btn-sm" onclick="event.stopPropagation(); abrirEditarConta('${c.id}')">editar</button><button class="btn-danger" onclick="event.stopPropagation(); eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button></td></tr>`
+    tb.innerHTML += `<tr class="linha-expandivel" onclick="toggleLinhaExpandida(this)"><td data-label="Nome">${c.nome}</td><td data-label="Banco">${trOuTraco(c.banco)}</td><td data-label="Tipo" class="td-expandido">${trOuTraco(c.tipo)}</td><td data-label="IBAN" class="td-expandido">${trOuTraco(c.iban)}</td><td data-label="Data" class="td-expandido">${c.inicio}</td><td data-label="Saldo" style="text-align:right" class="${c.saldo >= 0 ? 'positivo' : 'negativo'}">${fmt(c.saldo, c.moeda)}</td><td class="td-acoes td-expandido" style="white-space:nowrap">
+      <span class="acoes-desktop">
+        <button class="btn-sm" onclick="event.stopPropagation(); toggleMenuAcoesConta(event, '${c.id}')" aria-label="Mais ações">⋮</button>
+      </span>
+      <span class="acoes-mobile">
+        <button class="btn-sm" onclick="event.stopPropagation(); abrirModalAjusteSaldo('${c.id}')">reconciliações</button>
+        <button class="btn-sm" onclick="event.stopPropagation(); abrirEditarConta('${c.id}')">editar</button>
+        <button class="btn-danger" onclick="event.stopPropagation(); eliminarConta('${c.id}')" aria-label="Eliminar conta">✕</button>
+      </span>
+    </td></tr>`
   })
 }
 function toggleLinhaExpandida(tr) { tr.classList.toggle("expandido") }
@@ -2604,16 +2651,13 @@ function abrirModalConta() {
   document.getElementById("modal-conta-titulo").textContent = "Adicionar conta"
   document.getElementById("conta-id").value = ""; document.getElementById("conta-nome").value = ""; document.getElementById("conta-banco").value = ""; document.getElementById("conta-tipo").value = ""; document.getElementById("conta-iban").value = ""
   document.getElementById("conta-moeda").value = ""; document.getElementById("conta-moeda-display").value = ""; renderizarSeletorMoeda(null)
-  document.getElementById("conta-saldo").value = ""; document.getElementById("conta-saldo").disabled = false
-  document.getElementById("conta-saldo-label").textContent = "Saldo Inicial"; document.getElementById("conta-reconciliacoes-link").style.display = "none"
-  document.getElementById("conta-saldo-ajuda").style.display = "inline-flex"
-  pickerContaData.setDate(new Date())
+  document.getElementById("conta-saldo").value = ""
+  document.getElementById("conta-saldo-campo").style.display = "block"
   document.getElementById("conta-data-campo-adicionar").style.display = "block"
-  document.getElementById("conta-data-campo-editar").style.display = "none"
+  pickerContaData.setDate(new Date())
   document.getElementById("modal-conta").classList.add("open")
   ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
   ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"], "btn-guardar-conta")
-  atualizarMiniTimeline()
 }
 function abrirEditarConta(id) {
   const c = contasCache.find(x => x.id === id)
@@ -2627,16 +2671,11 @@ function abrirEditarConta(id) {
   const opcaoMoeda = OPCOES_MOEDA.find(o => o.valor === c.moeda)
   document.getElementById("conta-moeda-display").value = opcaoMoeda ? opcaoMoeda.label : (c.moeda || "")
   renderizarSeletorMoeda(c.moeda)
-  document.getElementById("conta-saldo").value = c.saldo
-  document.getElementById("conta-saldo").disabled = true; document.getElementById("conta-saldo-label").textContent = "Saldo Atual"; document.getElementById("conta-reconciliacoes-link").style.display = "block"
-  document.getElementById("conta-saldo-ajuda").style.display = "none"
+  document.getElementById("conta-saldo-campo").style.display = "none"
   document.getElementById("conta-data-campo-adicionar").style.display = "none"
-  document.getElementById("conta-data-campo-editar").style.display = "block"
-  document.getElementById("conta-data-display").value = fmtDataPt(c.inicio)
-  document.getElementById("conta-mini-timeline").style.display = "none"
   document.getElementById("modal-conta").classList.add("open")
   ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
-  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo"], "btn-guardar-conta")
+  ligarValidacaoFormulario(["conta-nome", "conta-moeda-display"], "btn-guardar-conta")
 }
 function atualizarMiniTimelineGenerico(prefixo, dataReconciliacaoStr, saldoStr, moeda) {
   const timeline = document.getElementById(prefixo + "-mini-timeline")
@@ -2648,14 +2687,6 @@ function atualizarMiniTimelineGenerico(prefixo, dataReconciliacaoStr, saldoStr, 
   document.getElementById(prefixo + "-timeline-data-depois").textContent = fmtDataPt(dataDepois)
   document.getElementById(prefixo + "-timeline-saldo-depois").textContent = `Saldo: ${saldoFormatado}`
   timeline.style.display = "flex"
-}
-function atualizarMiniTimeline() {
-  if (document.getElementById("conta-id").value) { document.getElementById("conta-mini-timeline").style.display = "none"; return }
-  const dataInicioMovimentos = document.getElementById("conta-data").value
-  const saldoStr = document.getElementById("conta-saldo").value
-  const moeda = document.getElementById("conta-moeda").value
-  const dataReconciliacao = dataInicioMovimentos ? somarDiasIso(dataInicioMovimentos, -1) : ""
-  atualizarMiniTimelineGenerico("conta", dataReconciliacao, saldoStr, moeda)
 }
 function atualizarMiniTimelineReconciliacao() {
   const id = document.getElementById("reconc-id").value
@@ -2672,7 +2703,7 @@ function atualizarMiniTimelineReconciliacao() {
 }
 async function guardarConta() {
   const id = document.getElementById("conta-id").value
-  const camposObrigatorios = id ? ["conta-nome", "conta-moeda-display", "conta-saldo"] : ["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"]
+  const camposObrigatorios = id ? ["conta-nome", "conta-moeda-display"] : ["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"]
   if (!camposValidos(...camposObrigatorios)) return
   const body = { nome: document.getElementById("conta-nome").value, banco: document.getElementById("conta-banco").value, tipo: document.getElementById("conta-tipo").value, iban: document.getElementById("conta-iban").value, moeda: document.getElementById("conta-moeda").value }
   let r
@@ -2732,16 +2763,14 @@ function selecionarMoeda(valor) {
   renderizarSeletorMoeda(valor)
   fecharSeletorMoeda()
   const id = document.getElementById("conta-id").value
-  const camposObrigatorios = id ? ["conta-nome", "conta-moeda-display", "conta-saldo"] : ["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"]
+  const camposObrigatorios = id ? ["conta-nome", "conta-moeda-display"] : ["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"]
   ligarValidacaoFormulario(camposObrigatorios, "btn-guardar-conta")
-  atualizarMiniTimeline()
 }
 
 // ═══════════════════════════════════════════════════════════
 // RECONCILIAÇÕES DE SALDO
 // ═══════════════════════════════════════════════════════════
-async function abrirModalAjusteSaldo() {
-  const id = document.getElementById("conta-id").value
+async function abrirModalAjusteSaldo(id) {
   document.getElementById("modal-conta").classList.remove("open")
   document.getElementById("reconc-conta-id").value = id
   esconderFormReconciliacao()
@@ -2750,7 +2779,6 @@ async function abrirModalAjusteSaldo() {
 }
 function fecharModalReconciliacoes() {
   document.getElementById("modal-reconciliacoes").classList.remove("open")
-  abrirEditarConta(document.getElementById("conta-id").value)
 }
 async function carregarReconciliacoes(contaId) {
   reconciliacoesCache = await api("/contas/" + contaId + "/ajustes-saldo")
@@ -3446,7 +3474,6 @@ document.getElementById("conta-saldo-ajuda").innerHTML = ICONE_INFO
 document.getElementById("reconc-valor-ajuda").innerHTML = ICONE_INFO
 document.getElementById("reconc-data-ajuda").innerHTML = ICONE_INFO
 document.getElementById("conta-data-ajuda").innerHTML = ICONE_INFO
-document.getElementById("conta-data-ajuda-editar").innerHTML = ICONE_INFO
 mostrarAjudaAoEscrever("reg-password", "ajuda-reg-password")
 mostrarAjudaAoEscrever("perfil-pw-nova", "ajuda-perfil-pw-nova")
 mostrarAjudaAoEscrever("reset-password-nova", "ajuda-reset-password-nova")

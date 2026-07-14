@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.db.database import get_connection, release_connection
+from app.db.database import get_connection, release_connection, release_connection
 from app.core.deps import utilizador_atual
 from app.services.reconciliacoes import reconciliacao_mais_antiga_data
 from app.services.categorizacao import guardar_em_cache
@@ -15,10 +15,10 @@ router = APIRouter()
 
 def _validar_data_movimento(cursor, conta_id, data, acao):
     rec = reconciliacao_mais_antiga_data(cursor, conta_id)
-    if rec and data <= rec:
+    if rec and data < rec:
         raise HTTPException(
             status_code=400,
-            detail=f"Esta conta tem uma reconciliação em {rec}, que já inclui os movimentos desse dia. Escolhe uma data posterior a {rec} antes de {acao}."
+            detail=f"Esta conta só tem reconciliações a partir de {rec}. Cria uma reconciliação anterior a {data} antes de {acao}."
         )
 
 

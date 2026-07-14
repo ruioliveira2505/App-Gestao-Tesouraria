@@ -200,6 +200,9 @@
     td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--color-border-light); }
     tr:last-child td { border-bottom: none; }
     tr.linha-em-edicao td { background: var(--color-border-light); }
+    @media (min-width: 769px) {
+      tr.linha-pendente td:first-child { border-left: 3px solid var(--color-aviso-border); }
+    }
     .separador-inicio-conta { border-top: 1px solid var(--color-border); margin: 1.25rem 0 0.75rem; padding-top: 0.75rem; }
     #reconc-table-wrap.tem-scroll-por-ver::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 28px; background: linear-gradient(to bottom, transparent, var(--color-white)); pointer-events: none; }
     tr:hover td { background: var(--color-surface); }
@@ -267,6 +270,8 @@
       font-size: 0.8rem; outline: none; display: block;
     }
     .filtro-pesquisa-input:focus { border-color: var(--color-text); }
+    .pesquisa-movimentos-input { width: 180px; padding: 0.5rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; outline: none; }
+    .pesquisa-movimentos-input:focus { border-color: var(--color-text); }
 
     .filtro-esfera-linha {
       font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.05em; color: var(--color-text);
@@ -461,14 +466,12 @@
     }
     .banner-pendentes {
       background: var(--color-aviso-bg); border: 1px solid var(--color-aviso-border); border-radius: var(--radius-lg);
-      padding: 0.9rem 1.1rem; margin-bottom: 1rem;
+      padding: 0.9rem 1.1rem; margin-bottom: 0.75rem;
       display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
     }
     .banner-pendentes .texto { font-size: 0.875rem; color: var(--color-aviso-text); display: flex; align-items: center; gap: 6px; }
-    .banner-pendentes .acoes { display: flex; gap: 0.5rem; flex-shrink: 0; }
-    .icone-auto { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
-    .icone-auto.llm svg { color: var(--color-aviso-icone); }
-    .icone-auto.sem-match svg { color: var(--color-negativo); }
+    .banner-pendentes .acoes { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+
     .icone-protegida { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--color-text-secondary); cursor: pointer; }
     .balao-ajuda { position: fixed; max-width: 240px; background: var(--color-text); color: var(--color-white); font-size: 0.8rem; line-height: 1.4; padding: 0.6rem 0.75rem; border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 220; }
     .btn-confirmar { padding: 0.3rem 0.6rem; font-size: 0.75rem; background: var(--color-positivo-bg); border: 1px solid var(--color-positivo-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-positivo-text); }
@@ -530,6 +533,20 @@
     .btn-aplicar-filtros.escondido { display: none; }
     .filtros-sheet-acoes { display: none; }
     @media (max-width: 768px) {
+      #page-movimentos .filtros > .btn-primary { order: 2; }
+      #page-movimentos .filtros { margin-bottom: 0.75rem; }
+      #page-movimentos .ordenacao-mobile.field { margin-bottom: 0.75rem; }
+      #page-movimentos .filtros > .btn-filtros-mobile { order: 1; }
+      #page-movimentos .filtros > .pesquisa-movimentos-input { order: 3; flex-basis: 100%; width: 100%; }
+      #mov-filtros-limpar-linha { display: none !important; }
+      #ct-filtros-limpar-linha { display: none !important; }
+      #an-filtros-limpar-linha { display: none !important; }
+      #page-contas .filtros { margin-bottom: 0.75rem; }
+      #page-contas .cards-grid { margin-bottom: 0.75rem; }
+      #page-contas .chart-full { margin-bottom: 0.75rem; }
+      #page-contas .ordenacao-mobile.field { margin-bottom: 0.75rem; }
+      #page-analise .filtros { margin-bottom: 0.75rem; }
+      #page-analise .ordenacao-mobile.field { margin-bottom: 0.75rem; }
       .summary-grid { grid-template-columns: 1fr; }
       nav { padding: 0 1rem; gap: 0.75rem; }
       .nav-brand { display: none; }
@@ -546,11 +563,13 @@
       .table-wrap.cards-mobile tr { display: block; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin: 0.75rem; padding: 0.75rem 1rem; }
       .table-wrap.cards-mobile tr:hover td { background: none; }
       .table-wrap.cards-mobile tr.linha-em-edicao { background: var(--color-border-light); }
+      .table-wrap.cards-mobile tr.linha-pendente { position: relative; }
+      .table-wrap.cards-mobile tr.linha-pendente::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--color-aviso-border); border-radius: var(--radius-md) 0 0 var(--radius-md); }
       .table-wrap.cards-mobile td { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: none; padding: 0.35rem 0; text-align: right; }
       .table-wrap.cards-mobile td::before { content: attr(data-label); font-size: 0.7rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; text-align: left; flex-shrink: 0; }
       .table-wrap.cards-mobile td[colspan] { display: block; text-align: center; }
       .table-wrap.cards-mobile td[colspan]::before { content: none; }
-      .table-wrap.cards-mobile td.td-acoes { justify-content: flex-end; padding-top: 0.6rem; margin-top: 0.25rem; border-top: 1px solid var(--color-border-light); }
+      .table-wrap.cards-mobile td.td-acoes { justify-content: flex-end; gap: 0.4rem; padding-top: 0.6rem; margin-top: 0.25rem; border-top: 1px solid var(--color-border-light); }
       .table-wrap.cards-mobile td.td-acoes::before { content: none; }
       .acoes-desktop { display: none; }
       .acoes-mobile { display: flex; gap: 0.4rem; }
@@ -671,8 +690,8 @@
     <span class="nav-brand">Tesouraria</span>
     <div class="nav-links">
       <div class="nav-link active" onclick="irPara('contas', this)">Contas</div>
-      <div class="nav-link" onclick="irPara('analise', this)">Análise</div>
       <div class="nav-link" onclick="irPara('movimentos', this)">Movimentos<span class="badge-pendentes" id="badge-pendentes" style="display:none"></span></div>
+      <div class="nav-link" onclick="irPara('analise', this)">Análise</div>
     </div>
     <div class="nav-right">
       <div class="avatar-wrapper">
@@ -741,17 +760,23 @@
       </div>
 
       <div class="field ordenacao-mobile">
-        <label>Ordenar por</label>
-        <select id="ct-ordenacao-select" onchange="ordenarContasMobile(this.value)">
-          <option value="nome">Nome (A→Z)</option>
-          <option value="saldo_desc">Saldo Atual (maior→menor)</option>
-          <option value="saldo_asc">Saldo Atual (menor→maior)</option>
-          <option value="inicio_asc">Data Início (antigo → recente)</option>
-          <option value="inicio_desc">Data Início (recente → antigo)</option>
-        </select>
+        <div class="filtro-cat-wrapper" style="min-width:0">
+          <button class="filtro-cat-btn" id="ct-ordenar-btn" onclick="toggleOrdenarCt(event)">
+            <span style="display:flex;align-items:center;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"></path></svg>
+              <span id="ct-ordenar-btn-texto">Ordenar</span>
+            </span>
+            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <div class="filtro-cat-panel" id="ct-ordenar-panel" style="width:100%">
+            <div class="seletor-grupo-label">Ordenar por</div>
+            <div id="ct-ordenar-campos"></div>
+            <div class="seletor-grupo-label" style="border-top:1px solid var(--color-border-light);margin-top:4px;padding-top:0.6rem">Direção</div>
+            <div id="ct-ordenar-direcoes"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="menu-acoes-lista" id="menu-acoes-flutuante" style="display:none;position:fixed"></div>
       <div class="table-wrap cards-mobile">
         <table>
           <thead><tr id="cabecalho-contas">
@@ -861,14 +886,21 @@
       <!-- Recorrências -->
       <div class="analise-secao" id="analise-secao-recorrencias">
         <div class="field ordenacao-mobile">
-          <label>Ordenar por</label>
-          <select id="an-recorrentes-ordenacao-select" onchange="ordenarRecorrentesMobile(this.value)">
-            <option value="valor_maior">Valor Médio (maior gasto → menor gasto)</option>
-            <option value="valor_menor">Valor Médio (menor gasto → maior gasto)</option>
-            <option value="freq_mais">Frequência (frequente → raro)</option>
-            <option value="freq_menos">Frequência (raro → frequente)</option>
-            <option value="proxima">Próxima Data (próximo → distante)</option>
-          </select>
+          <div class="filtro-cat-wrapper" style="min-width:0">
+            <button class="filtro-cat-btn" id="an-recorrentes-ordenar-btn" onclick="toggleOrdenarRecorrentes(event)">
+              <span style="display:flex;align-items:center;gap:6px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"></path></svg>
+                <span id="an-recorrentes-ordenar-btn-texto">Ordenar</span>
+              </span>
+              <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+            </button>
+            <div class="filtro-cat-panel" id="an-recorrentes-ordenar-panel" style="width:100%">
+              <div class="seletor-grupo-label">Ordenar por</div>
+              <div id="an-recorrentes-ordenar-campos"></div>
+              <div class="seletor-grupo-label" style="border-top:1px solid var(--color-border-light);margin-top:4px;padding-top:0.6rem">Direção</div>
+              <div id="an-recorrentes-ordenar-direcoes"></div>
+            </div>
+          </div>
         </div>
         <div class="table-wrap cards-mobile" style="margin-bottom:0">
           <table>
@@ -935,17 +967,35 @@
             </div>
           </div>
           <div class="field"><label>Período</label><input type="text" id="mov-periodo" placeholder="Selecionar datas" readonly></div>
-          <div class="field"><label>Procurar</label><input type="text" id="filtro-pesquisa" placeholder="Pesquisar descrição..." oninput="renderizarTabelaMovimentos()"></div>
           <div class="filtros-sheet-acoes">
             <button class="btn-secondary btn-aplicar-filtros" id="mov-limpar-filtros-sheet" onclick="limparFiltroSeccaoMovimentos()">Limpar Secção</button>
             <button class="btn-primary btn-aplicar-filtros" onclick="fecharFolhaFiltros('mov')">Concluir</button>
           </div>
         </div>
-        <button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>
+        <input type="text" id="filtro-pesquisa" class="pesquisa-movimentos-input" placeholder="Pesquisar descrição..." oninput="renderizarTabelaMovimentos()">
+        <button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar Movimento</button>
       </div>
       <div class="folha-filtros-overlay" id="mov-folha-overlay" onclick="fecharFolhaFiltros('mov')"></div>
       <div class="filtros-limpar-linha" id="mov-filtros-limpar-linha">
         <span class="filtros-limpar" onclick="limparFiltrosMovimentos()">✕ Limpar Filtros</span>
+      </div>
+
+      <div class="field ordenacao-mobile">
+        <div class="filtro-cat-wrapper" style="min-width:0">
+          <button class="filtro-cat-btn" id="mov-ordenar-btn" onclick="toggleOrdenarMov(event)">
+            <span style="display:flex;align-items:center;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"></path></svg>
+              <span id="mov-ordenar-btn-texto">Ordenar</span>
+            </span>
+            <span class="seta-dropdown-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <div class="filtro-cat-panel" id="mov-ordenar-panel" style="width:100%">
+            <div class="seletor-grupo-label">Ordenar por</div>
+            <div id="mov-ordenar-campos"></div>
+            <div class="seletor-grupo-label" style="border-top:1px solid var(--color-border-light);margin-top:4px;padding-top:0.6rem">Direção</div>
+            <div id="mov-ordenar-direcoes"></div>
+          </div>
+        </div>
       </div>
 
       <div class="table-wrap cards-mobile">
@@ -1130,6 +1180,8 @@
     </div>
   </div>
 </div>
+
+<div class="menu-acoes-lista" id="menu-acoes-flutuante" style="display:none;position:fixed"></div>
 
 <!-- Modal: Conta -->
 <div class="modal-overlay modal-tela-cheia" id="modal-conta">
@@ -1355,7 +1407,7 @@ let ctDataDe  = null, ctDataAte  = null
 
 let ordenacaoContas        = { campo: "nome", direcao: 1 }
 let contasTabelaCache      = []
-let ordenacaoMovimentos    = { campo: null, direcao: 1 }
+let ordenacaoMovimentos    = { campo: "data", direcao: -1 }
 let movimentosTabelaCache  = []
 let ordenacaoRecorrentes   = { campo: "proxima_data_estimada", direcao: 1 }
 let recorrentesTabelaCache = []
@@ -1384,8 +1436,7 @@ const PALETA_VERMELHA = ["#d9584a","#e17567","#e9958a","#f0b7ae","#f6d9d4","#e06
 // ═══════════════════════════════════════════════════════════
 const ICONE_OLHO_ABERTO       = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
 const ICONE_OLHO_FECHADO      = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 13s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
-const ICONE_SUGESTAO_LLM      = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg>`
-const ICONE_SEM_MATCH         = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.1 9a3 3 0 1 1 4.4 2.6c-.8.5-1.5 1-1.5 2.4"></path><path d="M12 17h.01"></path></svg>`
+
 const ICONE_PROTEGIDA         = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
 const ICONE_TOAST_SUCESSO     = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
 const ICONE_TOAST_ERRO        = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
@@ -1837,7 +1888,7 @@ function ativarPagina(pagina) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"))
   document.getElementById("page-" + pagina)?.classList.add("active")
-  const navLinks = { contas: 0, analise: 1, movimentos: 2 }
+  const navLinks = { contas: 0, movimentos: 1, analise: 2 }
   if (pagina in navLinks) document.querySelectorAll(".nav-link")[navLinks[pagina]].classList.add("active")
   if (pagina === "analise") trocarAbaAnalise(localStorage.getItem("analise_aba") || "resumo")   // ← novo
 }
@@ -2083,12 +2134,11 @@ function atualizarVisibilidadeLimparAnalise() {
   document.getElementById("an-limpar-filtros-sheet").classList.toggle("escondido", !ativos)
 }
 function temFiltroSeccaoMovimentosAtivo() {
-  return !!(contasSelecionadas.mov.size > 0 || categoriasMovSelecionadas.size > 0 || document.getElementById("filtro-pesquisa").value.trim() || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
+  return !!(contasSelecionadas.mov.size > 0 || categoriasMovSelecionadas.size > 0 || movDataDe !== isoDateStr(primeiroDiaMes()) || movDataAte !== isoDateStr(new Date()))
 }
 function limparFiltroSeccaoMovimentos() {
   contasSelecionadas.mov.clear()
   categoriasMovSelecionadas.clear()
-  document.getElementById("filtro-pesquisa").value = ""
   const inputPesqConta = document.getElementById("mov-filtro-conta-pesquisa")
   if (inputPesqConta) inputPesqConta.value = ""
   const inputPesqCat = document.getElementById("mov-filtro-categoria-pesquisa")
@@ -2323,6 +2373,23 @@ function toggleMenuAcoesReconciliacao(event, id, data, valor) {
   menu.style.top = "auto"
   menu.dataset.reconcId = String(id)
 }
+function toggleMenuAcoesMovimento(event, id) {
+  const menu = document.getElementById("menu-acoes-flutuante")
+  const jaAbertoParaEsta = menu.style.display !== "none" && menu.dataset.movId === String(id)
+  fecharMenusAcoes()
+  if (jaAbertoParaEsta) return
+  menu.innerHTML = `
+    <button onclick="fecharMenusAcoes(); abrirEditarMovimento('${id}')">Editar</button>
+    <button class="perigo" onclick="fecharMenusAcoes(); eliminarMovimento('${id}')">Eliminar</button>
+  `
+  const rect = event.currentTarget.getBoundingClientRect()
+  menu.style.display = "flex"
+  menu.style.left = "auto"
+  menu.style.right = (window.innerWidth - rect.right) + "px"
+  menu.style.bottom = (window.innerHeight - rect.top + 4) + "px"
+  menu.style.top = "auto"
+  menu.dataset.movId = String(id)
+}
 function toggleAjudaIcone(icone) {
   const jaAberto = document.querySelector(".balao-ajuda")?.dataset.para === icone.id
   fecharBalaoAjuda()
@@ -2352,11 +2419,14 @@ function fecharMenusAcoes() {
   if (menu) { menu.style.display = "none"; menu.dataset.contaId = "" }
 }
 document.addEventListener("click", (e) => {
-  if (!e.target.closest(".menu-acoes-lista") && !e.target.closest("[onclick*='toggleMenuAcoesConta']") && !e.target.closest("[onclick*='toggleMenuAcoesReconciliacao']")) fecharMenusAcoes()
+  if (!e.target.closest(".menu-acoes-lista") && !e.target.closest("[onclick*='toggleMenuAcoesConta']") && !e.target.closest("[onclick*='toggleMenuAcoesReconciliacao']") && !e.target.closest("[onclick*='toggleMenuAcoesMovimento']")) fecharMenusAcoes()
 })
 window.addEventListener("scroll", () => fecharMenusAcoes(), { passive: true, capture: true })
 function fecharTodosOsFiltros() {
   fecharFiltroCat()
+  fecharOrdenarMov()
+  fecharOrdenarCt()
+  fecharOrdenarRecorrentes()
   fecharFiltroCategoriaMov()
   fecharFiltroConta("ct")
   fecharFiltroConta("an")
@@ -2627,6 +2697,7 @@ function ordenarContas(campo) {
 }
 function renderizarTabelaContas() {
   let lista = [...contasTabelaCache]
+  renderizarPainelOrdenarCt()
   const { campo, direcao } = ordenacaoContas
   if (campo) lista.sort((a, b) => {
     let va = a[campo], vb = b[campo]
@@ -2657,16 +2728,80 @@ function renderizarTabelaContas() {
   })
 }
 function toggleLinhaExpandida(tr) { tr.classList.toggle("expandido") }
-function ordenarContasMobile(valor) {
-  const mapa = {
-    nome:        { campo: "nome",   direcao: 1  },
-    saldo_desc:  { campo: "saldo",  direcao: -1 },
-    saldo_asc:   { campo: "saldo",  direcao: 1  },
-    inicio_asc:  { campo: "inicio", direcao: 1  },
-    inicio_desc: { campo: "inicio", direcao: -1 },
-  }
-  ordenacaoContas = mapa[valor]
+const OPCOES_ORDENAR_CONTAS = {
+  nome:   { rotulo: "Nome",        direcoes: [{ valor: 1, rotulo: "A → Z" }, { valor: -1, rotulo: "Z → A" }] },
+  saldo:  { rotulo: "Saldo Atual", direcoes: [{ valor: -1, rotulo: "Maior → Menor" }, { valor: 1, rotulo: "Menor → Maior" }] },
+  inicio: { rotulo: "Data Início", direcoes: [{ valor: 1, rotulo: "Antigo → Recente" }, { valor: -1, rotulo: "Recente → Antigo" }] },
+}
+function renderizarPainelOrdenarCt() {
+  const camposDiv = document.getElementById("ct-ordenar-campos")
+  camposDiv.innerHTML = Object.entries(OPCOES_ORDENAR_CONTAS).map(([chave, o]) =>
+    `<div class="filtro-item-linha${ordenacaoContas.campo === chave ? ' selecionado' : ''}" onclick="selecionarCampoOrdenarCt('${chave}')"><span>${o.rotulo}</span><span class="check">${ICONE_CHECK}</span></div>`
+  ).join("")
+  const direcoesDiv = document.getElementById("ct-ordenar-direcoes")
+  const opcoes = OPCOES_ORDENAR_CONTAS[ordenacaoContas.campo]?.direcoes || OPCOES_ORDENAR_CONTAS.nome.direcoes
+  direcoesDiv.innerHTML = opcoes.map(d =>
+    `<div class="filtro-item-linha${ordenacaoContas.direcao === d.valor ? ' selecionado' : ''}" onclick="selecionarDirecaoOrdenarCt(${d.valor})"><span>${d.rotulo}</span><span class="check">${ICONE_CHECK}</span></div>`
+  ).join("")
+  document.getElementById("ct-ordenar-btn-texto").textContent = "Ordenar: " + (OPCOES_ORDENAR_CONTAS[ordenacaoContas.campo]?.rotulo || "Nome")
+}
+function selecionarCampoOrdenarCt(campo) {
+  ordenacaoContas = { campo, direcao: OPCOES_ORDENAR_CONTAS[campo].direcoes[0].valor }
+  renderizarPainelOrdenarCt()
   renderizarTabelaContas()
+}
+function selecionarDirecaoOrdenarCt(direcao) {
+  ordenacaoContas.direcao = direcao
+  renderizarPainelOrdenarCt()
+  renderizarTabelaContas()
+}
+function toggleOrdenarCt(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("ct-ordenar-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  painel.classList.toggle("aberto", !estavaAberto)
+}
+function fecharOrdenarCt() {
+  document.getElementById("ct-ordenar-panel").classList.remove("aberto")
+}
+
+const OPCOES_ORDENAR_MOVIMENTOS = {
+  data:      { rotulo: "Data",      direcoes: [{ valor: -1, rotulo: "Recente → Antigo" }, { valor: 1, rotulo: "Antigo → Recente" }] },
+  valor:     { rotulo: "Valor",     direcoes: [{ valor: -1, rotulo: "Maior → Menor" }, { valor: 1, rotulo: "Menor → Maior" }] },
+  descricao: { rotulo: "Descrição", direcoes: [{ valor: 1, rotulo: "A → Z" }, { valor: -1, rotulo: "Z → A" }] },
+}
+function renderizarPainelOrdenarMov() {
+  const camposDiv = document.getElementById("mov-ordenar-campos")
+  camposDiv.innerHTML = Object.entries(OPCOES_ORDENAR_MOVIMENTOS).map(([chave, o]) =>
+    `<div class="filtro-item-linha${ordenacaoMovimentos.campo === chave ? ' selecionado' : ''}" onclick="selecionarCampoOrdenarMov('${chave}')"><span>${o.rotulo}</span><span class="check">${ICONE_CHECK}</span></div>`
+  ).join("")
+  const direcoesDiv = document.getElementById("mov-ordenar-direcoes")
+  const opcoes = OPCOES_ORDENAR_MOVIMENTOS[ordenacaoMovimentos.campo].direcoes
+  direcoesDiv.innerHTML = opcoes.map(d =>
+    `<div class="filtro-item-linha${ordenacaoMovimentos.direcao === d.valor ? ' selecionado' : ''}" onclick="selecionarDirecaoOrdenarMov(${d.valor})"><span>${d.rotulo}</span><span class="check">${ICONE_CHECK}</span></div>`
+  ).join("")
+  document.getElementById("mov-ordenar-btn-texto").textContent = "Ordenar: " + OPCOES_ORDENAR_MOVIMENTOS[ordenacaoMovimentos.campo].rotulo
+}
+function selecionarCampoOrdenarMov(campo) {
+  ordenacaoMovimentos = { campo, direcao: OPCOES_ORDENAR_MOVIMENTOS[campo].direcoes[0].valor }
+  renderizarPainelOrdenarMov()
+  renderizarTabelaMovimentos()
+}
+function selecionarDirecaoOrdenarMov(direcao) {
+  ordenacaoMovimentos.direcao = direcao
+  renderizarPainelOrdenarMov()
+  renderizarTabelaMovimentos()
+}
+function toggleOrdenarMov(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("mov-ordenar-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  painel.classList.toggle("aberto", !estavaAberto)
+}
+function fecharOrdenarMov() {
+  document.getElementById("mov-ordenar-panel").classList.remove("aberto")
 }
 
 function abrirModalConta() {
@@ -3149,6 +3284,7 @@ function ordenarRecorrentes(campo) {
 function renderizarRecorrentes(recorrentes) { recorrentesTabelaCache = recorrentes; renderizarTabelaRecorrentes() }
 function renderizarTabelaRecorrentes() {
   let lista = [...recorrentesTabelaCache]
+  renderizarPainelOrdenarRecorrentes()
   const { campo, direcao } = ordenacaoRecorrentes
   if (campo) lista.sort((a, b) => { let va = a[campo], vb = b[campo]; if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase() }; return va < vb ? -direcao : va > vb ? direcao : 0 })
   atualizarIconesOrdenacao("cabecalho-recorrentes", ordenacaoRecorrentes)
@@ -3164,16 +3300,42 @@ function renderizarTabelaRecorrentes() {
     tb.innerHTML += `<tr class="linha-expandivel" onclick="toggleLinhaExpandida(this)"><td data-label="Descrição">${r.descricao}</td><td data-label="Categoria" class="td-expandido"><div class="valor-com-sub"><span>${r.categoria}</span><span class="sub-linha"><span class="separador-mobile">· </span>${r.grupo}</span></div></td><td data-label="Valor Médio" style="text-align:right" class="negativo">${fmt(r.valor_medio, moedaAnaliseGlobal)}</td><td data-label="Frequência" style="${r.regular ? '' : 'color:var(--color-text-faint)'}">${r.regular ? `~${r.intervalo_medio_dias} dias` : `${r.intervalo_medio_dias} dias (irregular)`}</td><td data-label="Próxima Data Estimada" class="td-expandido">${r.proxima_data_estimada}</td></tr>`
   })
 }
-function ordenarRecorrentesMobile(valor) {
-  const mapa = {
-    valor_maior: { campo: "valor_medio", direcao: 1 },
-    valor_menor: { campo: "valor_medio", direcao: -1 },
-    freq_mais:   { campo: "intervalo_medio_dias", direcao: 1 },
-    freq_menos:  { campo: "intervalo_medio_dias", direcao: -1 },
-    proxima:     { campo: "proxima_data_estimada", direcao: 1 },
-  }
-  ordenacaoRecorrentes = mapa[valor]
+const OPCOES_ORDENAR_RECORRENTES = {
+  valor_medio:           { rotulo: "Valor Médio",   direcoes: [{ valor: -1, rotulo: "Maior → Menor" }, { valor: 1, rotulo: "Menor → Maior" }] },
+  intervalo_medio_dias:  { rotulo: "Frequência",     direcoes: [{ valor: 1, rotulo: "Frequente → Raro" }, { valor: -1, rotulo: "Raro → Frequente" }] },
+  proxima_data_estimada: { rotulo: "Próxima Data",   direcoes: [{ valor: 1, rotulo: "Próximo → Distante" }, { valor: -1, rotulo: "Distante → Próximo" }] },
+}
+function renderizarPainelOrdenarRecorrentes() {
+  const camposDiv = document.getElementById("an-recorrentes-ordenar-campos")
+  camposDiv.innerHTML = Object.entries(OPCOES_ORDENAR_RECORRENTES).map(([chave, o]) =>
+    `<div class="filtro-item-linha${ordenacaoRecorrentes.campo === chave ? ' selecionado' : ''}" onclick="selecionarCampoOrdenarRecorrentes('${chave}')"><span>${o.rotulo}</span><span class="check">${ICONE_CHECK}</span></div>`
+  ).join("")
+  const direcoesDiv = document.getElementById("an-recorrentes-ordenar-direcoes")
+  const opcoes = OPCOES_ORDENAR_RECORRENTES[ordenacaoRecorrentes.campo]?.direcoes || OPCOES_ORDENAR_RECORRENTES.valor_medio.direcoes
+  direcoesDiv.innerHTML = opcoes.map(d =>
+    `<div class="filtro-item-linha${ordenacaoRecorrentes.direcao === d.valor ? ' selecionado' : ''}" onclick="selecionarDirecaoOrdenarRecorrentes(${d.valor})"><span>${d.rotulo}</span><span class="check">${ICONE_CHECK}</span></div>`
+  ).join("")
+  document.getElementById("an-recorrentes-ordenar-btn-texto").textContent = "Ordenar: " + (OPCOES_ORDENAR_RECORRENTES[ordenacaoRecorrentes.campo]?.rotulo || "Valor Médio")
+}
+function selecionarCampoOrdenarRecorrentes(campo) {
+  ordenacaoRecorrentes = { campo, direcao: OPCOES_ORDENAR_RECORRENTES[campo].direcoes[0].valor }
+  renderizarPainelOrdenarRecorrentes()
   renderizarTabelaRecorrentes()
+}
+function selecionarDirecaoOrdenarRecorrentes(direcao) {
+  ordenacaoRecorrentes.direcao = direcao
+  renderizarPainelOrdenarRecorrentes()
+  renderizarTabelaRecorrentes()
+}
+function toggleOrdenarRecorrentes(e) {
+  e.stopPropagation()
+  const painel = document.getElementById("an-recorrentes-ordenar-panel")
+  const estavaAberto = painel.classList.contains("aberto")
+  fecharTodosOsFiltros()
+  painel.classList.toggle("aberto", !estavaAberto)
+}
+function fecharOrdenarRecorrentes() {
+  document.getElementById("an-recorrentes-ordenar-panel").classList.remove("aberto")
 }
 
 
@@ -3204,6 +3366,7 @@ function ordenarMovimentos(campo) {
 function renderizarTabelaMovimentos() {
   let lista = [...movimentosTabelaCache]
   atualizarVisibilidadeLimparMovimentos()
+  renderizarPainelOrdenarMov()
   const pesquisa = document.getElementById("filtro-pesquisa").value.trim().toLowerCase()
   if (pesquisa) lista = lista.filter(m => m.descricao.toLowerCase().includes(pesquisa))
   const { campo, direcao } = ordenacaoMovimentos
@@ -3218,16 +3381,25 @@ function renderizarTabelaMovimentos() {
   const tb = document.getElementById("tabela-movimentos")
   if (lista.length === 0) {
     tb.innerHTML = temFiltrosMovimentosAtivos()
-      ? linhaVazia(6, "Nenhum movimento encontrado", "Experimenta ajustar ou limpar os filtros.", `<button class="btn-sm" onclick="limparFiltrosMovimentos()">Limpar filtros</button>`)
-      : linhaVazia(6, "Ainda não tens movimentos", "Os movimentos que adicionares vão aparecer aqui.", `<button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>`)
+      ? linhaVazia(6, null, "Nenhum movimento encontrado.", `<button class="btn-sm" onclick="limparFiltrosMovimentos()">Limpar filtros</button>`)
+      : linhaVazia(6, null, "Ainda não tens movimentos.", `<button class="btn-primary" onclick="abrirModalMovimento()">+ Adicionar</button>`)
     return
   }
   tb.innerHTML = ""
   lista.forEach(m => {
     const conta = contasCache.find(c => c.id === m.conta_id)
     const pendente = !m.confirmado
-    const iconePendente = !pendente ? "" : (m.sem_categoria ? `<span class="icone-auto sem-match" title="Categoria genérica. Recomenda-se validação.">${ICONE_SEM_MATCH}</span>` : `<span class="icone-auto llm" title="Categoria automática. Recomenda-se confirmação.">${ICONE_SUGESTAO_LLM}</span>`)
-    tb.innerHTML += `<tr><td data-label="Data">${m.data}</td><td data-label="Descrição">${m.descricao}</td><td data-label="Conta"><div class="valor-com-sub"><span>${conta ? conta.nome : m.conta_id}</span>${conta && conta.banco ? `<span class="sub-linha"><span class="separador-mobile">· </span>${conta.banco}</span>` : ""}</div></td><td data-label="Categoria"><div class="valor-com-sub"><span>${m.categoria}${iconePendente}</span>${m.grupo ? `<span class="sub-linha"><span class="separador-mobile">· </span>${m.grupo}</span>` : ""}</div></td><td data-label="Valor" style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta?.moeda)}</td><td class="td-acoes" style="white-space:nowrap">${pendente ? `<button class="btn-confirmar" onclick="confirmarMovimento('${m.id}')">✓ confirmar</button>` : ""}<button class="btn-sm" onclick="abrirEditarMovimento('${m.id}')">editar</button><button class="btn-danger" onclick="eliminarMovimento('${m.id}')">✕</button></td></tr>`
+
+    tb.innerHTML += `<tr class="linha-expandivel${pendente ? ' linha-pendente' : ''}" onclick="toggleLinhaExpandida(this)"><td data-label="Data">${m.data}</td><td data-label="Descrição">${m.descricao}</td><td data-label="Conta" class="td-expandido"><div class="valor-com-sub"><span>${conta ? conta.nome : m.conta_id}</span>${conta && conta.banco ? `<span class="sub-linha"><span class="separador-mobile">· </span>${conta.banco}</span>` : ""}</div></td><td data-label="Categoria" class="td-expandido"><div class="valor-com-sub"><span>${m.categoria}</span>${m.grupo ? `<span class="sub-linha"><span class="separador-mobile">· </span>${m.grupo}</span>` : ""}</div></td><td data-label="Valor" style="text-align:right" class="${m.valor >= 0 ? 'positivo' : 'negativo'}">${fmt(m.valor, conta?.moeda)}</td><td class="td-acoes td-expandido" style="white-space:nowrap">
+      <span class="acoes-desktop">
+        <button class="btn-sm" onclick="event.stopPropagation(); toggleMenuAcoesMovimento(event, '${m.id}')" aria-label="Mais ações">⋮</button>
+      </span>
+      ${pendente ? `<button class="btn-confirmar" onclick="event.stopPropagation(); confirmarMovimento('${m.id}')">✓ confirmar</button>` : ""}
+      <span class="acoes-mobile">
+        <button class="btn-sm" onclick="event.stopPropagation(); abrirEditarMovimento('${m.id}')">editar</button>
+        <button class="btn-danger" onclick="event.stopPropagation(); eliminarMovimento('${m.id}')" aria-label="Eliminar movimento">✕</button>
+      </span>
+    </td></tr>`
   })
 }
 
@@ -3294,11 +3466,11 @@ function renderizarBannerPendentes(contagem) {
   const banner = document.getElementById("banner-pendentes"), texto = document.getElementById("banner-pendentes-texto"), acoes = banner.querySelector(".acoes")
   if (pendentesAtivo) {
     texto.textContent = "A mostrar apenas movimentos pendentes de confirmação."
-    acoes.innerHTML = `<button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button><button class="btn-sm" onclick="limparModoPendentes()">Ver todos</button>`
+    acoes.innerHTML = `<button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button><button class="btn-secondary" onclick="limparModoPendentes()">Ver todos</button>`
     banner.style.display = "flex"
   } else if (contagem > 0) {
-    texto.innerHTML = `${ICONE_SUGESTAO_LLM} ${contagem} movimento(s) categorizados automaticamente — confirme.`
-    acoes.innerHTML = `<button class="btn-sm" onclick="filtrarApenasPendentes()">Ver pendentes</button><button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button>`
+    texto.innerHTML = `<span class="icone-protegida" id="banner-pendentes-ajuda" data-ajuda="Os movimentos são categorizados automaticamente através de um sistema que recorre à Inteligência Artificial. A categorização pode não ser correta em alguns casos, por isso recomenda-se a validação das categorias atribuídas.">${ICONE_INFO}</span> ${contagem} movimento(s) categorizados pelo sistema.`
+    acoes.innerHTML = `<button class="btn-secondary" onclick="filtrarApenasPendentes()">Ver pendentes</button><button class="btn-primary" onclick="confirmarTodosPendentes()">Confirmar todos</button>`
     banner.style.display = "flex"
   } else { banner.style.display = "none" }
 }
@@ -3571,6 +3743,15 @@ document.addEventListener("click", e => {
 
   const movFiltroContaBtn = document.getElementById("mov-filtro-conta-btn"), movFiltroContaPanel = document.getElementById("mov-filtro-conta-panel")
   if (movFiltroContaBtn && !path.includes(movFiltroContaBtn) && !path.includes(movFiltroContaPanel)) fecharFiltroConta("mov")
+
+  const movOrdenarBtn = document.getElementById("mov-ordenar-btn"), movOrdenarPanel = document.getElementById("mov-ordenar-panel")
+  if (movOrdenarBtn && !path.includes(movOrdenarBtn) && !path.includes(movOrdenarPanel)) fecharOrdenarMov()
+
+  const ctOrdenarBtn = document.getElementById("ct-ordenar-btn"), ctOrdenarPanel = document.getElementById("ct-ordenar-panel")
+  if (ctOrdenarBtn && !path.includes(ctOrdenarBtn) && !path.includes(ctOrdenarPanel)) fecharOrdenarCt()
+
+  const anRecOrdenarBtn = document.getElementById("an-recorrentes-ordenar-btn"), anRecOrdenarPanel = document.getElementById("an-recorrentes-ordenar-panel")
+  if (anRecOrdenarBtn && !path.includes(anRecOrdenarBtn) && !path.includes(anRecOrdenarPanel)) fecharOrdenarRecorrentes()
 
   const avatarBtn = document.getElementById("avatar-btn"), avatarMenu = document.getElementById("avatar-menu")
   if (avatarBtn && !path.includes(avatarBtn) && !path.includes(avatarMenu)) fecharMenuAvatar()

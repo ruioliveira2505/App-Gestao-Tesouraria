@@ -1,4 +1,5 @@
 import uuid
+from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.db.database import get_connection, release_connection, release_connection
@@ -13,12 +14,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _validar_data_movimento(cursor, conta_id, data, acao):
+def _validar_data_movimento(cursor, conta_id, data):
     rec = reconciliacao_mais_antiga_data(cursor, conta_id)
     if rec and data < rec:
+        inicio_movimentos = date.fromisoformat(rec) + timedelta(days=1)
         raise HTTPException(
             status_code=400,
-            detail=f"Esta conta só tem reconciliações a partir de {rec}. Cria uma reconciliação anterior a {data} antes de {acao}."
+            detail=f"Não é possível registar um movimento antes de {inicio_movimentos}, a Data de Início de Movimentos desta conta."
         )
 
 
@@ -28,8 +30,8 @@ def _validar_categoria_direcao(cursor, categoria_id, valor, uid):
     if not row:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
     if (valor > 0) != row[0]:
-        direcao = "uma categoria de Entrada" if valor > 0 else "uma categoria de Saída"
-        raise HTTPException(status_code=400, detail=f"Este movimento precisa de {direcao}.")
+        direcao = "Entrada" if valor > 0 else "Saída"
+        raise HTTPException(status_code=400, detail=f"Não é possível guardar este movimento: precisa de uma categoria de {direcao}.")
 
 
 def _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, eh_recebimento, confirmado):
@@ -130,7 +132,7 @@ def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador
     uid = utilizador["sub"]
     try:
         _validar_categoria_direcao(cursor, dados.categoria_id, dados.valor, uid)
-        _validar_data_movimento(cursor, dados.conta_id, dados.data, "adicionar este movimento")
+        _validar_data_movimento(cursor, dados.conta_id, dados.data)
         cursor.execute("""
             INSERT INTO movimentos (id, conta_id, data, descricao, valor, categoria_id, origem_cat, utilizador_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -150,7 +152,7 @@ def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict 
     uid = utilizador["sub"]
     try:
         _validar_categoria_direcao(cursor, dados.categoria_id, dados.valor, uid)
-        _validar_data_movimento(cursor, dados.conta_id, dados.data, "mover este movimento para essa data")
+        _validar_data_movimento(cursor, dados.conta_id, dados.data)
         cursor.execute("""
             UPDATE movimentos
             SET conta_id=%s, data=%s, descricao=%s, valor=%s, categoria_id=%s, origem_cat='manual'

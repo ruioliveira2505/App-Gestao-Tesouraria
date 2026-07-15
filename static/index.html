@@ -125,6 +125,7 @@
     .avatar-menu-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.9rem; font-size: 0.875rem; color: var(--color-text); cursor: pointer; }
     .avatar-menu-item .icone { display: flex; flex-shrink: 0; color: var(--color-text-secondary); }
     .avatar-menu-item:hover { background: var(--color-surface); }
+    .avatar-menu-separador { height: 1px; background: var(--color-border-light); margin: 0.35rem 0; }
 
     
     /* ═══════════════════════════════════════════════════════
@@ -163,6 +164,7 @@
     .menu-acoes-lista button { text-align: left; padding: 0.5rem 0.7rem; border: none; background: none; cursor: pointer; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--color-text); -webkit-appearance: none; }
     .menu-acoes-lista button:hover { background: var(--color-surface); }
     .menu-acoes-lista button.perigo { color: var(--color-negativo); }
+    .menu-acoes-separador { height: 1px; background: var(--color-border-light); margin: 0.3rem 0; }
     .btn-danger:hover { background: var(--color-negativo-bg); }
 
     
@@ -382,8 +384,8 @@
 /* ── Botão de drill-down ── */
     .btn-drilldown {
       background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-      cursor: pointer; padding: 2px 6px; color: var(--color-text-secondary);
-      display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; flex-shrink: 0;
+      cursor: pointer; padding: 5px; color: var(--color-text-secondary);
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
       opacity: 0; transition: opacity 0.15s;
     }
     .btn-drilldown:hover { background: var(--color-surface); color: var(--color-text); border-color: var(--color-text-secondary); }
@@ -491,6 +493,8 @@
     .categoria-gestao-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; font-size: 0.85rem; color: var(--color-text-tertiary); }
     .arraste-alca { cursor: grab; color: var(--color-text-faint); display: flex; flex-shrink: 0; margin-right: 8px; }
     .arraste-alca:active { cursor: grabbing; }
+    .btn-sm:disabled { opacity: 0.3; cursor: default; }
+    .btn-icone-only { padding: 0.3rem 0.55rem; }
     .grupo-gestao.a-arrastar, .categoria-gestao-item.a-arrastar { opacity: 0.4; }
     .grupo-gestao.arraste-acima, .categoria-gestao-item.arraste-acima { border-top: 2px solid var(--color-text); }
     .grupo-gestao.arraste-abaixo, .categoria-gestao-item.arraste-abaixo { border-bottom: 2px solid var(--color-text); }
@@ -507,6 +511,37 @@
     .perfil-secao.active { display: block; }
     .perfil-secao-titulo { font-size: 1.1rem; font-weight: 600; }
     .perfil-secao-subtitulo { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.2rem; }
+    .perfil-seta { display: flex; flex-shrink: 0; color: var(--color-text-faint); }
+    .perfil-card-avatar {
+      display: flex; align-items: center; gap: 1rem; padding: 1.25rem;
+      background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      cursor: pointer;
+    }
+    .perfil-card-avatar:hover { background: var(--color-surface); }
+    .perfil-avatar-grande {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      background: var(--color-primary); color: var(--color-white);
+      font-size: 1.1rem; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .perfil-card-avatar-info { flex: 1; min-width: 0; }
+    .perfil-card-avatar-nome { font-size: 1rem; font-weight: 600; color: var(--color-text); }
+    .perfil-card-avatar-email { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 2px; }
+    .perfil-lista {
+      background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .perfil-lista-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.9rem 1.25rem; font-size: 0.875rem; color: var(--color-text);
+      cursor: pointer; border-bottom: 1px solid var(--color-border-light);
+    }
+    .perfil-lista-item:last-child { border-bottom: none; }
+    .perfil-lista-item:hover { background: var(--color-surface); }
+    .perfil-zona-perigo {
+      background: var(--color-negativo-bg); border: 1px solid var(--color-negativo-border); border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
 
     
     /* ═══════════════════════════════════════════════════════
@@ -699,6 +734,7 @@
         <div class="avatar-menu" id="avatar-menu">
           <div class="avatar-menu-item" onclick="alternarOcultarValores()"><span class="icone" id="icone-menu-olho"></span> <span id="texto-menu-olho">Ocultar valores</span></div>
           <div class="avatar-menu-item" onclick="irParaConfiguracoes()"><span class="icone" id="icone-menu-config"></span> Configurações</div>
+          <div class="avatar-menu-separador"></div>
           <div class="avatar-menu-item" onclick="logout()"><span class="icone" id="icone-menu-sair"></span> Terminar sessão</div>
         </div>
       </div>
@@ -1033,28 +1069,30 @@
           <div class="perfil-secao active" id="perfil-secao-conta">
             <h2 class="perfil-secao-titulo">Conta</h2>
             <p class="perfil-secao-subtitulo">Gere a tua identidade, segurança e sessões.</p>
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Perfil</div></div>
-            <div class="table-wrap" style="padding:1.25rem">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
-                <div style="flex:1;min-width:0">
-                  <div class="field" style="margin-bottom:0.75rem"><label>Nome</label><div id="perfil-nome-display" style="font-size:0.9rem"></div></div>
-                  <div class="field" style="margin-bottom:0"><label>Email</label><div id="perfil-email-display" style="font-size:0.9rem"></div></div>
-                </div>
-                <button class="btn-sm" onclick="abrirModalEditarPerfil()">Editar</button>
+
+            <div class="perfil-card-avatar" onclick="abrirModalEditarPerfil()" style="margin-top:1.5rem">
+              <div class="perfil-avatar-grande" id="perfil-avatar-grande"></div>
+              <div class="perfil-card-avatar-info">
+                <div class="perfil-card-avatar-nome" id="perfil-nome-display"></div>
+                <div class="perfil-card-avatar-email" id="perfil-email-display"></div>
+              </div>
+              <span class="perfil-seta" id="seta-perfil-avatar"></span>
+            </div>
+
+            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Segurança</div></div>
+            <div class="perfil-lista">
+              <div class="perfil-lista-item" onclick="abrirModalAlterarPassword()">
+                <span>Palavra-passe</span>
+                <span class="perfil-seta" id="seta-perfil-password"></span>
+              </div>
+              <div class="perfil-lista-item" onclick="terminarTodasAsSessoes()">
+                <span>Terminar sessão em todos os dispositivos</span>
+                <span class="perfil-seta" id="seta-perfil-sessoes"></span>
               </div>
             </div>
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Password</div></div>
-            <div class="table-wrap" style="padding:1.25rem">
-              <p class="danger-zone-text">Alterar a palavra-passe que dá acesso à tua conta.</p>
-              <button class="btn-secondary" onclick="abrirModalAlterarPassword()">Alterar palavra-passe</button>
-            </div>
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Sessões</div></div>
-            <div class="table-wrap" style="padding:1.25rem">
-              <p class="danger-zone-text">Terminar sessão em todos os dispositivos onde tens a aplicação aberta.</p>
-              <button class="btn-secondary" onclick="terminarTodasAsSessoes()">Terminar sessão em todos os dispositivos</button>
-            </div>
+
             <div class="section-header" style="margin-top:1.5rem"><div class="section-title" style="color:var(--color-negativo)">Zona de Perigo</div></div>
-            <div class="table-wrap" style="padding:1.25rem">
+            <div class="perfil-zona-perigo">
               <p class="danger-zone-text">Eliminar a conta removendo permanentemente todos os teus dados.</p>
               <button class="btn-danger" onclick="eliminarContaUtilizador()">Eliminar a minha conta</button>
             </div>
@@ -1449,8 +1487,9 @@ const ICONE_SETA_BAIXO        = `<svg width="12" height="12" viewBox="0 0 24 24"
 const ICONE_SETA_CIMA         = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>`
 const ICONE_INFO              = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
 const ICONE_ARRASTAR          = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>`
-const ICONE_GRAFICO           = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
+const ICONE_GRAFICO           = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
 const ICONE_CHECK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
+const ICONE_SETA_DIREITA = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>`
 const ICONE_INDETERMINADO = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="12" x2="18" y2="12"></line></svg>`
 const ICONE_PREFERENCIAS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>`
 const ICONE_SAIR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`
@@ -1472,7 +1511,7 @@ function moedaPredominante(lista) {
 function fmtMes(ym) {
   const [y, m] = ym.split("-")
   const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
-  return nomes[parseInt(m)-1] + " " + y
+  return nomes[parseInt(m)-1] + " " + y.slice(-2)
 }
 function fmtDiaCurto(iso) {
   const [y, m, d] = iso.split("-")
@@ -1840,6 +1879,11 @@ async function iniciarApp() {
   document.getElementById("texto-menu-olho").textContent = valoresOcultos ? "Mostrar valores" : "Ocultar valores"
   const pagina = localStorage.getItem("paginaAtual") || "contas"
   ativarPagina(pagina)
+  if (pagina === "configuracoes") {
+    const secoesValidas = ["conta", "categorias", "preferencias"]
+    const secaoGuardada = localStorage.getItem("secaoConfiguracoes")
+    trocarSecaoPerfil(secoesValidas.includes(secaoGuardada) ? secaoGuardada : "conta")
+  }
   document.getElementById("app-screen").style.display = "block"
   contasCache = await api("/contas")
   categoriasCache    = await api("/categorias")
@@ -2419,7 +2463,7 @@ function fecharMenusAcoes() {
   if (menu) { menu.style.display = "none"; menu.dataset.contaId = "" }
 }
 document.addEventListener("click", (e) => {
-  if (!e.target.closest(".menu-acoes-lista") && !e.target.closest("[onclick*='toggleMenuAcoesConta']") && !e.target.closest("[onclick*='toggleMenuAcoesReconciliacao']") && !e.target.closest("[onclick*='toggleMenuAcoesMovimento']")) fecharMenusAcoes()
+  if (!e.target.closest(".menu-acoes-lista") && !e.target.closest("[onclick*='toggleMenuAcoesConta']") && !e.target.closest("[onclick*='toggleMenuAcoesReconciliacao']") && !e.target.closest("[onclick*='toggleMenuAcoesMovimento']") && !e.target.closest("[onclick*='toggleMenuAcoesGrupo']") && !e.target.closest("[onclick*='toggleMenuAcoesCategoria']")) fecharMenusAcoes()
 })
 window.addEventListener("scroll", () => fecharMenusAcoes(), { passive: true, capture: true })
 function fecharTodosOsFiltros() {
@@ -3107,7 +3151,7 @@ function renderizarGraficoMensal(mensal) {
             return linha
           }}}
         },
-        scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
+        scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 769 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
       }
     })
   })
@@ -3140,9 +3184,9 @@ function renderizarGrupos() {
     const pct = totalTipo > 0 ? (g.total / totalTipo * 100) : 0
     const subcatHtml = g.subcategorias.map(s => {
       const sPct = g.total > 0 ? (s.total / g.total * 100) : 0
-      return `<div class="sub-item"><span>${s.categoria}</span><span style="display:flex;align-items:center;gap:8px"><button class="btn-drilldown" title="Ver evolução mensal de ${s.categoria}" onclick="abrirDrillDownCategoria(${s.categoria_id}, '${s.categoria.replace(/'/g, "\\'")}', '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span></span></div><div class="sub-barra-fundo"><div class="barra-fill" style="width:${sPct}%;background:${corClara}"></div></div>`
+      return `<div class="sub-item"><span>${s.categoria}</span><span style="display:flex;align-items:center;gap:8px"><button class="btn-drilldown" title="Ver evolução mensal de ${s.categoria}" aria-label="Ver evolução mensal de ${s.categoria}" onclick="abrirDrillDownCategoria(${s.categoria_id}, '${s.categoria.replace(/'/g, "\\'")}', '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO}</button><span><span class="pct">${sPct.toFixed(1)}%</span>${fmt(s.total, moedaAnaliseGlobal)}</span></span></div><div class="sub-barra-fundo"><div class="barra-fill" style="width:${sPct}%;background:${corClara}"></div></div>`
     }).join("")
-    el.innerHTML += `<div class="grupo-bar-row"><div class="linha-topo" onclick="toggleGrupo(${gi})" style="cursor:pointer"><span class="nome">${g.grupo}</span><span style="display:flex;align-items:center;gap:8px"><button class="btn-drilldown" title="Ver evolução mensal de ${g.grupo}" onclick="event.stopPropagation(); abrirDrillDownGrupo(${g.grupo_id}, '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO} evolução</button><span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total, moedaAnaliseGlobal)}</strong></span></span></div><div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${corBase}"></div></div><div class="sub-grupo" id="sub-grupo-${gi}">${subcatHtml}</div></div>`
+    el.innerHTML += `<div class="grupo-bar-row"><div class="linha-topo" onclick="toggleGrupo(${gi})" style="cursor:pointer"><span class="nome">${g.grupo}</span><span style="display:flex;align-items:center;gap:8px"><button class="btn-drilldown" title="Ver evolução mensal de ${g.grupo}" aria-label="Ver evolução mensal de ${g.grupo}" onclick="event.stopPropagation(); abrirDrillDownGrupo(${g.grupo_id}, '${g.grupo.replace(/'/g, "\\'")}')">${ICONE_GRAFICO}</button><span class="valores"><span class="pct">${pct.toFixed(1)}%</span><strong>${fmt(g.total, moedaAnaliseGlobal)}</strong></span></span></div><div class="barra-fundo"><div class="barra-fill" style="width:${pct}%;background:${corBase}"></div></div><div class="sub-grupo" id="sub-grupo-${gi}">${subcatHtml}</div></div>`
   })
   document.getElementById("total-tipo").textContent = fmt(totalTipo, moedaAnaliseGlobal)
   document.getElementById("label-tipo").textContent = tipoAtual === "in" ? "Entradas" : "Saídas"
@@ -3210,7 +3254,7 @@ function renderizarGraficoDrilldownTotal(dados) {
         if (idx > 0) { const ant = totaisPorMes[idx-1].total; if (ant > 0) { const v = ((totaisPorMes[idx].total - ant) / ant) * 100; linha += ` (${v >= 0 ? '+' : ''}${v.toFixed(0)}% mês anterior)` } }
         return linha
       }}}},
-      scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
+      scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 769 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
     }
   })
 }
@@ -3240,7 +3284,7 @@ function renderizarGraficoDrilldownEmpilhado(dados, grupoId) {
           return ` ${ctx.dataset.label}: ${fmt(ctx.raw, moedaAnaliseGlobal)} (${pct.toFixed(0)}% do grupo)`
         }}}
       },
-      scales: { x: { grid: { display: false }, stacked: true, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { stacked: true, display: window.innerWidth >= 769, border: { display: false } } }
+      scales: { x: { grid: { display: false }, stacked: true, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 769 ? 4 : 8 } }, y: { stacked: true, display: window.innerWidth >= 769, border: { display: false } } }
     }
   })
 }
@@ -3265,7 +3309,7 @@ async function abrirDrillDownCategoria(categoriaId, nomeCategoria, nomeGrupo) {
         if (idx > 0) { const ant = dados[idx-1].total; if (ant > 0) { const v = ((dados[idx].total - ant) / ant) * 100; linha += ` (${v >= 0 ? '+' : ''}${v.toFixed(0)}% mês anterior)` } }
         return linha
       }}}},
-      scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 500 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
+      scales: { x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: window.innerWidth < 769 ? 4 : 8 } }, y: { display: window.innerWidth >= 769, border: { display: false }, ticks: { maxTicksLimit: 6 } } }
     }
   })
 }
@@ -3291,8 +3335,8 @@ function renderizarTabelaRecorrentes() {
   const tb = document.getElementById("tabela-recorrentes")
   if (lista.length === 0) {
     tb.innerHTML = temFiltrosAnaliseAtivos()
-      ? linhaVazia(5, "Nenhum resultado com os filtros atuais", "Experimenta ajustar ou limpar o filtro.", `<button class="btn-sm" onclick="limparFiltrosAnalise()">Limpar filtro</button>`)
-      : linhaVazia(5, "Sem padrões recorrentes detetados", "Precisas de pelo menos 2 movimentos com a mesma descrição para um padrão aparecer aqui.")
+      ? linhaVazia(5, null, "Nenhum resultado encontrado.", `<button class="btn-sm" onclick="limparFiltrosAnalise()">Limpar filtro</button>`)
+      : linhaVazia(5, null, "Nenhum padrão recorrente detetado.")
     return
   }
   tb.innerHTML = ""
@@ -3493,13 +3537,17 @@ async function confirmarTodosPendentes() {
 function trocarSecaoPerfil(secao) {
   document.querySelectorAll(".perfil-sidebar-item").forEach(item => item.classList.toggle("active", item.dataset.secao === secao))
   document.querySelectorAll(".perfil-secao").forEach(el => el.classList.toggle("active", el.id === `perfil-secao-${secao}`))
+  localStorage.setItem("secaoConfiguracoes", secao)
 }
 async function carregarConfiguracoes() {
-  trocarSecaoPerfil('conta')
+  const secoesValidas = ["conta", "categorias", "preferencias"]
+  const secaoGuardada = localStorage.getItem("secaoConfiguracoes")
+  trocarSecaoPerfil(secoesValidas.includes(secaoGuardada) ? secaoGuardada : "conta")
   const dados = await api("/me")
   perfilCache = dados
   document.getElementById("perfil-nome-display").textContent = dados.nome
   document.getElementById("perfil-email-display").textContent = dados.email
+  document.getElementById("perfil-avatar-grande").textContent = iniciaisNome(dados.nome)
   await carregarArvoreCategorias()
 }
 function abrirModalEditarPerfil() {
@@ -3523,6 +3571,7 @@ async function guardarPerfil() {
   perfilCache = { nome: document.getElementById("perfil-nome").value, email: document.getElementById("perfil-email").value }
   document.getElementById("perfil-nome-display").textContent = perfilCache.nome
   document.getElementById("perfil-email-display").textContent = perfilCache.email
+  document.getElementById("perfil-avatar-grande").textContent = iniciaisNome(perfilCache.nome)
   fecharModal()
   mostrarToast("Perfil atualizado.", "sucesso")
 }
@@ -3571,15 +3620,17 @@ function trocarTipoCategorias(tipo) {
 function renderizarArvoreCategorias() {
   const grupos = arvoreCategoriasCache.filter(g => tipoGestaoCategorias === "in" ? g.eh_recebimento : !g.eh_recebimento)
   const el = document.getElementById("lista-categorias-gestao")
+  if (grupos.length === 0) {
+    el.innerHTML = `<div class="estado-vazio"><div class="subtitulo">Ainda não tens grupos de ${tipoGestaoCategorias === "in" ? "Entradas" : "Saídas"}.</div></div>`
+    return
+  }
   el.innerHTML = ""
-  grupos.forEach(g => {
+  grupos.forEach((g, gi) => {
     const grupoProtegido = g.categorias.some(c => c.protegida)
-    const tagGrupoProtegido = grupoProtegido ? `<span class="icone-protegida" title="Este grupo contém uma categoria do sistema e não pode ser eliminado.">${ICONE_PROTEGIDA}</span>` : ""
-    const btnEliminarGrupo = grupoProtegido ? "" : `<button class="btn-danger" onclick="confirmarEliminarCategoria(${g.id}, true)">eliminar</button>`
-    el.innerHTML += `<div class="grupo-gestao" draggable="true" ondragstart="arrastarInicio(event,'grupo',${g.id},null)" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'grupo',${g.id})" ondrop="largarSobre(event,'grupo',${g.id},null)"><div class="grupo-gestao-header"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span class="nome">${g.nome}${tagGrupoProtegido}</span></span><div class="acoes"><button class="btn-sm" onclick="abrirModalCategoria(${g.id})">+ categoria</button><button class="btn-sm" onclick="abrirEditarGrupo(${g.id},'${g.nome.replace(/'/g,"\\'")}')">editar</button>${btnEliminarGrupo}</div></div><div class="categorias-gestao-lista">${g.categorias.map(c => {
-      const tagProtegida = c.protegida ? `<span class="icone-protegida" title="Categoria do sistema — não pode ser renomeada ou eliminada.">${ICONE_PROTEGIDA}</span>` : ""
-      const acoes = c.protegida ? "" : `<button class="btn-sm" onclick="abrirEditarCategoriaGestao(${c.id},'${c.nome.replace(/'/g,"\\'")}',${g.id})">editar</button><button class="btn-danger" onclick="confirmarEliminarCategoria(${c.id}, false)">eliminar</button>`
-      return `<div class="categoria-gestao-item" draggable="true" ondragstart="arrastarInicio(event,'categoria',${c.id},${g.id})" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'categoria',${c.id})" ondrop="largarSobre(event,'categoria',${c.id},${g.id})"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span>${c.nome}${tagProtegida}</span></span><div class="acoes">${acoes}</div></div>`
+    const tagGrupoProtegido = grupoProtegido ? `<span class="icone-protegida" id="grupo-protegido-${g.id}" data-ajuda="Este grupo contém uma categoria do sistema e não pode ser eliminado.">${ICONE_PROTEGIDA}</span>` : ""
+    el.innerHTML += `<div class="grupo-gestao" draggable="true" ondragstart="arrastarInicio(event,'grupo',${g.id},null)" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'grupo',${g.id})" ondrop="largarSobre(event,'grupo',${g.id},null)"><div class="grupo-gestao-header"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span class="nome">${g.nome}${tagGrupoProtegido}</span></span><div class="acoes"><button class="btn-sm btn-icone-only" onclick="abrirModalCategoria(${g.id})" aria-label="Adicionar categoria">+</button><button class="btn-sm" onclick="toggleMenuAcoesGrupo(event, ${g.id}, '${g.nome.replace(/'/g,"\\'")}', ${grupoProtegido}, ${gi === 0}, ${gi === grupos.length - 1})" aria-label="Mais ações">⋮</button></div></div><div class="categorias-gestao-lista">${g.categorias.map((c, ci) => {
+      const tagProtegida = c.protegida ? `<span class="icone-protegida" id="cat-protegida-${c.id}" data-ajuda="Categoria do sistema — não pode ser renomeada ou eliminada.">${ICONE_PROTEGIDA}</span>` : ""
+      return `<div class="categoria-gestao-item" draggable="true" ondragstart="arrastarInicio(event,'categoria',${c.id},${g.id})" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'categoria',${c.id})" ondrop="largarSobre(event,'categoria',${c.id},${g.id})"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span>${c.nome}${tagProtegida}</span></span><div class="acoes"><button class="btn-sm" onclick="toggleMenuAcoesCategoria(event, ${c.id}, '${c.nome.replace(/'/g,"\\'")}', ${g.id}, ${c.protegida}, ${ci === 0}, ${ci === g.categorias.length - 1})" aria-label="Mais ações">⋮</button></div></div>`
     }).join("")}</div></div>`
   })
 }
@@ -3603,6 +3654,61 @@ function arrastarSobre(e, tipo, id) {
   const emCima = (e.clientY - rect.top) < rect.height / 2
   document.querySelectorAll(".arraste-acima, .arraste-abaixo").forEach(el => el.classList.remove("arraste-acima", "arraste-abaixo"))
   alvo.classList.add(emCima ? "arraste-acima" : "arraste-abaixo")
+}
+function toggleMenuAcoesGrupo(event, id, nome, protegido, ehPrimeiro, ehUltimo) {
+  const menu = document.getElementById("menu-acoes-flutuante")
+  const jaAbertoParaEsta = menu.style.display !== "none" && menu.dataset.grupoId === String(id)
+  fecharMenusAcoes()
+  if (jaAbertoParaEsta) return
+  const mover = `${ehPrimeiro ? "" : `<button onclick="fecharMenusAcoes(); moverItemCategoria('grupo', ${id}, null, -1)">Mover para cima</button>`}${ehUltimo ? "" : `<button onclick="fecharMenusAcoes(); moverItemCategoria('grupo', ${id}, null, 1)">Mover para baixo</button>`}`
+  menu.innerHTML = `
+    ${mover}
+    ${mover ? `<div class="menu-acoes-separador"></div>` : ""}
+    <button onclick="fecharMenusAcoes(); abrirEditarGrupo(${id},'${nome.replace(/'/g, "\\'")}')">Editar</button>
+    ${protegido ? "" : `<button class="perigo" onclick="fecharMenusAcoes(); confirmarEliminarCategoria(${id}, true)">Eliminar</button>`}
+  `
+  const rect = event.currentTarget.getBoundingClientRect()
+  menu.style.display = "flex"
+  menu.style.left = "auto"
+  menu.style.right = (window.innerWidth - rect.right) + "px"
+  menu.style.bottom = (window.innerHeight - rect.top + 4) + "px"
+  menu.style.top = "auto"
+  menu.dataset.grupoId = String(id)
+}
+function toggleMenuAcoesCategoria(event, id, nome, grupoId, protegido, ehPrimeiro, ehUltimo) {
+  const menu = document.getElementById("menu-acoes-flutuante")
+  const jaAbertoParaEsta = menu.style.display !== "none" && menu.dataset.categoriaId === String(id)
+  fecharMenusAcoes()
+  if (jaAbertoParaEsta) return
+  const mover = `${ehPrimeiro ? "" : `<button onclick="fecharMenusAcoes(); moverItemCategoria('categoria', ${id}, ${grupoId}, -1)">Mover para cima</button>`}${ehUltimo ? "" : `<button onclick="fecharMenusAcoes(); moverItemCategoria('categoria', ${id}, ${grupoId}, 1)">Mover para baixo</button>`}`
+  menu.innerHTML = `
+    ${mover}
+    ${mover && !protegido ? `<div class="menu-acoes-separador"></div>` : ""}
+    ${protegido ? "" : `<button onclick="fecharMenusAcoes(); abrirEditarCategoriaGestao(${id},'${nome.replace(/'/g, "\\'")}',${grupoId})">Editar</button><button class="perigo" onclick="fecharMenusAcoes(); confirmarEliminarCategoria(${id}, false)">Eliminar</button>`}
+  `
+  const rect = event.currentTarget.getBoundingClientRect()
+  menu.style.display = "flex"
+  menu.style.left = "auto"
+  menu.style.right = (window.innerWidth - rect.right) + "px"
+  menu.style.bottom = (window.innerHeight - rect.top + 4) + "px"
+  menu.style.top = "auto"
+  menu.dataset.categoriaId = String(id)
+}
+async function moverItemCategoria(tipo, id, grupoId, direcao) {
+  let lista
+  if (tipo === "grupo") {
+    lista = arvoreCategoriasCache.filter(g => tipoGestaoCategorias === "in" ? g.eh_recebimento : !g.eh_recebimento).map(g => g.id)
+  } else {
+    lista = arvoreCategoriasCache.find(g => g.id === grupoId).categorias.map(c => c.id)
+  }
+  const idx = lista.indexOf(id)
+  const novoIdx = idx + direcao
+  if (novoIdx < 0 || novoIdx >= lista.length) return
+  ;[lista[idx], lista[novoIdx]] = [lista[novoIdx], lista[idx]]
+  fecharMenusAcoes()
+  const r = await apiPut("/categorias/reordenar", { ids: lista })
+  if (!r.ok) { mostrarToast(mensagemDeErro(await r.json()), "erro"); return }
+  carregarArvoreCategorias()
 }
 async function largarSobre(e, tipo, idAlvo, grupoIdAlvo) {
   e.preventDefault()
@@ -3706,6 +3812,9 @@ document.getElementById("icone-menu-config").innerHTML = ICONE_PERFIL_GERAL
 document.getElementById("icone-menu-sair").innerHTML = ICONE_SAIR
 document.getElementById("conta-saldo-ajuda").innerHTML = ICONE_INFO
 document.getElementById("reconc-titulo-ajuda").innerHTML = ICONE_INFO
+document.getElementById("seta-perfil-avatar").innerHTML = ICONE_SETA_DIREITA
+document.getElementById("seta-perfil-password").innerHTML = ICONE_SETA_DIREITA
+document.getElementById("seta-perfil-sessoes").innerHTML = ICONE_SETA_DIREITA
 document.getElementById("reconc-valor-ajuda").innerHTML = ICONE_INFO
 document.getElementById("reconc-data-ajuda").innerHTML = ICONE_INFO
 document.getElementById("conta-data-ajuda").innerHTML = ICONE_INFO

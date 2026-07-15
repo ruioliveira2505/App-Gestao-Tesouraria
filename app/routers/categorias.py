@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import utilizador_atual
-from app.db.database import get_connection, release_connection
-from app.schemas.categorias import CategoriaGestaoInput, ReordenarCategoriasInput
+from app.db.database import get_connection, release_connection, release_connection
+from app.schemas.categorias import CategoriaGestaoInput
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ def _eliminar_grupo(cursor, categoria_id, migrar_para_id, forcar):
     if cursor.fetchone()[0] > 0:
         raise HTTPException(
             status_code=400,
-            detail="Este grupo contém uma categoria necessária para o sistema e não pode ser eliminado."
+            detail="Não é possível eliminar este grupo: contém uma categoria necessária para o sistema."
         )
 
     cursor.execute("SELECT COUNT(*) FROM categorias WHERE parent_id=%s", (categoria_id,))
@@ -48,7 +48,7 @@ def _eliminar_folha(cursor, categoria_id, migrar_para_id, forcar):
     cursor.execute("SELECT COUNT(*) FROM movimentos WHERE categoria_id=%s", (categoria_id,))
     n = cursor.fetchone()[0]
     if n > 0 and not migrar_para_id and not forcar:
-        raise HTTPException(status_code=400, detail=f"{n} transação(ões) usam esta categoria.")
+        raise HTTPException(status_code=400, detail=f"Esta categoria tem {n} transação(ões) associada(s). Escolhe uma categoria de destino ou confirma a eliminação total.")
 
     if n > 0 and migrar_para_id:
         cursor.execute("UPDATE movimentos SET categoria_id=%s WHERE categoria_id=%s", (migrar_para_id, categoria_id))
@@ -121,7 +121,7 @@ def criar_categoria(dados: CategoriaGestaoInput, utilizador: dict = Depends(util
     uid = utilizador["sub"]
     try:
         if dados.parent_id is None and dados.eh_recebimento is None:
-            raise HTTPException(status_code=400, detail="Um grupo novo precisa de indicar se é Entrada ou Saída.")
+            raise HTTPException(status_code=400, detail="Não é possível criar um grupo sem indicar se é Entrada ou Saída.")
 
         if dados.parent_id is not None and not _eh_grupo(cursor, dados.parent_id, uid):
             raise HTTPException(status_code=404, detail="Grupo não encontrado")
@@ -146,43 +146,6 @@ def criar_categoria(dados: CategoriaGestaoInput, utilizador: dict = Depends(util
     return {"ok": True}
 
 
-@router.put("/categorias/reordenar")
-def reordenar_categorias(dados: ReordenarCategoriasInput, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-    try:
-        if not dados.ids:
-            raise HTTPException(status_code=400, detail="Lista de categorias vazia.")
-
-        placeholders = ",".join(["%s"] * len(dados.ids))
-
-        cursor.execute(
-            f"SELECT id, parent_id, eh_recebimento FROM categorias WHERE id IN ({placeholders}) AND utilizador_id=%s",
-            (*dados.ids, uid)
-        )
-        rows = cursor.fetchall()
-        if len(rows) != len(dados.ids):
-            raise HTTPException(status_code=404, detail="Uma ou mais categorias não foram encontradas.")
-
-        parents = {r[1] for r in rows}
-        if len(parents) > 1:
-            raise HTTPException(status_code=400, detail="Só podes reordenar categorias que pertencem ao mesmo grupo.")
-
-        if None in parents:
-            direcoes = {r[2] for r in rows}
-            if len(direcoes) > 1:
-                raise HTTPException(status_code=400, detail="Só podes reordenar grupos da mesma direção (Entrada ou Saída).")
-
-        for posicao, categoria_id in enumerate(dados.ids, start=1):
-            cursor.execute("UPDATE categorias SET ordem=%s WHERE id=%s AND utilizador_id=%s", (posicao, categoria_id, uid))
-        conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
-    return {"ok": True}
-
-
 @router.put("/categorias/{categoria_id}")
 def editar_categoria(categoria_id: int, dados: CategoriaGestaoInput, utilizador: dict = Depends(utilizador_atual)):
     conn = get_connection()
@@ -196,11 +159,11 @@ def editar_categoria(categoria_id: int, dados: CategoriaGestaoInput, utilizador:
         parent_id, protegida = row
 
         if protegida:
-            raise HTTPException(status_code=400, detail="Esta categoria é necessária para o sistema funcionar e não pode ser editada.")
+            raise HTTPException(status_code=400, detail="Não é possível editar esta categoria: é necessária para o sistema funcionar.")
 
         if dados.parent_id is not None:
             if parent_id is None:
-                raise HTTPException(status_code=400, detail="Um grupo não pode ser movido para dentro de outro grupo.")
+                raise HTTPException(status_code=400, detail="Não é possível mover um grupo para dentro de outro grupo.")
             if not _eh_grupo(cursor, dados.parent_id, uid):
                 raise HTTPException(status_code=404, detail="Grupo de destino não encontrado")
             cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s", (dados.parent_id,))
@@ -232,7 +195,7 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
         parent_id, protegida, eh_recebimento = row
 
         if protegida:
-            raise HTTPException(status_code=400, detail="Esta categoria é necessária para o sistema funcionar e não pode ser eliminada.")
+            raise HTTPException(status_code=400, detail="Não é possível eliminar esta categoria: é necessária para o sistema funcionar.")
 
         if migrar_para_id:
             cursor.execute("SELECT parent_id, eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (migrar_para_id, uid))
@@ -242,9 +205,9 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
             destino_parent_id, destino_eh_recebimento = destino
 
             if (parent_id is None) != (destino_parent_id is None):
-                raise HTTPException(status_code=400, detail="O destino tem de ser do mesmo tipo (grupo ou categoria).")
+                raise HTTPException(status_code=400, detail="Não é possível mover: o destino tem de ser do mesmo tipo (grupo ou categoria).")
             if destino_eh_recebimento != eh_recebimento:
-                raise HTTPException(status_code=400, detail="O destino tem de ser da mesma direção (Entrada ou Saída).")
+                raise HTTPException(status_code=400, detail="Não é possível mover: o destino tem de ser da mesma direção (Entrada ou Saída).")
 
         if parent_id is None:
             _eliminar_grupo(cursor, categoria_id, migrar_para_id, forcar)
@@ -252,6 +215,46 @@ def eliminar_categoria(categoria_id: int, migrar_para_id: int = None, forcar: bo
             _eliminar_folha(cursor, categoria_id, migrar_para_id, forcar)
 
         conn.commit()
+    finally:
+        cursor.close()
+        release_connection(conn)
+    return {"ok": True}
+
+
+@router.post("/categorias/{categoria_id}/mover")
+def mover_categoria(categoria_id: int, direcao: str, utilizador: dict = Depends(utilizador_atual)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    uid = utilizador["sub"]
+    try:
+        cursor.execute("SELECT parent_id, ordem, eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Categoria não encontrada")
+        parent_id, ordem, eh_recebimento = row
+
+        operador  = ">" if direcao == "down" else "<"
+        ordenacao = "ASC" if direcao == "down" else "DESC"
+
+        if parent_id is None:
+            cursor.execute(f"""
+                SELECT id, ordem FROM categorias
+                WHERE utilizador_id=%s AND parent_id IS NULL AND eh_recebimento=%s AND ordem {operador} %s
+                ORDER BY ordem {ordenacao} LIMIT 1
+            """, (uid, eh_recebimento, ordem))
+        else:
+            cursor.execute(f"""
+                SELECT id, ordem FROM categorias
+                WHERE parent_id=%s AND ordem {operador} %s
+                ORDER BY ordem {ordenacao} LIMIT 1
+            """, (parent_id, ordem))
+        vizinho = cursor.fetchone()
+
+        if vizinho:
+            vizinho_id, vizinho_ordem = vizinho
+            cursor.execute("UPDATE categorias SET ordem=%s WHERE id=%s", (vizinho_ordem, categoria_id))
+            cursor.execute("UPDATE categorias SET ordem=%s WHERE id=%s", (ordem, vizinho_id))
+            conn.commit()
     finally:
         cursor.close()
         release_connection(conn)

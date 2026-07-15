@@ -1,4 +1,11 @@
 <html lang="pt">
+<script>
+  (function() {
+    const salvo = localStorage.getItem("tema") || "sistema"
+    const escuro = salvo === "escuro" || (salvo === "sistema" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    if (escuro) document.documentElement.setAttribute("data-tema", "escuro")
+  })()
+</script>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -13,6 +20,7 @@
     ═══════════════════════════════════════════════════════ */
 
     :root {
+      color-scheme: light;
       --color-bg: #f5f5f3;
       --color-text: #1a1a1a;
       --color-text-secondary: #888;
@@ -68,6 +76,59 @@
       --radius-md: 8px;
       --radius-lg: 10px;
       --radius-xl: 12px;
+    }
+
+    html[data-tema="escuro"] {
+      color-scheme: dark;
+      --color-bg: #17171a;
+      --color-text: #f0f0f0;
+      --color-text-secondary: #9a9a9a;
+      --color-text-tertiary: #b5b5b5;
+      --color-text-faint: #85858a;
+      --color-border: #333336;
+      --color-border-light: #2b2b2f;
+      --color-white: #232326;
+      --color-surface: #1c1c1f;
+
+      --color-positivo: #4ade80;
+      --color-positivo-bg: #112417;
+      --color-positivo-bg-hover: #163825;
+      --color-positivo-border: #22543d;
+      --color-positivo-text: #86efac;
+
+      --color-negativo: #f87171;
+      --color-negativo-bg: #2a1616;
+      --color-negativo-border: #7f1d1d;
+      --color-negativo-text: #fca5a5;
+
+      --litepicker-container-months-bg-color: #232326;
+      --litepicker-container-months-color: #f0f0f0;
+      --litepicker-month-header-color: #f0f0f0;
+      --litepicker-button-prev-month-color: #f0f0f0;
+      --litepicker-button-next-month-color: #f0f0f0;
+      --litepicker-is-today-color: #f0f0f0;
+      --litepicker-is-in-range-color: #333336;
+      --litepicker-is-start-color-bg: #f0f0f0;
+      --litepicker-is-start-color: #17171a;
+      --litepicker-is-end-color-bg: #f0f0f0;
+      --litepicker-is-end-color: #17171a;
+      --litepicker-highlighted-day-color: #f0f0f0;
+      --litepicker-button-cancel-color: #f0f0f0;
+      --litepicker-button-apply-color-bg: #f0f0f0;
+
+      --color-aviso-bg: #2a2013;
+      --color-aviso-border: #7c5e1f;
+      --color-aviso-text: #f0c36d;
+      --color-aviso-icone: #d97706;
+
+      --color-primary: #f0f0f0;
+      --color-primary-hover: #d4d4d4;
+      --color-disabled: #444448;
+
+      --color-badge-bg: #333336;
+      --color-badge-text: #b5b5b5;
+
+      --color-overlay: rgba(0, 0, 0, 0.6);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -134,7 +195,7 @@
 
     .field { margin-bottom: 1rem; }
     .field label { display: block; font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 4px; }
-    .field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; outline: none; background: var(--color-white); }
+    .field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; outline: none; background: var(--color-white); color: var(--color-text); }
     .field input:focus, .field select:focus { border-color: var(--color-text); }
     .field-com-toggle { position: relative; }
     .field-com-toggle input { padding-right: 2.5rem; }
@@ -269,10 +330,10 @@
     .filtro-pesquisa-input {
       width: calc(100% - 1.4rem); margin: 0.2rem 0.7rem 0; padding: 0.4rem 0.6rem;
       border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-      font-size: 0.8rem; outline: none; display: block;
+      font-size: 0.8rem; outline: none; display: block; background: var(--color-white); color: var(--color-text);
     }
     .filtro-pesquisa-input:focus { border-color: var(--color-text); }
-    .pesquisa-movimentos-input { width: 180px; padding: 0.5rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; outline: none; }
+    .pesquisa-movimentos-input { width: 180px; padding: 0.5rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; outline: none; background: var(--color-white); color: var(--color-text); }
     .pesquisa-movimentos-input:focus { border-color: var(--color-text); }
 
     .filtro-esfera-linha {
@@ -1133,11 +1194,12 @@
             </div>
             <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Aparência</div></div>
             <div class="table-wrap" style="padding:1.25rem">
-              <div class="toggle-tipo" style="opacity:0.5;pointer-events:none">
-                <button class="active">Claro</button>
-                <button>Escuro</button>
+              <div class="toggle-tipo" id="toggle-tema">
+                <button id="tema-claro" onclick="mudarTema('claro')">Claro</button>
+                <button id="tema-escuro" onclick="mudarTema('escuro')">Escuro</button>
+                <button id="tema-sistema" onclick="mudarTema('sistema')">Sistema</button>
               </div>
-              <p style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:0.5rem">Em breve.</p>
+              <p style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:0.5rem">"Sistema" segue a preferência do teu dispositivo.</p>
             </div>
           </div>
         </div>
@@ -1490,6 +1552,9 @@ const ICONE_ARRASTAR          = `<svg width="14" height="14" viewBox="0 0 24 24"
 const ICONE_GRAFICO           = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
 const ICONE_CHECK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`
 const ICONE_SETA_DIREITA = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>`
+function corTema(clara, escura) {
+  return document.documentElement.getAttribute("data-tema") === "escuro" ? escura : clara
+}
 const ICONE_INDETERMINADO = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="12" x2="18" y2="12"></line></svg>`
 const ICONE_PREFERENCIAS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>`
 const ICONE_SAIR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`
@@ -1875,6 +1940,7 @@ function logoutPorInatividade() { logout(); mostrarToast("Sessão terminada por 
 async function iniciarApp() {
   document.getElementById("auth-screen").style.display = "none"
   atualizarAvatar()
+  aplicarTema()
   document.getElementById("icone-menu-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
   document.getElementById("texto-menu-olho").textContent = valoresOcultos ? "Mostrar valores" : "Ocultar valores"
   const pagina = localStorage.getItem("paginaAtual") || "contas"
@@ -1942,7 +2008,7 @@ function carregarPagina(pagina) {
   if (pagina === "movimentos") carregarMovimentos()
   if (pagina === "configuracoes") carregarConfiguracoes()
 }
-function irPara(pagina) { ativarPagina(pagina); localStorage.setItem("paginaAtual", pagina); carregarPagina(pagina) }
+function irPara(pagina) { ativarPagina(pagina); localStorage.setItem("paginaAtual", pagina); if (pagina === "configuracoes") trocarSecaoPerfil("conta"); carregarPagina(pagina) }
 function iniciaisNome(nome) {
   if (!nome) return "?"
   const partes = nome.trim().split(/\s+/)
@@ -1963,6 +2029,22 @@ function toggleMenuAvatar(e) {
   avatarMenuAberto = !estavaAberto
   document.getElementById("avatar-menu").classList.toggle("aberto", avatarMenuAberto)
 }
+function aplicarTema() {
+  const salvo = localStorage.getItem("tema") || "sistema"
+  const escuro = salvo === "escuro" || (salvo === "sistema" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  if (escuro) document.documentElement.setAttribute("data-tema", "escuro")
+  else document.documentElement.removeAttribute("data-tema")
+  document.querySelectorAll("#toggle-tema button").forEach(b => b.classList.remove("active"))
+  document.getElementById("tema-" + salvo)?.classList.add("active")
+}
+function mudarTema(tema) {
+  localStorage.setItem("tema", tema)
+  aplicarTema()
+  carregarPagina(localStorage.getItem("paginaAtual") || "contas")
+}
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if ((localStorage.getItem("tema") || "sistema") === "sistema") aplicarTema()
+})
 function fecharMenuAvatar() {
   avatarMenuAberto = false
   document.getElementById("avatar-menu")?.classList.remove("aberto")
@@ -2721,7 +2803,7 @@ function renderizarCardSaldoTotal(lista) {
 function renderizarGraficoSaldo(saldoDiario, moeda) {
   mostrarGraficoOuVazio("grafico-saldo-mensal", saldoDiario.length > 0, "Sem dados de saldo para mostrar.", () => {
     destruirGrafico("saldoMensal")
-    const corSaldo = saldoDiario.length && saldoDiario[saldoDiario.length - 1].saldo < 0 ? "#c0392b" : "#1a7a4a"
+    const corSaldo = saldoDiario.length && saldoDiario[saldoDiario.length - 1].saldo < 0 ? corTema("#c0392b", "#f87171") : corTema("#1a7a4a", "#4ade80")
     const maxTicksX = window.innerWidth < 769 ? 4 : 8
     const passoX = Math.max(1, Math.round(saldoDiario.length / maxTicksX))
     const inicioX = Math.floor(passoX / 2)
@@ -3138,7 +3220,7 @@ function renderizarGraficoMensal(mensal) {
     destruirGrafico("mensal")
     graficos.mensal = new Chart(document.getElementById("grafico-mensal"), {
       type: "bar",
-      data: { labels: mensal.map(m => fmtMes(m.mes)), datasets: [{ label: "Entradas", data: mensal.map(m => m.entradas), backgroundColor: "#1a7a4a" }, { label: "Saídas", data: mensal.map(m => m.saidas), backgroundColor: "#c0392b" }] },
+      data: { labels: mensal.map(m => fmtMes(m.mes)), datasets: [{ label: "Entradas", data: mensal.map(m => m.entradas), backgroundColor: corTema("#1a7a4a", "#4ade80") }, { label: "Saídas", data: mensal.map(m => m.saidas), backgroundColor: corTema("#c0392b", "#f87171") }] },
       options: {
         aspectRatio: window.innerWidth < 769 ? 1.3 : 2,
         layout: { padding: window.innerWidth < 769 ? { left: 0, right: 0, top: 0, bottom: 0 } : {} },
@@ -3177,7 +3259,7 @@ function renderizarGrupos() {
     fecharDrillDown(); return
   }
   const totalTipo = filtrados.reduce((s, g) => s + g.total, 0)
-  const corBase  = tipoAtual === "in" ? "#1a7a4a" : "#c0392b"
+  const corBase  = tipoAtual === "in" ? corTema("#1a7a4a", "#4ade80") : corTema("#c0392b", "#f87171")
   const corClara = tipoAtual === "in" ? "#7fc4a0" : "#e08b7f"     
   el.innerHTML = ""
   filtrados.forEach((g, gi) => {
@@ -3240,7 +3322,7 @@ function trocarModoDrilldown(modo) {
 
 function renderizarGraficoDrilldownTotal(dados) {
   const totaisPorMes = dados.meses.map(m => ({ mes: m.mes, total: dados.categorias.reduce((s, cat) => s + (m.categorias[cat] || 0), 0) }))
-  const cor = tipoAtual === "in" ? "#1a7a4a" : "#c0392b"
+  const cor = tipoAtual === "in" ? corTema("#1a7a4a", "#4ade80") : corTema("#c0392b", "#f87171")
   destruirGrafico("drilldown")
   document.getElementById("grafico-drilldown").style.display = "block"
   graficos.drilldown = new Chart(document.getElementById("grafico-drilldown"), {
@@ -3540,9 +3622,6 @@ function trocarSecaoPerfil(secao) {
   localStorage.setItem("secaoConfiguracoes", secao)
 }
 async function carregarConfiguracoes() {
-  const secoesValidas = ["conta", "categorias", "preferencias"]
-  const secaoGuardada = localStorage.getItem("secaoConfiguracoes")
-  trocarSecaoPerfil(secoesValidas.includes(secaoGuardada) ? secaoGuardada : "conta")
   const dados = await api("/me")
   perfilCache = dados
   document.getElementById("perfil-nome-display").textContent = dados.nome
@@ -3627,7 +3706,7 @@ function renderizarArvoreCategorias() {
   el.innerHTML = ""
   grupos.forEach((g, gi) => {
     const grupoProtegido = g.categorias.some(c => c.protegida)
-    const tagGrupoProtegido = grupoProtegido ? `<span class="icone-protegida" id="grupo-protegido-${g.id}" data-ajuda="Este grupo contém uma categoria do sistema e não pode ser eliminado.">${ICONE_PROTEGIDA}</span>` : ""
+    const tagGrupoProtegido = grupoProtegido ? `<span class="icone-protegida" id="grupo-protegido-${g.id}" data-ajuda="Este grupo contém uma categoria necessária para o sistema e não pode ser eliminado.">${ICONE_PROTEGIDA}</span>` : ""
     el.innerHTML += `<div class="grupo-gestao" draggable="true" ondragstart="arrastarInicio(event,'grupo',${g.id},null)" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'grupo',${g.id})" ondrop="largarSobre(event,'grupo',${g.id},null)"><div class="grupo-gestao-header"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span class="nome">${g.nome}${tagGrupoProtegido}</span></span><div class="acoes"><button class="btn-sm btn-icone-only" onclick="abrirModalCategoria(${g.id})" aria-label="Adicionar categoria">+</button><button class="btn-sm" onclick="toggleMenuAcoesGrupo(event, ${g.id}, '${g.nome.replace(/'/g,"\\'")}', ${grupoProtegido}, ${gi === 0}, ${gi === grupos.length - 1})" aria-label="Mais ações">⋮</button></div></div><div class="categorias-gestao-lista">${g.categorias.map((c, ci) => {
       const tagProtegida = c.protegida ? `<span class="icone-protegida" id="cat-protegida-${c.id}" data-ajuda="Categoria do sistema — não pode ser renomeada ou eliminada.">${ICONE_PROTEGIDA}</span>` : ""
       return `<div class="categoria-gestao-item" draggable="true" ondragstart="arrastarInicio(event,'categoria',${c.id},${g.id})" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'categoria',${c.id})" ondrop="largarSobre(event,'categoria',${c.id},${g.id})"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span>${c.nome}${tagProtegida}</span></span><div class="acoes"><button class="btn-sm" onclick="toggleMenuAcoesCategoria(event, ${c.id}, '${c.nome.replace(/'/g,"\\'")}', ${g.id}, ${c.protegida}, ${ci === 0}, ${ci === g.categorias.length - 1})" aria-label="Mais ações">⋮</button></div></div>`

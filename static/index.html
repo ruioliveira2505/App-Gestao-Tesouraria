@@ -11,9 +11,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tesouraria</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
-  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/plugins/ranges.js"></script>
   <style>
     /* ═══════════════════════════════════════════════════════
        VARIÁVEIS
@@ -41,22 +38,6 @@
       --color-negativo-bg: #fef2f2;
       --color-negativo-border: #fca5a5;
       --color-negativo-text: #991b1b;
-
-      --litepicker-container-months-bg-color: #ffffff;
-      --litepicker-container-months-color: #1a1a1a;
-      --litepicker-month-header-color: #1a1a1a;
-      --litepicker-button-prev-month-color: #1a1a1a;
-      --litepicker-button-next-month-color: #1a1a1a;
-      --litepicker-is-today-color: #1a1a1a;
-      --litepicker-is-in-range-color: #f5f5f3;
-      --litepicker-is-start-color-bg: #1a1a1a;
-      --litepicker-is-start-color: #ffffff;
-      --litepicker-is-end-color-bg: #1a1a1a;
-      --litepicker-is-end-color: #ffffff;
-      --litepicker-highlighted-day-color: #1a1a1a;
-      --litepicker-button-cancel-color-bg: transparent;
-      --litepicker-button-cancel-color: #1a1a1a;
-      --litepicker-button-apply-color-bg: #1a1a1a;
 
       --color-aviso-bg: #fff7e6;
       --color-aviso-border: #f0c36d;
@@ -100,21 +81,6 @@
       --color-negativo-bg: #2a1616;
       --color-negativo-border: #7f1d1d;
       --color-negativo-text: #fca5a5;
-
-      --litepicker-container-months-bg-color: #232326;
-      --litepicker-container-months-color: #f0f0f0;
-      --litepicker-month-header-color: #f0f0f0;
-      --litepicker-button-prev-month-color: #f0f0f0;
-      --litepicker-button-next-month-color: #f0f0f0;
-      --litepicker-is-today-color: #f0f0f0;
-      --litepicker-is-in-range-color: #333336;
-      --litepicker-is-start-color-bg: #f0f0f0;
-      --litepicker-is-start-color: #17171a;
-      --litepicker-is-end-color-bg: #f0f0f0;
-      --litepicker-is-end-color: #17171a;
-      --litepicker-highlighted-day-color: #f0f0f0;
-      --litepicker-button-cancel-color: #f0f0f0;
-      --litepicker-button-apply-color-bg: #f0f0f0;
 
       --color-aviso-bg: #2a2013;
       --color-aviso-border: #7c5e1f;
@@ -222,6 +188,43 @@
     .acoes-mobile { display: none; }
     .acoes-desktop { display: inline-flex; }
     .menu-acoes-lista { position: fixed; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 160px; z-index: 210; flex-direction: column; padding: 0.3rem; }
+    .calendario-panel {
+      background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 300; padding: 0.75rem; width: 266px;
+    }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .cal-nav { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--color-text); padding: 2px 10px; border-radius: var(--radius-sm); -webkit-appearance: none; }
+    .cal-nav:hover:not(:disabled) { background: var(--color-surface); }
+    .cal-nav:disabled { opacity: 0.3; cursor: default; }
+    .cal-titulo-selects { display: flex; gap: 4px; }
+    .cal-select { border: none; background: none; font-weight: 600; font-size: 0.8rem; color: var(--color-text); cursor: pointer; padding: 2px 4px; outline: none; }
+    .cal-select:hover { background: var(--color-surface); border-radius: var(--radius-sm); }
+    .cal-semana { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.7rem; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .cal-grelha { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-dia { text-align: center; padding: 6px 0; font-size: 0.8rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text); }
+    .cal-dia:hover:not(.cal-vazio):not(.desabilitado) { background: var(--color-surface); }
+    .cal-dia.hoje { font-weight: 600; color: var(--color-primary); }
+    .cal-dia.selecionado { background: var(--color-primary); color: var(--color-white); }
+    .cal-dia.desabilitado { color: var(--color-text-faint); cursor: default; }
+    .cal-vazio { cursor: default; }
+    .calendario-range-panel {
+      background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 300; display: flex; overflow: hidden;
+    }
+    .cal-range-presets { display: flex; flex-direction: column; padding: 0.5rem; border-right: 1px solid var(--color-border-light); min-width: 130px; }
+    .cal-range-preset { text-align: left; background: none; border: none; padding: 0.5rem 0.6rem; font-size: 0.8rem; color: var(--color-text); cursor: pointer; border-radius: var(--radius-sm); -webkit-appearance: none; }
+    .cal-range-preset.selecionado { background: var(--color-badge-bg); font-weight: 600; }
+    .cal-range-preset:hover { background: var(--color-surface); }
+    .cal-range-corpo { padding: 0.75rem; width: 266px; }
+    .cal-range-resumo { font-size: 0.75rem; color: var(--color-text-secondary); text-align: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--color-border-light); }
+    .cal-dia.range-inicio, .cal-dia.range-fim { background: var(--color-primary); color: var(--color-white); }
+    .cal-dia.range-meio { background: var(--color-badge-bg); border-radius: 0; }
+    @media (max-width: 768px) {
+      .calendario-range-panel { flex-direction: column; align-items: center; }
+      .cal-range-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; border-right: none; border-bottom: 1px solid var(--color-border-light); min-width: 0; width: 100%; }
+      .cal-range-preset { text-align: center; }
+      .cal-range-corpo { width: min(266px, calc(100vw - 2rem)); }
+    }
     .menu-acoes-lista button { text-align: left; padding: 0.5rem 0.7rem; border: none; background: none; cursor: pointer; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--color-text); -webkit-appearance: none; }
     .menu-acoes-lista button:hover { background: var(--color-surface); }
     .menu-acoes-lista button.perigo { color: var(--color-negativo); }
@@ -354,15 +357,6 @@
     }
     .seletor-periodo:hover { background: var(--color-surface); border-color: var(--color-text-secondary); }
     .seletor-periodo:focus { outline: 2px solid var(--color-text); outline-offset: 1px; background: var(--color-surface); }
-    .litepicker .container__predefined-ranges button,
-    .litepicker .container__predefined-ranges a {
-      color: var(--color-text) !important;
-      text-decoration-color: var(--color-text) !important;
-    }
-    .litepicker .container__predefined-ranges .active {
-      background: var(--color-bg) !important;
-      color: var(--color-text) !important;
-    }
 
     .campo-seletor { position: relative; }
     .campo-seletor input[readonly] { cursor: pointer; caret-color: transparent; padding-right: 2.2rem; }
@@ -1282,6 +1276,8 @@
 </div>
 
 <div class="menu-acoes-lista" id="menu-acoes-flutuante" style="display:none;position:fixed"></div>
+<div class="calendario-panel" id="calendario-panel" style="display:none;position:fixed"></div>
+<div class="calendario-range-panel" id="calendario-range-panel" style="display:none;position:fixed"></div>
 
 <!-- Modal: Conta -->
 <div class="modal-overlay modal-tela-cheia" id="modal-conta">
@@ -1513,12 +1509,6 @@ let ordenacaoRecorrentes   = { campo: "proxima_data_estimada", direcao: 1 }
 let recorrentesTabelaCache = []
 
 let elimAtual = null
-let pickerMovData = null
-let pickerReconc  = null
-let pickerContaData = null
-let pickerContas  = null
-let pickerAnalise = null
-let pickerMovimentos = null
 
 let drilldownAtual = null
 
@@ -1777,80 +1767,313 @@ function ultimoDiaMesAnterior()   { const h = new Date(); return new Date(h.getF
 function primeiroDiaAnoAnterior() { const h = new Date(); return new Date(h.getFullYear() - 1, 0, 1) }
 function ultimoDiaAnoAnterior()   { const h = new Date(); return new Date(h.getFullYear() - 1, 11, 31) }
 
-function rangesPadrao() {
-  return {
-    position: 'left',
-    customRanges: {
-      'Este mês':    [primeiroDiaMes(), new Date()],
-      'Mês passado': [primeiroDiaMesAnterior(), ultimoDiaMesAnterior()],
-      '30 dias':     [menosDias(30), new Date()],
-      'Este ano':    [primeiroDiaAno(), new Date()],
-      'Ano passado': [primeiroDiaAnoAnterior(), ultimoDiaAnoAnterior()],
-      '365 dias':    [menosDias(365), new Date()],
-    }
-  }
-}
 
 function iniciarPickerContas() {
-  pickerContas = new Litepicker({
-    element: document.getElementById('ct-periodo-btn'),
-    singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
-    startDate: new Date(ctDataDe + 'T00:00:00'),
-    endDate:   new Date(ctDataAte + 'T00:00:00'),
-    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    plugins: ['ranges'], ranges: rangesPadrao(), mobileFriendly: true,
-    setup: (picker) => {
-      picker.on('selected', (d1, d2) => { ctDataDe = d1.format('YYYY-MM-DD'); ctDataAte = d2.format('YYYY-MM-DD'); carregarContas() })
-    }
-  })
+  definirIntervaloCalendarioRange("ct-periodo-btn", ctDataDe, ctDataAte)
+  document.getElementById("ct-periodo-btn").onclick = () =>
+    abrirCalendarioRange("ct-periodo-btn", ctDataDe, ctDataAte, { maxDays: 365, aoAplicar: (d1, d2) => { ctDataDe = d1; ctDataAte = d2; carregarContas() } })
+
 }
 function iniciarPickerAnalise() {
-  pickerAnalise = new Litepicker({
-    element: document.getElementById('an-periodo'),
-    singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
-    startDate: new Date(anDataDe + 'T00:00:00'),
-    endDate:   new Date(anDataAte + 'T00:00:00'),
-    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    plugins: ['ranges'], ranges: rangesPadrao(), mobileFriendly: true,
-    setup: (picker) => {
-      picker.on('selected', (d1, d2) => { anDataDe = d1.format('YYYY-MM-DD'); anDataAte = d2.format('YYYY-MM-DD'); carregarAnalise() })
-    }
-  })
+  definirIntervaloCalendarioRange("an-periodo", anDataDe, anDataAte)
+  document.getElementById("an-periodo").onclick = () =>
+    abrirCalendarioRange("an-periodo", anDataDe, anDataAte, { maxDays: 365, aoAplicar: (d1, d2) => { anDataDe = d1; anDataAte = d2; carregarAnalise() } })
+
 }
 function iniciarPickerMovimentos() {
-  pickerMovimentos = new Litepicker({
-    element: document.getElementById('mov-periodo'),
-    singleMode: false, format: 'YYYY-MM-DD', maxDays: 365,
-    startDate: new Date(movDataDe + 'T00:00:00'),
-    endDate:   new Date(movDataAte + 'T00:00:00'),
-    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    plugins: ['ranges'], ranges: rangesPadrao(), mobileFriendly: true,
-    setup: (picker) => {
-      picker.on('selected', (d1, d2) => { movDataDe = d1.format('YYYY-MM-DD'); movDataAte = d2.format('YYYY-MM-DD'); carregarMovimentos() })
-    }
-  })
+  definirIntervaloCalendarioRange("mov-periodo", movDataDe, movDataAte)
+  document.getElementById("mov-periodo").onclick = () =>
+    abrirCalendarioRange("mov-periodo", movDataDe, movDataAte, { maxDays: 365, aoAplicar: (d1, d2) => { movDataDe = d1; movDataAte = d2; carregarMovimentos() } })
+
 }
 function iniciarPickerMovData() {
-  pickerMovData = new Litepicker({
-    element: document.getElementById('mov-data'),
-    singleMode: true, format: 'YYYY-MM-DD', mobileFriendly: true,
-    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-  })
+  document.getElementById("mov-data").onclick = () => abrirCalendarioSimples("mov-data")
 }
 function iniciarPickerReconciliacao() {
-  pickerReconc = new Litepicker({
-    element: document.getElementById('reconc-data'),
-    singleMode: true, format: 'YYYY-MM-DD', maxDate: new Date(), mobileFriendly: true,
-    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-    setup: (picker) => { picker.on('selected', () => atualizarSaldoAtualReconciliacao()) },
-  })
+  document.getElementById("reconc-data").onclick = () => abrirCalendarioSimples("reconc-data", { maxDate: isoDateStr(new Date()), aoSelecionar: atualizarSaldoAtualReconciliacao })
 }
+let calendarioEstado = null   // { inputId, ano, mes, maxDate, minDate }
+
+function abrirCalendarioSimples(inputId, opcoes = {}) {
+  if (calendarioEstado && calendarioEstado.inputId === inputId) { fecharCalendarioSimples(); return }
+  fecharTodosOsFiltros(); fecharMenusAcoes()
+  const input = document.getElementById(inputId)
+  const valorAtual = input.value ? new Date(input.value + "T00:00:00") : new Date()
+  calendarioEstado = {
+    inputId,
+    ano: valorAtual.getFullYear(),
+    mes: valorAtual.getMonth(),
+    maxDate: opcoes.maxDate || null,
+    minDate: opcoes.minDate || null,
+    aoSelecionar: opcoes.aoSelecionar || null,
+  }
+  renderizarCalendarioSimples()
+  const panel = document.getElementById("calendario-panel")
+  panel.style.display = "block"
+  const rect = input.getBoundingClientRect()
+  panel.style.left = Math.min(rect.left, window.innerWidth - 282) + "px"
+  reposicionarCalendarioSimples()
+}
+function fecharCalendarioSimples() {
+  document.getElementById("calendario-panel").style.display = "none"
+  calendarioEstado = null
+}
+function renderizarCalendarioSimples() {
+  if (!calendarioEstado) return
+  const { ano, mes, maxDate, minDate } = calendarioEstado
+  const input = document.getElementById(calendarioEstado.inputId)
+  const diaSelecionado = input.value || null
+  const nomesMeses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
+  const primeiroDia = new Date(ano, mes, 1)
+  const diaSemanaInicio = (primeiroDia.getDay() + 6) % 7
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate()
+  const hoje = isoDateStr(new Date())
+
+  let celulas = ""
+  for (let i = 0; i < diaSemanaInicio; i++) celulas += `<div class="cal-dia cal-vazio"></div>`
+  for (let d = 1; d <= diasNoMes; d++) {
+    const dataIso = `${ano}-${String(mes+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
+    const desabilitado = (maxDate && dataIso > maxDate) || (minDate && dataIso < minDate)
+    const classes = ["cal-dia"]
+    if (dataIso === diaSelecionado) classes.push("selecionado")
+    if (dataIso === hoje) classes.push("hoje")
+    if (desabilitado) classes.push("desabilitado")
+    celulas += `<div class="${classes.join(" ")}" ${desabilitado ? "" : `onclick="selecionarDiaCalendarioSimples('${dataIso}')"`}>${d}</div>`
+  }
+
+  const mesSeguinte = new Date(ano, mes + 1, 1)
+  const podeAvancar = !maxDate || isoDateStr(mesSeguinte) <= maxDate
+  const mesAnterior = new Date(ano, mes, 0)
+  const podeRecuar = !minDate || isoDateStr(new Date(ano, mes, 1)) > minDate || isoDateStr(mesAnterior) >= minDate
+
+  const anoAtual = new Date().getFullYear()
+  const opcoesMes = nomesMeses.map((nome, i) => `<option value="${i}" ${i === mes ? "selected" : ""}>${nome}</option>`).join("")
+  let opcoesAno = ""
+  for (let a = anoAtual; a >= 1970; a--) opcoesAno += `<option value="${a}" ${a === ano ? "selected" : ""}>${a}</option>`
+
+  document.getElementById("calendario-panel").innerHTML = `
+    <div class="cal-header">
+      <button type="button" class="cal-nav" onclick="navegarCalendarioSimples(-1)" ${podeRecuar ? "" : "disabled"} aria-label="Mês anterior">‹</button>
+      <span class="cal-titulo-selects">
+        <select class="cal-select" onchange="mudarMesCalendarioSimples(this.value)" aria-label="Mês">${opcoesMes}</select>
+        <select class="cal-select" onchange="mudarAnoCalendarioSimples(this.value)" aria-label="Ano">${opcoesAno}</select>
+      </span>
+      <button type="button" class="cal-nav" onclick="navegarCalendarioSimples(1)" ${podeAvancar ? "" : "disabled"} aria-label="Mês seguinte">›</button>
+    </div>
+    <div class="cal-semana"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+    <div class="cal-grelha">${celulas}</div>
+  `
+}
+function mudarMesCalendarioSimples(mes) {
+  calendarioEstado.mes = parseInt(mes)
+  renderizarCalendarioSimples()
+  reposicionarCalendarioSimples()
+}
+function mudarAnoCalendarioSimples(ano) {
+  calendarioEstado.ano = parseInt(ano)
+  renderizarCalendarioSimples()
+  reposicionarCalendarioSimples()
+}
+function navegarCalendarioSimples(delta) {
+  calendarioEstado.mes += delta
+  if (calendarioEstado.mes < 0) { calendarioEstado.mes = 11; calendarioEstado.ano-- }
+  if (calendarioEstado.mes > 11) { calendarioEstado.mes = 0; calendarioEstado.ano++ }
+  renderizarCalendarioSimples()
+  reposicionarCalendarioSimples()
+}
+function reposicionarCalendarioSimples() {
+  const input = document.getElementById(calendarioEstado.inputId)
+  const panel = document.getElementById("calendario-panel")
+  const rect = input.getBoundingClientRect()
+  const alturaPainel = panel.offsetHeight
+  const espacoAbaixo = window.innerHeight - rect.bottom
+  if (espacoAbaixo >= alturaPainel + 8) {
+    panel.style.top = (rect.bottom + 4) + "px"
+    panel.style.bottom = "auto"
+  } else {
+    panel.style.top = "auto"
+    panel.style.bottom = (window.innerHeight - rect.top + 4) + "px"
+  }
+}
+function selecionarDiaCalendarioSimples(dataIso) {
+  const input = document.getElementById(calendarioEstado.inputId)
+  const callback = calendarioEstado.aoSelecionar
+  input.value = dataIso
+  input.dispatchEvent(new Event("input", { bubbles: true }))
+  fecharCalendarioSimples()
+  if (callback) callback()
+}
+function definirDataCalendarioSimples(inputId, dataIso) {
+  document.getElementById(inputId).value = dataIso || ""
+}
+
+let calendarioRangeEstado = null   // { inputId, ano, mes, dataInicio, dataFim, maxDays, aoAplicar }
+
+function nomesPresetsRange() {
+  return {
+    "Este mês":    [primeiroDiaMes(), new Date()],
+    "Mês passado": [primeiroDiaMesAnterior(), ultimoDiaMesAnterior()],
+    "30 dias":     [menosDias(30), new Date()],
+    "Este ano":    [primeiroDiaAno(), new Date()],
+    "Ano passado": [primeiroDiaAnoAnterior(), ultimoDiaAnoAnterior()],
+    "365 dias":    [menosDias(365), new Date()],
+  }
+}
+function abrirCalendarioRange(inputId, dataDeAtual, dataAteAtual, opcoes = {}) {
+  if (calendarioRangeEstado && calendarioRangeEstado.inputId === inputId) { fecharCalendarioRange(); return }
+  fecharTodosOsFiltros(); fecharMenusAcoes(); fecharCalendarioSimples()
+  const input = document.getElementById(inputId)
+  const refData = dataDeAtual ? new Date(dataDeAtual + "T00:00:00") : new Date()
+  calendarioRangeEstado = {
+    inputId,
+    ano: refData.getFullYear(),
+    mes: refData.getMonth(),
+    dataInicio: dataDeAtual || null,
+    dataFim: dataAteAtual || null,
+    maxDays: opcoes.maxDays || null,
+    aoAplicar: opcoes.aoAplicar || null,
+  }
+  renderizarCalendarioRange()
+  const panel = document.getElementById("calendario-range-panel")
+  panel.style.display = "flex"
+  reposicionarCalendarioRange()
+}
+function fecharCalendarioRange() {
+  document.getElementById("calendario-range-panel").style.display = "none"
+  calendarioRangeEstado = null
+}
+function reposicionarCalendarioRange() {
+  const input = document.getElementById(calendarioRangeEstado.inputId)
+  const panel = document.getElementById("calendario-range-panel")
+  const rect = input.getBoundingClientRect()
+  const larguraPainel = panel.offsetWidth
+  panel.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - larguraPainel - 8)) + "px"
+  const alturaPainel = panel.offsetHeight
+  const espacoAbaixo = window.innerHeight - rect.bottom
+  if (espacoAbaixo >= alturaPainel + 8) {
+    panel.style.top = (rect.bottom + 4) + "px"
+    panel.style.bottom = "auto"
+  } else {
+    panel.style.top = "auto"
+    panel.style.bottom = (window.innerHeight - rect.top + 4) + "px"
+  }
+}
+function renderizarCalendarioRange() {
+  if (!calendarioRangeEstado) return
+  const { ano, mes, dataInicio, dataFim, maxDays } = calendarioRangeEstado
+  const nomesMeses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
+  const primeiroDia = new Date(ano, mes, 1)
+  const diaSemanaInicio = (primeiroDia.getDay() + 6) % 7
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate()
+  const hoje = isoDateStr(new Date())
+
+  let minSelecionavel = null, maxSelecionavel = null
+  if (dataInicio && !dataFim && maxDays) {
+    const ini = new Date(dataInicio + "T00:00:00")
+    const maxD = new Date(ini); maxD.setDate(maxD.getDate() + maxDays - 1)
+    const minD = new Date(ini); minD.setDate(minD.getDate() - maxDays + 1)
+    maxSelecionavel = isoDateStr(maxD)
+    minSelecionavel = isoDateStr(minD)
+  }
+
+  let celulas = ""
+  for (let i = 0; i < diaSemanaInicio; i++) celulas += `<div class="cal-dia cal-vazio"></div>`
+  for (let d = 1; d <= diasNoMes; d++) {
+    const dataIso = `${ano}-${String(mes+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
+    const desabilitado = dataIso > hoje || (minSelecionavel && dataIso < minSelecionavel) || (maxSelecionavel && dataIso > maxSelecionavel)
+    const classes = ["cal-dia"]
+    if (dataIso === dataInicio) classes.push("selecionado", "range-inicio")
+    if (dataIso === dataFim) classes.push("selecionado", "range-fim")
+    if (dataInicio && dataFim && dataIso > dataInicio && dataIso < dataFim) classes.push("range-meio")
+    if (dataIso === hoje) classes.push("hoje")
+    if (desabilitado) classes.push("desabilitado")
+    celulas += `<div class="${classes.join(" ")}" ${desabilitado ? "" : `onclick="selecionarDiaCalendarioRange('${dataIso}')"`}>${d}</div>`
+  }
+
+  const anoAtual = new Date().getFullYear()
+  const opcoesMes = nomesMeses.map((nome, i) => `<option value="${i}" ${i === mes ? "selected" : ""}>${nome}</option>`).join("")
+  let opcoesAno = ""
+  for (let a = anoAtual; a >= 1970; a--) opcoesAno += `<option value="${a}" ${a === ano ? "selected" : ""}>${a}</option>`
+
+  const mesSeguinte = new Date(ano, mes + 1, 1)
+  const podeAvancar = isoDateStr(mesSeguinte) <= hoje
+
+  const presets = Object.entries(nomesPresetsRange()).map(([nome, [ini, fim]]) => {
+    const ativo = dataInicio === isoDateStr(ini) && dataFim === isoDateStr(fim)
+    return `<button type="button" class="cal-range-preset${ativo ? " selecionado" : ""}" onclick="aplicarPresetCalendarioRange('${nome}')">${nome}</button>`
+  }).join("")
+
+  const resumo = dataInicio && dataFim ? `${dataInicio} — ${dataFim}` : (dataInicio ? `${dataInicio} — escolhe o fim` : "Escolhe a data de início")
+
+  document.getElementById("calendario-range-panel").innerHTML = `
+    <div class="cal-range-presets">${presets}</div>
+    <div class="cal-range-corpo">
+      <div class="cal-header">
+        <button type="button" class="cal-nav" onclick="navegarCalendarioRange(-1)" aria-label="Mês anterior">‹</button>
+        <span class="cal-titulo-selects">
+          <select class="cal-select" onchange="mudarMesCalendarioRange(this.value)" aria-label="Mês">${opcoesMes}</select>
+          <select class="cal-select" onchange="mudarAnoCalendarioRange(this.value)" aria-label="Ano">${opcoesAno}</select>
+        </span>
+        <button type="button" class="cal-nav" onclick="navegarCalendarioRange(1)" ${podeAvancar ? "" : "disabled"} aria-label="Mês seguinte">›</button>
+      </div>
+      <div class="cal-semana"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+      <div class="cal-grelha">${celulas}</div>
+      <div class="cal-range-resumo">${resumo}</div>
+    </div>
+  `
+}
+function navegarCalendarioRange(delta) {
+  calendarioRangeEstado.mes += delta
+  if (calendarioRangeEstado.mes < 0) { calendarioRangeEstado.mes = 11; calendarioRangeEstado.ano-- }
+  if (calendarioRangeEstado.mes > 11) { calendarioRangeEstado.mes = 0; calendarioRangeEstado.ano++ }
+  renderizarCalendarioRange()
+  reposicionarCalendarioRange()
+}
+function mudarMesCalendarioRange(mes) {
+  calendarioRangeEstado.mes = parseInt(mes)
+  renderizarCalendarioRange()
+  reposicionarCalendarioRange()
+}
+function mudarAnoCalendarioRange(ano) {
+  calendarioRangeEstado.ano = parseInt(ano)
+  renderizarCalendarioRange()
+  reposicionarCalendarioRange()
+}
+function selecionarDiaCalendarioRange(dataIso) {
+  const st = calendarioRangeEstado
+  if (!st.dataInicio || st.dataFim) {
+    st.dataInicio = dataIso
+    st.dataFim = null
+  } else if (dataIso < st.dataInicio) {
+    st.dataFim = st.dataInicio
+    st.dataInicio = dataIso
+  } else {
+    st.dataFim = dataIso
+  }
+  renderizarCalendarioRange()
+  reposicionarCalendarioRange()
+  if (st.dataInicio && st.dataFim) aplicarCalendarioRange()
+}
+function aplicarPresetCalendarioRange(nome) {
+  const [ini, fim] = nomesPresetsRange()[nome]
+  calendarioRangeEstado.dataInicio = isoDateStr(ini)
+  calendarioRangeEstado.dataFim = isoDateStr(fim)
+  aplicarCalendarioRange()
+}
+function aplicarCalendarioRange() {
+  const st = calendarioRangeEstado
+  const input = document.getElementById(st.inputId)
+  input.value = `${st.dataInicio} — ${st.dataFim}`
+  const callback = st.aoAplicar
+  fecharCalendarioRange()
+  if (callback) callback(st.dataInicio, st.dataFim)
+}
+function definirIntervaloCalendarioRange(inputId, dataDe, dataAte) {
+  document.getElementById(inputId).value = dataDe && dataAte ? `${dataDe} — ${dataAte}` : ""
+}
+
 function iniciarPickerContaData() {
-  pickerContaData = new Litepicker({
-    element: document.getElementById('conta-data'),
-    singleMode: true, format: 'YYYY-MM-DD', maxDate: new Date(), mobileFriendly: true,
-    dropdowns: { minYear: 2020, maxYear: null, months: true, years: true },
-  })
+  document.getElementById("conta-data").onclick = () => abrirCalendarioSimples("conta-data", { maxDate: isoDateStr(new Date()) })
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2549,6 +2772,8 @@ document.addEventListener("click", (e) => {
 })
 window.addEventListener("scroll", () => fecharMenusAcoes(), { passive: true, capture: true })
 function fecharTodosOsFiltros() {
+  fecharCalendarioSimples()
+  fecharCalendarioRange()
   fecharFiltroCat()
   fecharOrdenarMov()
   fecharOrdenarCt()
@@ -2937,7 +3162,7 @@ function abrirModalConta() {
   document.getElementById("conta-saldo").value = ""
   document.getElementById("conta-saldo-campo").style.display = "block"
   document.getElementById("conta-data-campo-adicionar").style.display = "block"
-  pickerContaData.setDate(new Date())
+  definirDataCalendarioSimples("conta-data", isoDateStr(new Date()))
   document.getElementById("modal-conta").classList.add("open")
   ligarCampoComSugestoesInline("conta-banco", opcoesBancos); ligarCampoComSugestoesInline("conta-tipo", opcoesTipos)
   ligarValidacaoFormulario(["conta-nome", "conta-moeda-display", "conta-saldo", "conta-data"], "btn-guardar-conta")
@@ -2963,7 +3188,7 @@ async function abrirEditarConta(id) {
   document.getElementById("conta-saldo").value = ""
   const inicio = await api("/contas/" + id + "/inicio")
   document.getElementById("conta-data").value = inicio.data
-  pickerContaData.setDate(inicio.data)
+  definirDataCalendarioSimples("conta-data", inicio.data)
   document.getElementById("conta-saldo").value = inicio.saldo_real
 }
 
@@ -3095,7 +3320,7 @@ function atualizarSombraScrollReconciliacoes() {
 }
 function mostrarFormReconciliacao(id, data, valor) {
   document.getElementById("reconc-id").value = id || ""
-  pickerReconc.setDate(data || new Date())
+  definirDataCalendarioSimples("reconc-data", data || isoDateStr(new Date()))
   document.getElementById("reconc-data").disabled = !!id
   document.getElementById("reconc-valor").value = valor !== undefined ? valor : ""
   document.getElementById("form-reconciliacao").style.display = "block"
@@ -3532,7 +3757,7 @@ function renderizarTabelaMovimentos() {
 function abrirModalMovimento() {
   document.getElementById("modal-movimento-titulo").textContent = "Adicionar movimento"
   document.getElementById("mov-id").value = ""
-  pickerMovData.setDate(new Date())
+  definirDataCalendarioSimples("mov-data", isoDateStr(new Date()))
   document.getElementById("mov-descricao").value = ""
   document.getElementById("mov-valor").value = ""
 
@@ -3557,7 +3782,7 @@ function abrirEditarMovimento(id) {
   document.getElementById("modal-movimento-titulo").textContent = "Editar movimento"
   document.getElementById("mov-id").value = m.id
   selecionarContaMovForm(m.conta_id)
-  pickerMovData.setDate(m.data)
+  definirDataCalendarioSimples("mov-data", m.data)
   document.getElementById("mov-descricao").value = m.descricao
   document.getElementById("mov-valor").value = Math.abs(m.valor)
   const tipo = m.valor > 0 ? "in" : "out"
@@ -3937,6 +4162,15 @@ document.addEventListener("click", e => {
 
   const ctOrdenarBtn = document.getElementById("ct-ordenar-btn"), ctOrdenarPanel = document.getElementById("ct-ordenar-panel")
   if (ctOrdenarBtn && !path.includes(ctOrdenarBtn) && !path.includes(ctOrdenarPanel)) fecharOrdenarCt()
+
+  if (calendarioEstado) {
+    const calInput = document.getElementById(calendarioEstado.inputId), calPanel = document.getElementById("calendario-panel")
+    if (calInput && !path.includes(calInput) && !path.includes(calPanel)) fecharCalendarioSimples()
+  }
+  if (calendarioRangeEstado) {
+    const calInput = document.getElementById(calendarioRangeEstado.inputId), calPanel = document.getElementById("calendario-range-panel")
+    if (calInput && !path.includes(calInput) && !path.includes(calPanel)) fecharCalendarioRange()
+  }
 
   const anRecOrdenarBtn = document.getElementById("an-recorrentes-ordenar-btn"), anRecOrdenarPanel = document.getElementById("an-recorrentes-ordenar-panel")
   if (anRecOrdenarBtn && !path.includes(anRecOrdenarBtn) && !path.includes(anRecOrdenarPanel)) fecharOrdenarRecorrentes()

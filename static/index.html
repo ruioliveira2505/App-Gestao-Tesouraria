@@ -135,7 +135,7 @@
       transition: width 0.18s ease; overflow: hidden; position: sticky; top: 0; height: 100vh; height: 100dvh; z-index: 50;
     }
     .friso.expandido { width: 200px; padding: 0.75rem; }
-    .friso-toggle-recolhido { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: none; border: none; color: var(--color-text-secondary); cursor: pointer; border-radius: var(--radius-sm); margin-bottom: 0.5rem; -webkit-appearance: none; }
+    .friso-toggle-recolhido { display: flex; align-items: center; justify-content: center; width: 100%; padding: 8px 0; background: none; border: none; color: var(--color-text-secondary); cursor: pointer; border-radius: var(--radius-sm); margin-bottom: 0.5rem; -webkit-appearance: none; }
     .friso-toggle-recolhido:hover { background: var(--color-surface); }
     .friso.expandido .friso-toggle-recolhido { display: none; }
     .friso-topo-expandido { display: none; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding: 0 0.4rem; }
@@ -144,9 +144,10 @@
     .friso-topo-expandido button { background: none; border: none; color: var(--color-text-secondary); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); display: flex; flex-shrink: 0; -webkit-appearance: none; }
     .friso-topo-expandido button:hover { background: var(--color-surface); }
     .friso-item {
-      display: flex; align-items: center; gap: 10px; padding: 0.6rem; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0.6rem; border-radius: var(--radius-sm);
       cursor: pointer; color: var(--color-text-secondary); font-size: 0.85rem; white-space: nowrap; position: relative;
     }
+    .friso.expandido .friso-item { justify-content: flex-start; }
     .friso-item .icon { display: flex; flex-shrink: 0; }
     .friso-item .label { display: none; }
     .friso.expandido .friso-item .label { display: inline; }
@@ -286,8 +287,7 @@
        SECÇÕES E TABELAS
     ═══════════════════════════════════════════════════════ */
 
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .section-title { font-size: 0.75rem; font-weight: 600; color: var(--color-text-secondary); letter-spacing: 0.05em; text-transform: uppercase; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.75rem; }
 
     .table-wrap { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); overflow-x: auto; overflow-y: hidden; margin-bottom: 1.5rem; }
     table { width: 100%; border-collapse: collapse; background: var(--color-white); }
@@ -472,6 +472,11 @@
     .toggle-tipo button.active.in  { background: var(--color-positivo-bg); color: var(--color-positivo-text); font-weight: 500; }
     .toggle-tipo button.active:not(.in):not(.out) { background: var(--color-badge-bg); color: var(--color-text); font-weight: 500; }
     .toggle-tipo-sm button { padding: 0.3rem 0.7rem; font-size: 0.72rem; }
+    .abas-categorias { display: flex; width: 100%; border: none; border-radius: 0; overflow: visible; gap: 1.25rem; border-bottom: 1px solid var(--color-border-light); }
+    .abas-categorias button { background: none; padding: 0.5rem 0 0.6rem; border-bottom: 1px solid transparent; margin-bottom: -1px; font-size: 0.85rem; }
+    .abas-categorias button.active.in, .abas-categorias button.active.out { background: none; border-radius: 0; }
+    .abas-categorias button.active.in { color: var(--color-positivo); border-bottom-color: var(--color-positivo); }
+    .abas-categorias button.active.out { color: var(--color-negativo); border-bottom-color: var(--color-negativo); }
 
     
     /* ═══════════════════════════════════════════════════════
@@ -601,7 +606,7 @@
        PERFIL E GESTÃO DE CATEGORIAS
     ═══════════════════════════════════════════════════════ */
 
-    .grupo-gestao { border-bottom: 1px solid var(--color-border-light); padding: 0.75rem 0; }
+    .grupo-gestao { border-bottom: 1px solid var(--color-border-light); padding: 1rem 0; }
     .grupo-gestao:last-child { border-bottom: none; }
     .grupo-gestao-header { display: flex; justify-content: space-between; align-items: center; }
     .grupo-gestao-header .nome { font-weight: 500; font-size: 0.9rem; }
@@ -615,10 +620,21 @@
     .grupo-gestao.a-arrastar, .categoria-gestao-item.a-arrastar { opacity: 0.4; }
     .grupo-gestao.arraste-acima, .categoria-gestao-item.arraste-acima { border-top: 2px solid var(--color-text); }
     .grupo-gestao.arraste-abaixo, .categoria-gestao-item.arraste-abaixo { border-bottom: 2px solid var(--color-text); }
-    .danger-zone-text { font-size: 0.875rem; color: var(--color-text-tertiary); margin-bottom: 0.75rem; }
-
     .perfil-layout { display: flex; gap: 1.5rem; align-items: flex-start; }
-    .perfil-sidebar { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }
+    .modal-configuracoes-conteudo {
+      max-width: 760px; width: 100%; height: 80vh; max-height: 640px;
+      display: flex; flex-direction: column; padding: 0; position: relative; overflow: hidden;
+    }
+    .btn-fechar-modal-config {
+      background: none; border: none; cursor: pointer; align-self: flex-start;
+      color: var(--color-text-secondary); padding: 4px; border-radius: var(--radius-sm); display: flex; margin-bottom: 0.5rem;
+    }
+    .btn-fechar-modal-config:hover { background: var(--color-surface); }
+    .modal-mobile-titulo { display: none; }
+    .modal-configuracoes-conteudo .perfil-layout { flex: 1; min-height: 0; padding: 1.75rem; gap: 1.25rem; align-items: stretch; }
+    .modal-configuracoes-conteudo .perfil-sidebar { width: 165px; }
+    .modal-configuracoes-conteudo .perfil-conteudo { overflow-y: auto; flex: 1; min-height: 0; padding-right: 0.5rem; }
+    .perfil-sidebar { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid var(--color-border-light); padding-right: 1.25rem; }
     .perfil-sidebar-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--color-text-secondary); cursor: pointer; }
     .perfil-sidebar-item .icone { display: flex; flex-shrink: 0; }
     .perfil-sidebar-item:hover { background: var(--color-surface); }
@@ -626,40 +642,18 @@
     .perfil-conteudo { flex: 1; min-width: 0; }
     .perfil-secao { display: none; }
     .perfil-secao.active { display: block; }
-    .perfil-secao-titulo { font-size: 1.1rem; font-weight: 600; }
-    .perfil-secao-subtitulo { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.2rem; }
+    h2.perfil-secao-titulo { font-size: 1.1rem; font-weight: 600; padding-bottom: 0.85rem; border-bottom: 1px solid var(--color-border-light); margin-bottom: 0.5rem; }
     .perfil-seta { display: flex; flex-shrink: 0; color: var(--color-text-faint); }
-    .perfil-card-avatar {
-      display: flex; align-items: center; gap: 1rem; padding: 1.25rem;
-      background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      cursor: pointer;
-    }
-    .perfil-card-avatar:hover { background: var(--color-surface); }
-    .perfil-avatar-grande {
-      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
-      background: var(--color-primary); color: var(--color-white);
-      font-size: 1.1rem; font-weight: 600;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .perfil-card-avatar-info { flex: 1; min-width: 0; }
-    .perfil-card-avatar-nome { font-size: 1rem; font-weight: 600; color: var(--color-text); }
-    .perfil-card-avatar-email { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 2px; }
-    .perfil-lista {
-      background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
+    .perfil-lista {}
     .perfil-lista-item {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 0.9rem 1.25rem; font-size: 0.875rem; color: var(--color-text);
+      padding: 1.1rem 0; font-size: 0.875rem; color: var(--color-text);
       cursor: pointer; border-bottom: 1px solid var(--color-border-light);
     }
     .perfil-lista-item:last-child { border-bottom: none; }
     .perfil-lista-item:hover { background: var(--color-surface); }
-    .perfil-zona-perigo {
-      background: var(--color-negativo-bg); border: 1px solid var(--color-negativo-border); border-radius: var(--radius-lg);
-      padding: 1.25rem;
-    }
-
+    .perfil-lista-item.somente-leitura { cursor: default; }
+    .perfil-lista-item.somente-leitura:hover { background: none; }
     
     /* ═══════════════════════════════════════════════════════
        ESTADOS VAZIOS E SKELETONS
@@ -685,6 +679,7 @@
     .btn-aplicar-filtros.escondido { display: none; }
     .filtros-sheet-acoes { display: none; }
     @media (max-width: 768px) {
+      .section-header { flex-wrap: wrap; row-gap: 0.5rem; }
       #page-movimentos .filtros { margin-bottom: 0.75rem; }
       #page-movimentos .ordenacao-mobile.field { margin-bottom: 0.75rem; }
       #page-movimentos .filtros > .pesquisa-movimentos-input { flex: 1; min-width: 0; width: auto; }
@@ -724,7 +719,17 @@
       .seletor-periodo { width: 44px; padding: 0.5rem; color: transparent; }
       .campo-com-icone .icone-calendario { left: 50%; transform: translate(-50%, -50%); }
       .perfil-layout { flex-direction: column; }
-      .perfil-sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+      .perfil-sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; padding-right: 0; }
+      .modal-configuracoes-conteudo { height: 90vh; height: 90dvh; max-height: none; max-width: none; margin: 0 0.75rem; padding: 0; }
+      .modal-mobile-titulo {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 1.1rem 1.25rem 0.85rem; font-weight: 700; font-size: 1.05rem;
+      }
+      .btn-fechar-modal-config-mobile { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: var(--radius-sm); display: flex; }
+      .btn-fechar-modal-config-mobile:hover { background: var(--color-surface); }
+      .btn-fechar-modal-config { display: none; }
+      .modal-configuracoes-conteudo .perfil-layout { padding: 0 1.25rem 1.25rem; gap: 0.75rem; }
+      .modal-configuracoes-conteudo .perfil-sidebar { width: 100%; border-top: 1px solid var(--color-border-light); border-bottom: 1px solid var(--color-border-light); padding: 0.5rem 0; }
       .table-wrap.cards-mobile table { display: block; }
       .table-wrap.cards-mobile thead { display: none; }
       .table-wrap.cards-mobile tbody { display: block; }
@@ -885,7 +890,7 @@
   </nav>
   <div class="avatar-menu" id="avatar-menu" style="position:fixed">
     <div class="avatar-menu-item" onclick="alternarOcultarValores()"><span class="icone" id="icone-menu-olho"></span> <span id="texto-menu-olho">Ocultar valores</span></div>
-    <div class="avatar-menu-item" onclick="irParaConfiguracoes()"><span class="icone" id="icone-menu-config"></span> Configurações</div>
+    <div class="avatar-menu-item" onclick="abrirModalConfiguracoes()"><span class="icone" id="icone-menu-config"></span> Configurações</div>
     <div class="avatar-menu-separador"></div>
     <div class="avatar-menu-item" onclick="logout()"><span class="icone" id="icone-menu-sair"></span> Terminar sessão</div>
   </div>
@@ -1065,7 +1070,7 @@
         </div>
         <div class="chart-full">
           <div class="section-header">
-            <h3 style="margin:0">Detalhe por Grupo</h3>
+            <h3 style="margin:0">Detalhe</h3>
             <div style="display:flex;gap:0.5rem;align-items:center">
               <button class="btn-sm" id="btn-expandir-recolher" onclick="alternarExpandirTodos()"></button>
               <div class="toggle-tipo">
@@ -1218,34 +1223,60 @@
     <!-- ──────────────────────────────────────────────
          PÁGINA: PERFIL
     ────────────────────────────────────────────── -->
-    <div class="page" id="page-configuracoes">
-      <div class="perfil-layout">
-        <div class="perfil-sidebar">
-          <div class="perfil-sidebar-item active" data-secao="conta" onclick="trocarSecaoPerfil('conta')">
-            <span class="icone" id="icone-sidebar-conta"></span> Conta
-          </div>
-          <div class="perfil-sidebar-item" data-secao="categorias" onclick="trocarSecaoPerfil('categorias')">
-            <span class="icone" id="icone-sidebar-categorias"></span> Categorias
-          </div>
-          <div class="perfil-sidebar-item" data-secao="preferencias" onclick="trocarSecaoPerfil('preferencias')">
-            <span class="icone" id="icone-sidebar-preferencias"></span> Preferências
-          </div>
+    <div class="modal-overlay modal-tela-cheia" id="modal-configuracoes" onclick="if(event.target===this) fecharModalConfiguracoes()">
+  <div class="modal modal-configuracoes-conteudo">
+    <div class="modal-mobile-titulo">
+      <span>Configurações</span>
+      <button class="btn-fechar-modal-config-mobile" onclick="fecharModalConfiguracoes()" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="perfil-layout">
+      <div class="perfil-sidebar">
+        <button class="btn-fechar-modal-config" onclick="fecharModalConfiguracoes()" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div class="perfil-sidebar-item active" data-secao="conta" onclick="trocarSecaoPerfil('conta')">
+          <span class="icone" id="icone-sidebar-conta"></span> Conta
         </div>
-        <div class="perfil-conteudo">
-          <div class="perfil-secao active" id="perfil-secao-conta">
+        <div class="perfil-sidebar-item" data-secao="seguranca" onclick="trocarSecaoPerfil('seguranca')">
+          <span class="icone" id="icone-sidebar-seguranca"></span> Segurança
+        </div>
+        <div class="perfil-sidebar-item" data-secao="categorias" onclick="trocarSecaoPerfil('categorias')">
+          <span class="icone" id="icone-sidebar-categorias"></span> Categorias
+        </div>
+        <div class="perfil-sidebar-item" data-secao="preferencias" onclick="trocarSecaoPerfil('preferencias')">
+          <span class="icone" id="icone-sidebar-preferencias"></span> Preferências
+        </div>
+      </div>
+      <div class="perfil-conteudo">
+        <div class="perfil-secao active" id="perfil-secao-conta">
             <h2 class="perfil-secao-titulo">Conta</h2>
-            <p class="perfil-secao-subtitulo">Gere a tua identidade, segurança e sessões.</p>
 
-            <div class="perfil-card-avatar" onclick="abrirModalEditarPerfil()" style="margin-top:1.5rem">
-              <div class="perfil-avatar-grande" id="perfil-avatar-grande"></div>
-              <div class="perfil-card-avatar-info">
-                <div class="perfil-card-avatar-nome" id="perfil-nome-display"></div>
-                <div class="perfil-card-avatar-email" id="perfil-email-display"></div>
+            <div class="perfil-lista">
+              <div class="perfil-lista-item" onclick="abrirModalEditarPerfil()">
+                <span>Nome</span>
+                <span style="display:flex;align-items:center;gap:0.6rem">
+                  <span style="color:var(--color-text-secondary);font-size:0.85rem" id="perfil-nome-display"></span>
+                  <span class="perfil-seta" id="seta-perfil-avatar"></span>
+                </span>
               </div>
-              <span class="perfil-seta" id="seta-perfil-avatar"></span>
+              <div class="perfil-lista-item" onclick="abrirModalEditarPerfil()">
+                <span>Email</span>
+                <span style="display:flex;align-items:center;gap:0.6rem">
+                  <span style="color:var(--color-text-secondary);font-size:0.85rem" id="perfil-email-display"></span>
+                  <span class="perfil-seta" id="seta-perfil-email"></span>
+                </span>
+              </div>
+              <div class="perfil-lista-item somente-leitura">
+                <span>Eliminar conta</span>
+                <button class="btn-sm" style="color:var(--color-negativo);border-color:var(--color-negativo-border)" onclick="eliminarContaUtilizador()">Eliminar</button>
+              </div>
             </div>
+          </div>
 
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Segurança</div></div>
+          <div class="perfil-secao" id="perfil-secao-seguranca">
+            <h2 class="perfil-secao-titulo">Segurança</h2>
             <div class="perfil-lista">
               <div class="perfil-lista-item" onclick="abrirModalAlterarPassword()">
                 <span>Palavra-passe</span>
@@ -1256,25 +1287,17 @@
                 <span class="perfil-seta" id="seta-perfil-sessoes"></span>
               </div>
             </div>
-
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title" style="color:var(--color-negativo)">Zona de Perigo</div></div>
-            <div class="perfil-zona-perigo">
-              <p class="danger-zone-text">Eliminar a conta removendo permanentemente todos os teus dados.</p>
-              <button class="btn-danger" onclick="eliminarContaUtilizador()">Eliminar a minha conta</button>
-            </div>
           </div>
 
           <div class="perfil-secao" id="perfil-secao-categorias">
             <h2 class="perfil-secao-titulo">Categorias</h2>
-            <p class="perfil-secao-subtitulo">Organiza os grupos e categorias usados nos teus movimentos.</p>
-            <div class="section-header" style="margin-top:1.5rem">
-              <div class="section-title">Gestão de Categorias</div>
-              <div class="toggle-tipo">
+            <div class="section-header" style="margin-bottom:0.3rem">
+              <div class="toggle-tipo abas-categorias">
                 <button id="cat-tipo-in" class="active in" onclick="trocarTipoCategorias('in')">Entradas</button>
                 <button id="cat-tipo-out" class="out" onclick="trocarTipoCategorias('out')">Saídas</button>
               </div>
             </div>
-            <div class="table-wrap" style="padding:1.25rem">
+            <div>
               <div id="lista-categorias-gestao"></div>
               <button class="btn-sm" style="margin-top:0.75rem" onclick="abrirModalGrupo()">+ Adicionar Grupo</button>
             </div>
@@ -1282,34 +1305,29 @@
 
           <div class="perfil-secao" id="perfil-secao-preferencias">
             <h2 class="perfil-secao-titulo">Preferências</h2>
-            <p class="perfil-secao-subtitulo">Personaliza a aplicação ao teu gosto. Estas opções ainda não estão disponíveis.</p>
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Idioma</div></div>
-            <div class="table-wrap" style="padding:1.25rem">
-              <select disabled style="width:100%;padding:0.6rem 0.75rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:0.875rem;background:var(--color-surface);color:var(--color-text-secondary)">
-                <option>Português</option>
-              </select>
-              <p style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:0.5rem">Em breve — por agora a aplicação está disponível só em português.</p>
-            </div>
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Moeda Principal</div></div>
-            <div class="table-wrap" style="padding:1.25rem">
-              <select disabled style="width:100%;padding:0.6rem 0.75rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:0.875rem;background:var(--color-surface);color:var(--color-text-secondary)">
-                <option>Detetada automaticamente</option>
-              </select>
-              <p style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:0.5rem">Em breve — vais poder escolher a moeda usada para apresentar os totais consolidados.</p>
-            </div>
-            <div class="section-header" style="margin-top:1.5rem"><div class="section-title">Aparência</div></div>
-            <div class="table-wrap" style="padding:1.25rem">
-              <div class="toggle-tipo" id="toggle-tema">
-                <button id="tema-claro" onclick="mudarTema('claro')">Claro</button>
-                <button id="tema-escuro" onclick="mudarTema('escuro')">Escuro</button>
-                <button id="tema-sistema" onclick="mudarTema('sistema')">Sistema</button>
+            <div class="perfil-lista">
+              <div class="perfil-lista-item somente-leitura">
+                <span>Idioma</span>
+                <span style="color:var(--color-text-secondary);font-size:0.85rem">Português</span>
               </div>
-              <p style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:0.5rem">"Sistema" segue a preferência do teu dispositivo.</p>
+              <div class="perfil-lista-item somente-leitura">
+                <span>Moeda Principal</span>
+                <span style="color:var(--color-text-secondary);font-size:0.85rem">Detetada automaticamente</span>
+              </div>
+              <div class="perfil-lista-item somente-leitura">
+                <span>Aparência</span>
+                <div class="toggle-tipo" id="toggle-tema">
+                  <button id="tema-claro" onclick="mudarTema('claro')">Claro</button>
+                  <button id="tema-escuro" onclick="mudarTema('escuro')">Escuro</button>
+                  <button id="tema-sistema" onclick="mudarTema('sistema')">Sistema</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
   </main>
   </div>
@@ -1318,11 +1336,11 @@
 <!-- ═══════════════════════════════════════════════════════
      MODAL DRILL-DOWN
 ═══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-drilldown">
+<div class="modal-overlay modal-tela-cheia" id="modal-drilldown">
   <div class="modal-drilldown">
     <div class="modal-drilldown-header">
       <div class="modal-drilldown-header-texto">
-        <div class="drilldown-titulo-label" id="drawer-subtitulo">Evolução mensal</div>
+        <div class="drilldown-titulo-label" id="drawer-subtitulo">Evolução Mensal</div>
         <h2 id="drawer-titulo" style="font-size:1.1rem;font-weight:600;margin:0"></h2>
         <div id="drawer-titulo-grupo" style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:2px"></div>
       </div>
@@ -1661,6 +1679,7 @@ const ICONE_INDETERMINADO = `<svg width="13" height="13" viewBox="0 0 24 24" fil
 const ICONE_PREFERENCIAS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>`
 const ICONE_SAIR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`
 const ICONE_UTILIZADOR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`
+const ICONE_SEGURANCA = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`
 
 // ═══════════════════════════════════════════════════════════
 // UTILS GERAIS
@@ -1746,7 +1765,7 @@ function guardarFiltrosPagina(pagina, dados) {
   localStorage.setItem("filtros_" + pagina, JSON.stringify(dados))
 }
 function fecharModal() {
-  document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("open"))
+  document.querySelectorAll(".modal-overlay:not(#modal-configuracoes)").forEach(m => m.classList.remove("open"))
 }
 function mensagemDeErro(d) {
   if (typeof d.detail === "string") return d.detail
@@ -2280,12 +2299,7 @@ async function iniciarApp() {
   document.getElementById("icone-menu-olho").innerHTML = valoresOcultos ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO
   document.getElementById("texto-menu-olho").textContent = valoresOcultos ? "Mostrar valores" : "Ocultar valores"
   const pagina = localStorage.getItem("paginaAtual") || "contas"
-  ativarPagina(pagina)
-  if (pagina === "configuracoes") {
-    const secoesValidas = ["conta", "categorias", "preferencias"]
-    const secaoGuardada = localStorage.getItem("secaoConfiguracoes")
-    trocarSecaoPerfil(secoesValidas.includes(secaoGuardada) ? secaoGuardada : "conta")
-  }
+  ativarPagina(["contas", "movimentos", "analise"].includes(pagina) ? pagina : "contas")
   document.getElementById("app-screen").style.display = "block"
   contasCache = await api("/contas")
   categoriasCache    = await api("/categorias")
@@ -2340,7 +2354,7 @@ function ativarPagina(pagina) {
   if (pagina === "movimentos") setTimeout(atualizarPosicoesFixasMovimentos, 0)
   if (pagina === "analise") setTimeout(atualizarPosicoesFixasAnalise, 0)
 }
-const TITULOS_PAGINAS_MOBILE = { contas: "Contas", movimentos: "Movimentos", analise: "Análise", configuracoes: "Configurações" }
+const TITULOS_PAGINAS_MOBILE = { contas: "Contas", movimentos: "Movimentos", analise: "Análise" }
 const ACOES_FAB_MOBILE = { contas: () => abrirModalConta(), movimentos: () => abrirModalMovimento() }
 let fabAcaoAtual = null
 function atualizarBarraMobile(pagina) {
@@ -2358,9 +2372,8 @@ function carregarPagina(pagina) {
   if (pagina === "contas")     carregarContas()
   if (pagina === "analise")    carregarAnalise()
   if (pagina === "movimentos") carregarMovimentos()
-  if (pagina === "configuracoes") carregarConfiguracoes()
 }
-function irPara(pagina) { ativarPagina(pagina); localStorage.setItem("paginaAtual", pagina); if (pagina === "configuracoes") trocarSecaoPerfil("conta"); carregarPagina(pagina) }
+function irPara(pagina) { ativarPagina(pagina); localStorage.setItem("paginaAtual", pagina); carregarPagina(pagina) }
 function iniciaisNome(nome) {
   if (!nome) return "?"
   const partes = nome.trim().split(/\s+/)
@@ -2373,7 +2386,17 @@ function atualizarAvatar() {
   const nomeEl = document.getElementById("friso-nome-utilizador")
   if (nomeEl) nomeEl.textContent = NOME
 }
-function irParaConfiguracoes() { fecharMenuAvatar(); irPara("configuracoes") }
+function abrirModalConfiguracoes() {
+  fecharMenuAvatar()
+  document.getElementById("friso").classList.remove("expandido")
+  trocarSecaoPerfil("conta")
+  document.getElementById("modal-configuracoes").classList.add("open")
+  document.querySelector(".perfil-sidebar").scrollLeft = 0
+  carregarConfiguracoes()
+}
+function fecharModalConfiguracoes() {
+  document.getElementById("modal-configuracoes").classList.remove("open")
+}
 
 let avatarMenuAberto = false
 function toggleMenuAvatar(e) {
@@ -3680,7 +3703,7 @@ function abrirDrawer(titulo, subtitulo, nomeGrupo, mostrarToggle = false) {
 }
 
 async function abrirDrillDownGrupo(grupoId, nomeGrupo) {
-  abrirDrawer(nomeGrupo, "Evolução mensal do grupo", null, true)
+  abrirDrawer(nomeGrupo, "Evolução Mensal", null, true)
   const params = construirParamsAnalise()
   params.set("grupo_id", grupoId)
   const dados = await api("/stats/mensal-detalhe?" + params.toString())
@@ -3749,7 +3772,7 @@ function renderizarGraficoDrilldownEmpilhado(dados, grupoId) {
 }
 
 async function abrirDrillDownCategoria(categoriaId, nomeCategoria, nomeGrupo) {
-  abrirDrawer(nomeCategoria, "Evolução mensal da categoria", nomeGrupo, false)
+  abrirDrawer(nomeCategoria, "Evolução Mensal", nomeGrupo, false)
   drilldownAtual = null
   const params = construirParamsAnalise()
   params.set("categoria_id", categoriaId)
@@ -3996,14 +4019,12 @@ async function confirmarTodosPendentes() {
 function trocarSecaoPerfil(secao) {
   document.querySelectorAll(".perfil-sidebar-item").forEach(item => item.classList.toggle("active", item.dataset.secao === secao))
   document.querySelectorAll(".perfil-secao").forEach(el => el.classList.toggle("active", el.id === `perfil-secao-${secao}`))
-  localStorage.setItem("secaoConfiguracoes", secao)
 }
 async function carregarConfiguracoes() {
   const dados = await api("/me")
   perfilCache = dados
   document.getElementById("perfil-nome-display").textContent = dados.nome
   document.getElementById("perfil-email-display").textContent = dados.email
-  document.getElementById("perfil-avatar-grande").textContent = iniciaisNome(dados.nome)
   await carregarArvoreCategorias()
 }
 function abrirModalEditarPerfil() {
@@ -4027,7 +4048,6 @@ async function guardarPerfil() {
   perfilCache = { nome: document.getElementById("perfil-nome").value, email: document.getElementById("perfil-email").value }
   document.getElementById("perfil-nome-display").textContent = perfilCache.nome
   document.getElementById("perfil-email-display").textContent = perfilCache.email
-  document.getElementById("perfil-avatar-grande").textContent = iniciaisNome(perfilCache.nome)
   fecharModal()
   mostrarToast("Perfil atualizado.", "sucesso")
 }
@@ -4084,9 +4104,9 @@ function renderizarArvoreCategorias() {
   grupos.forEach((g, gi) => {
     const grupoProtegido = g.categorias.some(c => c.protegida)
     const tagGrupoProtegido = grupoProtegido ? `<span class="icone-protegida" id="grupo-protegido-${g.id}" data-ajuda="Este grupo contém uma categoria necessária para o sistema e não pode ser eliminado.">${ICONE_PROTEGIDA}</span>` : ""
-    el.innerHTML += `<div class="grupo-gestao" draggable="true" ondragstart="arrastarInicio(event,'grupo',${g.id},null)" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'grupo',${g.id})" ondrop="largarSobre(event,'grupo',${g.id},null)"><div class="grupo-gestao-header"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span class="nome">${g.nome}${tagGrupoProtegido}</span></span><div class="acoes"><button class="btn-sm btn-icone-only" onclick="abrirModalCategoria(${g.id})" aria-label="Adicionar categoria">+</button><button class="btn-sm" onclick="toggleMenuAcoesGrupo(event, ${g.id}, '${g.nome.replace(/'/g,"\\'")}', ${grupoProtegido}, ${gi === 0}, ${gi === grupos.length - 1})" aria-label="Mais ações">⋮</button></div></div><div class="categorias-gestao-lista">${g.categorias.map((c, ci) => {
+    el.innerHTML += `<div class="grupo-gestao" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'grupo',${g.id})" ondrop="largarSobre(event,'grupo',${g.id},null)"><div class="grupo-gestao-header"><span style="display:flex;align-items:center"><span class="arraste-alca" draggable="true" ondragstart="arrastarInicio(event,'grupo',${g.id},null)">${ICONE_ARRASTAR}</span><span class="nome">${g.nome}${tagGrupoProtegido}</span></span><div class="acoes"><button class="btn-sm btn-icone-only" onclick="abrirModalCategoria(${g.id})" aria-label="Adicionar categoria">+</button><button class="btn-sm" onclick="toggleMenuAcoesGrupo(event, ${g.id}, '${g.nome.replace(/'/g,"\\'")}', ${grupoProtegido}, ${gi === 0}, ${gi === grupos.length - 1})" aria-label="Mais ações">⋮</button></div></div><div class="categorias-gestao-lista">${g.categorias.map((c, ci) => {
       const tagProtegida = c.protegida ? `<span class="icone-protegida" id="cat-protegida-${c.id}" data-ajuda="Categoria do sistema — não pode ser renomeada ou eliminada.">${ICONE_PROTEGIDA}</span>` : ""
-      return `<div class="categoria-gestao-item" draggable="true" ondragstart="arrastarInicio(event,'categoria',${c.id},${g.id})" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'categoria',${c.id})" ondrop="largarSobre(event,'categoria',${c.id},${g.id})"><span style="display:flex;align-items:center"><span class="arraste-alca">${ICONE_ARRASTAR}</span><span>${c.nome}${tagProtegida}</span></span><div class="acoes"><button class="btn-sm" onclick="toggleMenuAcoesCategoria(event, ${c.id}, '${c.nome.replace(/'/g,"\\'")}', ${g.id}, ${c.protegida}, ${ci === 0}, ${ci === g.categorias.length - 1})" aria-label="Mais ações">⋮</button></div></div>`
+      return `<div class="categoria-gestao-item" ondragend="arrastarFim(event)" ondragover="arrastarSobre(event,'categoria',${c.id})" ondrop="largarSobre(event,'categoria',${c.id},${g.id})"><span style="display:flex;align-items:center"><span class="arraste-alca" draggable="true" ondragstart="arrastarInicio(event,'categoria',${c.id},${g.id})">${ICONE_ARRASTAR}</span><span>${c.nome}${tagProtegida}</span></span><div class="acoes"><button class="btn-sm" onclick="toggleMenuAcoesCategoria(event, ${c.id}, '${c.nome.replace(/'/g,"\\'")}', ${g.id}, ${c.protegida}, ${ci === 0}, ${ci === g.categorias.length - 1})" aria-label="Mais ações">⋮</button></div></div>`
     }).join("")}</div></div>`
   })
 }
@@ -4262,6 +4282,7 @@ async function confirmarEliminacaoComMigracao() {
 // ═══════════════════════════════════════════════════════════
 document.querySelectorAll(".toggle-password").forEach(btn => { btn.innerHTML = ICONE_OLHO_FECHADO; btn.setAttribute("aria-label", "Mostrar password") })
 document.getElementById("icone-sidebar-conta").innerHTML = ICONE_UTILIZADOR
+document.getElementById("icone-sidebar-seguranca").innerHTML = ICONE_SEGURANCA
 document.getElementById("icone-sidebar-categorias").innerHTML = ICONE_PERFIL_CATEGORIAS
 document.getElementById("icone-sidebar-preferencias").innerHTML = ICONE_PREFERENCIAS
 document.getElementById("icone-menu-config").innerHTML = ICONE_PERFIL_GERAL
@@ -4269,6 +4290,7 @@ document.getElementById("icone-menu-sair").innerHTML = ICONE_SAIR
 document.getElementById("conta-saldo-ajuda").innerHTML = ICONE_INFO
 document.getElementById("reconc-titulo-ajuda").innerHTML = ICONE_INFO
 document.getElementById("seta-perfil-avatar").innerHTML = ICONE_SETA_DIREITA
+document.getElementById("seta-perfil-email").innerHTML = ICONE_SETA_DIREITA
 document.getElementById("seta-perfil-password").innerHTML = ICONE_SETA_DIREITA
 document.getElementById("seta-perfil-sessoes").innerHTML = ICONE_SETA_DIREITA
 document.getElementById("reconc-valor-ajuda").innerHTML = ICONE_INFO

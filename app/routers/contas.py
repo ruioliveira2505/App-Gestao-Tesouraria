@@ -12,6 +12,14 @@ from app.services.reconciliacoes import atualizar_saldo_atual, primeiro_moviment
 router = APIRouter()
 
 
+def fmt_data_pt(valor):
+    if valor is None:
+        return valor
+    if isinstance(valor, str):
+        valor = date.fromisoformat(valor)
+    return valor.strftime("%d-%m-%Y")
+
+
 # ─── contas ───────────────────────────────────────────────────────────────────
 
 @router.get("/contas")
@@ -178,7 +186,7 @@ def editar_inicio_conta(
         if primeiro_mov and dados.data > primeiro_mov:
             raise HTTPException(
                 status_code=400,
-                detail=f"Não é possível definir a Data de Início de Movimentos depois de {primeiro_mov}, já que tens um movimento registado nesse dia."
+                detail=f"Não é possível definir a Data de Início de Movimentos depois de {fmt_data_pt(primeiro_mov)}, já que tens um movimento registado nesse dia."
             )
 
         # Se a nova data ultrapassar reconciliações já existentes, essas passam a ficar
@@ -293,7 +301,7 @@ def criar_ajuste_saldo(conta_id: str, dados: AjusteSaldoInput, utilizador: dict 
             inicio_movimentos = mais_antiga + timedelta(days=1)
             raise HTTPException(
                 status_code=400,
-                detail=f"Não é possível definir uma reconciliação antes de {inicio_movimentos}, a Data de Início de Movimentos desta conta."
+                detail=f"Não é possível definir uma reconciliação antes de {fmt_data_pt(inicio_movimentos)}, a Data de Início de Movimentos desta conta."
             )
 
         try:

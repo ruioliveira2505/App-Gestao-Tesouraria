@@ -14,13 +14,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def fmt_data_pt(valor):
+    if valor is None:
+        return valor
+    if isinstance(valor, str):
+        valor = date.fromisoformat(valor)
+    return valor.strftime("%d-%m-%Y")
+
+
 def _validar_data_movimento(cursor, conta_id, data):
     rec = reconciliacao_mais_antiga_data(cursor, conta_id)
     if rec and data < rec:
         inicio_movimentos = date.fromisoformat(rec) + timedelta(days=1)
         raise HTTPException(
             status_code=400,
-            detail=f"Não é possível registar um movimento antes de {inicio_movimentos}, a Data de Início de Movimentos desta conta."
+            detail=f"Não é possível registar um movimento antes de {fmt_data_pt(inicio_movimentos)}, a Data de Início de Movimentos desta conta."
         )
 
 

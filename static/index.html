@@ -105,7 +105,7 @@
        LAYOUT
     ═══════════════════════════════════════════════════════ */
 
-    main { padding: 1.25rem 2rem 2rem; max-width: 1200px; margin: 0 auto; flex: 1; min-width: 0; }
+    main { padding: 1.25rem 2rem 2rem; max-width: 1200px; margin: 0 auto; flex: 1; min-width: 0; height: 100vh; height: 100dvh; overflow-y: auto; }
     .page { display: none; }
     .page.active { display: block; }
 
@@ -128,11 +128,11 @@
     ═══════════════════════════════════════════════════════ */
 
     #app-screen { display: none; }
-    .app-layout { display: flex; align-items: flex-start; min-height: 100vh; min-height: 100dvh; }
+    .app-layout { display: flex; align-items: stretch; height: 100vh; height: 100dvh; overflow: hidden; }
     .friso {
       width: 60px; background: var(--color-white); border-right: 1px solid var(--color-border);
       display: flex; flex-direction: column; padding: 0.75rem 0.5rem; gap: 2px; flex-shrink: 0;
-      transition: width 0.18s ease; overflow: hidden; position: sticky; top: 0; height: 100vh; height: 100dvh; z-index: 50;
+      transition: width 0.18s ease; overflow: hidden; height: 100vh; height: 100dvh; z-index: 50;
     }
     .friso.expandido { width: 200px; padding: 0.75rem; }
     .friso-toggle-recolhido { display: flex; align-items: center; justify-content: center; width: 100%; padding: 8px 0; background: none; border: none; color: var(--color-text-secondary); cursor: pointer; border-radius: var(--radius-sm); margin-bottom: 0.5rem; -webkit-appearance: none; }
@@ -156,7 +156,7 @@
     .friso-spacer { flex: 1; }
     .friso-perfil { border-top: 1px solid var(--color-border); margin-top: 0.5rem; padding-top: 0.75rem; margin-left: -0.5rem; margin-right: -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; }
     .friso.expandido .friso-perfil { margin-left: -0.75rem; margin-right: -0.75rem; padding-left: 0.75rem; padding-right: 0.75rem; }
-    .cabecalho-pagina { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; position: sticky; top: 0; background: var(--color-bg); padding: 0.75rem 0; border-bottom: 1px solid var(--color-border); z-index: 40; }
+    .cabecalho-pagina { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; position: sticky; top: -1.25rem; background: var(--color-bg); padding: calc(0.75rem + 1.25rem) 0 0.75rem; border-bottom: 1px solid var(--color-border); z-index: 40; }
     .cabecalho-pagina h1 { font-size: 1.4rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
     .btn-fab {
       width: 36px; height: 36px; border-radius: 50%; background: var(--color-primary); color: var(--color-white);
@@ -1073,7 +1073,7 @@
         </div>
         <div class="chart-full">
           <div class="section-header">
-            <h3 style="margin:0;display:flex;align-items:center;gap:0.4rem;cursor:pointer" onclick="alternarExpandirTodos()">Grupos <span id="btn-expandir-recolher" style="display:flex"></span></h3>
+            <h3 style="margin:0;display:flex;align-items:center;gap:0.4rem;cursor:pointer" onclick="alternarExpandirTodos()">Categorias <span id="btn-expandir-recolher" style="display:flex"></span></h3>
             <div class="toggle-tipo">
               <button id="btn-tipo-in" class="active in" onclick="trocarTipo('in')">Entradas</button>
               <button id="btn-tipo-out" class="out" onclick="trocarTipo('out')">Saídas</button>
@@ -2956,7 +2956,7 @@ document.addEventListener("click", (e) => {
   if (icone) { toggleAjudaIcone(icone); return }
   if (!e.target.closest(".balao-ajuda")) fecharBalaoAjuda()
 })
-window.addEventListener("scroll", () => fecharBalaoAjuda(), { passive: true, capture: true })
+document.querySelector("main").addEventListener("scroll", () => fecharBalaoAjuda(), { passive: true, capture: true })
 document.getElementById("reconc-table-wrap").addEventListener("scroll", atualizarSombraScrollReconciliacoes, { passive: true })
 function fecharMenusAcoes() {
   const menu = document.getElementById("menu-acoes-flutuante")
@@ -2965,7 +2965,7 @@ function fecharMenusAcoes() {
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".menu-acoes-lista") && !e.target.closest("[onclick*='toggleMenuAcoesConta']") && !e.target.closest("[onclick*='toggleMenuAcoesReconciliacao']") && !e.target.closest("[onclick*='toggleMenuAcoesMovimento']") && !e.target.closest("[onclick*='toggleMenuAcoesGrupo']") && !e.target.closest("[onclick*='toggleMenuAcoesCategoria']")) fecharMenusAcoes()
 })
-window.addEventListener("scroll", () => fecharMenusAcoes(), { passive: true, capture: true })
+document.querySelector("main").addEventListener("scroll", () => fecharMenusAcoes(), { passive: true, capture: true })
 function fecharTodosOsFiltros() {
   fecharCalendarioSimples()
   fecharCalendarioRange()
@@ -3669,6 +3669,8 @@ function trocarTipo(tipo) {
   tipoAtual = tipo
   document.getElementById("btn-tipo-out").classList.toggle("active", tipo === "out")
   document.getElementById("btn-tipo-in").classList.toggle("active", tipo === "in")
+  gruposExpandidos = false
+  atualizarIconeExpandirRecolher()
   fecharDrillDown(); renderizarGrupos()
 }
 
@@ -4384,7 +4386,6 @@ document.addEventListener("click", e => {
   if (contaMoedaPanel && !path.includes(contaMoedaPanel) && !path.includes(contaMoedaInput)) fecharSeletorMoeda()
 })
 
-let scrollAntesDoBloqueio = 0
 const observadorModaisTelaCheia = new MutationObserver(() => {
   const frisoAbertoEmMobile = window.innerWidth <= 768 && document.getElementById("friso").classList.contains("expandido")
   const algumAberto = document.querySelector(".modal-tela-cheia.open") !== null || document.querySelector(".folha-filtros-overlay.aberta") !== null || frisoAbertoEmMobile
@@ -4394,17 +4395,7 @@ const observadorModaisTelaCheia = new MutationObserver(() => {
   document.querySelector("#page-movimentos .ordenacao-mobile")?.classList.toggle("folha-aberta", algumAberto)
   document.querySelector("#page-analise .filtros")?.classList.toggle("folha-aberta", algumAberto)
   document.querySelector("#page-analise .ordenacao-mobile")?.classList.toggle("folha-aberta", algumAberto)
-  if (algumAberto && document.body.style.position !== "fixed") {
-    scrollAntesDoBloqueio = window.scrollY
-    document.body.style.position = "fixed"
-    document.body.style.top = `-${scrollAntesDoBloqueio}px`
-    document.body.style.width = "100%"
-  } else if (!algumAberto && document.body.style.position === "fixed") {
-    document.body.style.position = ""
-    document.body.style.top = ""
-    document.body.style.width = ""
-    window.scrollTo(0, scrollAntesDoBloqueio)
-  }
+  document.querySelector("main").style.overflow = algumAberto ? "hidden" : ""
 })
 document.querySelectorAll(".modal-tela-cheia, .folha-filtros-overlay, #friso").forEach(m => {
   observadorModaisTelaCheia.observe(m, { attributes: true, attributeFilter: ["class"] })
@@ -4412,14 +4403,16 @@ document.querySelectorAll(".modal-tela-cheia, .folha-filtros-overlay, #friso").f
 document.addEventListener("blur", (e) => {
   if (!e.target.matches?.("input, select, textarea")) return
   if (!e.target.closest(".modal-tela-cheia")) return
-  setTimeout(() => window.scrollTo(window.scrollX, window.scrollY), 100)
+  const main = document.querySelector("main")
+  setTimeout(() => main.scrollTo(main.scrollLeft, main.scrollTop), 100)
 }, true)
 function atualizarPosicoesFixasContas() {
   const pagina = document.getElementById("page-contas")
   if (!pagina || !pagina.classList.contains("active")) return
   const emMobile = window.innerWidth <= 768
   const referencia = emMobile ? document.querySelector(".barra-mobile-topo") : pagina.querySelector(".cabecalho-pagina")
-  const topoBase = referencia ? referencia.getBoundingClientRect().height : 0
+  const paddingTopMain = parseFloat(getComputedStyle(document.querySelector("main")).paddingTop) || 0
+  const topoBase = (referencia ? referencia.getBoundingClientRect().height : 0) - paddingTopMain
   const filtros = pagina.querySelector(".filtros")
   if (!filtros) return
   filtros.style.top = topoBase + "px"
@@ -4442,7 +4435,8 @@ function atualizarPosicoesFixasMovimentos() {
   if (!pagina || !pagina.classList.contains("active")) return
   const emMobile = window.innerWidth <= 768
   const referencia = emMobile ? document.querySelector(".barra-mobile-topo") : pagina.querySelector(".cabecalho-pagina")
-  const topoBase = referencia ? referencia.getBoundingClientRect().height : 0
+  const paddingTopMain = parseFloat(getComputedStyle(document.querySelector("main")).paddingTop) || 0
+  const topoBase = (referencia ? referencia.getBoundingClientRect().height : 0) - paddingTopMain
   const filtros = pagina.querySelector(".filtros")
   if (!filtros) return
   filtros.style.top = topoBase + "px"
@@ -4465,7 +4459,8 @@ function atualizarPosicoesFixasAnalise() {
   if (!pagina || !pagina.classList.contains("active")) return
   const emMobile = window.innerWidth <= 768
   const referencia = emMobile ? document.querySelector(".barra-mobile-topo") : pagina.querySelector(".cabecalho-pagina")
-  const topoBase = referencia ? referencia.getBoundingClientRect().height : 0
+  const paddingTopMain = parseFloat(getComputedStyle(document.querySelector("main")).paddingTop) || 0
+  const topoBase = (referencia ? referencia.getBoundingClientRect().height : 0) - paddingTopMain
   const filtros = pagina.querySelector(".filtros")
   if (!filtros) return
   filtros.style.top = topoBase + "px"

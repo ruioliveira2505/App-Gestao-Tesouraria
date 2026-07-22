@@ -105,7 +105,7 @@
        LAYOUT
     ═══════════════════════════════════════════════════════ */
 
-    main { flex: 1; min-width: 0; height: 100vh; height: 100dvh; overflow-y: auto; }
+    main { flex: 1; min-width: 0; height: 100vh; height: 100dvh; overflow-y: auto; scrollbar-gutter: stable; }
     .main-conteudo { padding: 1.25rem 2rem 2rem; max-width: 1200px; margin: 0 auto; }
     .page { display: none; }
     .page.active { display: block; }
@@ -524,7 +524,7 @@
     ═══════════════════════════════════════════════════════ */
 
     .chart-full { background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 1.25rem; margin-bottom: 1.5rem; }
-    .chart-full h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .chart-full h3, .card.destaque h3 { font-size: 0.7rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
 
     
     /* ═══════════════════════════════════════════════════════
@@ -1501,7 +1501,7 @@
 </div>
 
 <!-- Modal: Editar Perfil -->
-<div class="modal-overlay" id="modal-editar-perfil">
+<div class="modal-overlay modal-tela-cheia" id="modal-editar-perfil">
   <div class="modal">
     <h2>Editar perfil</h2>
     <div class="field"><label>Nome</label><input type="text" id="perfil-nome" required></div>
@@ -1514,7 +1514,7 @@
 </div>
 
 <!-- Modal: Alterar Password -->
-<div class="modal-overlay" id="modal-alterar-password">
+<div class="modal-overlay modal-tela-cheia" id="modal-alterar-password">
   <div class="modal">
     <h2>Alterar palavra-passe</h2>
     <div class="field field-com-toggle">
@@ -1536,7 +1536,7 @@
 </div>
 
 <!-- Modal: Grupo de categorias -->
-<div class="modal-overlay" id="modal-grupo">
+<div class="modal-overlay modal-tela-cheia" id="modal-grupo">
   <div class="modal">
     <h2 id="modal-grupo-titulo">Adicionar grupo</h2>
     <input type="hidden" id="grupo-id">
@@ -1556,7 +1556,7 @@
 </div>
 
 <!-- Modal: Categoria -->
-<div class="modal-overlay" id="modal-categoria-gestao">
+<div class="modal-overlay modal-tela-cheia" id="modal-categoria-gestao">
   <div class="modal">
     <h2 id="modal-categoria-gestao-titulo">Adicionar categoria</h2>
     <input type="hidden" id="categoria-gestao-id">
@@ -1570,7 +1570,7 @@
 </div>
 
 <!-- Modal: Eliminar categoria com opções -->
-<div class="modal-overlay" id="modal-eliminar-categoria">
+<div class="modal-overlay modal-tela-cheia" id="modal-eliminar-categoria">
   <div class="modal">
     <h2 id="elim-titulo">Eliminar categoria</h2>
     <p id="elim-aviso" style="font-size:0.875rem;color:#555;margin-bottom:1rem"></p>
@@ -1584,7 +1584,7 @@
 </div>
 
 <!-- Modal: Confirmação genérica -->
-<div class="modal-overlay" id="confirm-modal">
+<div class="modal-overlay modal-tela-cheia" id="confirm-modal">
   <div class="modal">
     <p id="confirm-modal-texto" style="font-size:0.9rem;color:var(--color-text);margin-bottom:1.25rem"></p>
     <div class="modal-footer">
@@ -2376,6 +2376,7 @@ function restaurarFiltros() {
 }
 
 function ativarPagina(pagina) {
+  document.querySelector("main").scrollTop = 0
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"))
   document.querySelectorAll(".friso-item[data-pagina]").forEach(l => l.classList.toggle("active", l.dataset.pagina === pagina))
   document.getElementById("page-" + pagina)?.classList.add("active")
@@ -3222,7 +3223,7 @@ function renderizarCardSaldoTotal(lista) {
   const moeda = moedaPredominante(lista)
   const total = lista.reduce((s, c) => s + c.saldo, 0)
   const classe = total >= 0 ? "positivo" : "negativo"
-  document.getElementById("ct-card-total").innerHTML = `<div class="card destaque ${classe}"><div class="label">Saldo Total Consolidado</div><div class="valor ${classe}">${fmt(total, moeda)}</div><div class="sub">${lista.length} conta(s)</div></div>`
+  document.getElementById("ct-card-total").innerHTML = `<div class="card destaque ${classe}"><h3>Saldo Total</h3><div class="valor ${classe}">${fmt(total, moeda)}</div><div class="sub">${lista.length} conta(s)</div></div>`
 }
 
 function renderizarGraficoSaldo(saldoDiario, moeda) {
@@ -4400,8 +4401,37 @@ const observadorModaisTelaCheia = new MutationObserver(() => {
   document.querySelector("#page-movimentos .ordenacao-mobile")?.classList.toggle("folha-aberta", algumAberto)
   document.querySelector("#page-analise .filtros")?.classList.toggle("folha-aberta", algumAberto)
   document.querySelector("#page-analise .ordenacao-mobile")?.classList.toggle("folha-aberta", algumAberto)
-  document.querySelector("main").style.overflow = algumAberto ? "hidden" : ""
+  const main = document.querySelector("main")
+  if (algumAberto && !bloqueioScrollAtivo) {
+    const rect = main.getBoundingClientRect()
+    scrollAntesDoBloqueio = main.scrollTop
+    main.style.position = "fixed"
+    main.style.top = "0"
+    main.style.left = rect.left + "px"
+    main.style.width = rect.width + "px"
+    main.style.height = "100dvh"
+    main.style.overflow = "hidden"
+    main.style.zIndex = "70"
+    bloqueioScrollAtivo = true
+  } else if (!algumAberto && bloqueioScrollAtivo) {
+    main.style.position = ""
+    main.style.top = ""
+    main.style.left = ""
+    main.style.width = ""
+    main.style.height = ""
+    main.style.overflow = ""
+    main.style.zIndex = ""
+    main.scrollTop = scrollAntesDoBloqueio
+    bloqueioScrollAtivo = false
+  }
 })
+let scrollAntesDoBloqueio = 0
+let bloqueioScrollAtivo = false
+document.addEventListener("touchmove", (e) => {
+  if (!bloqueioScrollAtivo) return
+  const dentroDeModalAberto = e.target.closest(".modal-tela-cheia.open, .folha-filtros-overlay.aberta, .filtros-conteudo.aberta, .friso.expandido")
+  if (!dentroDeModalAberto) e.preventDefault()
+}, { passive: false })
 document.querySelectorAll(".modal-tela-cheia, .folha-filtros-overlay, #friso").forEach(m => {
   observadorModaisTelaCheia.observe(m, { attributes: true, attributeFilter: ["class"] })
 })

@@ -1,4 +1,4 @@
-from app.db.database import get_connection, release_connection, release_connection
+from app.db.database import get_connection, release_connection
 from tests.helpers import criar_movimento
 
 
@@ -33,13 +33,6 @@ def test_movimento_sem_match_aparece_como_pendente(client, headers_autenticado, 
     forcar_origem(mid, "sem_match")
     r = client.get("/movimentos?precisa_confirmacao=true", headers=headers_autenticado).json()
     assert len(r) == 1
-
-
-def test_movimento_regra_nao_aparece_como_pendente(client, headers_autenticado, conta_id, categoria_id):
-    mid = criar_movimento(client, headers_autenticado, conta_id, categoria_id)
-    forcar_origem(mid, "regra")
-    r = client.get("/movimentos?precisa_confirmacao=true", headers=headers_autenticado).json()
-    assert r == []
 
 
 def test_movimento_cache_nao_aparece_como_pendente(client, headers_autenticado, conta_id, categoria_id):

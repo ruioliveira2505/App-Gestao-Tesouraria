@@ -1,91 +1,57 @@
-from fastapi import APIRouter, Depends, HTTPException
+"""Perfil do utilizador autenticado — dados de conta, password e sessões.
+
+As regras de negócio vivem em app.services.perfil — este router só trata da ligação à
+base de dados e da tradução HTTP <-> serviço.
+"""
+
+from fastapi import APIRouter, Depends, Request
+from psycopg2.extras import RealDictCursor
 
 from app.core.deps import utilizador_atual
-from app.core.security import encriptar_password, verificar_password, criar_token 
-from app.db.database import get_connection, release_connection, release_connection, release_connection
-from app.schemas.perfil import PasswordUpdateInput, PerfilUpdateInput
+from app.core.limiter import limiter
+from app.core.security import criar_token
+from app.db.database import get_db
+from app.schemas.comum import OkResponse
+from app.schemas.perfil import AtualizarPerfilOutput, PasswordUpdateInput, PasswordUpdateOutput, PerfilOutput, PerfilUpdateInput
+from app.services import perfil as servico
 
-router = APIRouter()
-
-
-@router.get("/me")
-def perfil(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT nome, email FROM utilizadores WHERE id=%s", (utilizador["sub"],))
-        nome, email = cursor.fetchone()
-    finally:
-        cursor.close()
-        release_connection(conn)
-    return {"email": email, "id": utilizador["sub"], "nome": nome}
+router = APIRouter(tags=["perfil"])
 
 
-@router.put("/me")
-def atualizar_perfil(dados: PerfilUpdateInput, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT id FROM utilizadores WHERE email=%s AND id != %s", (dados.email, utilizador["sub"]))
-        if cursor.fetchone():
-            raise HTTPException(status_code=400, detail="Email já está em uso")
+@router.get("/me", response_model=PerfilOutput)
+def perfil(utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Dados do utilizador autenticado (id, nome, email)."""
+    return servico.obter_perfil(cursor, utilizador["sub"])
 
-        cursor.execute("UPDATE utilizadores SET nome=%s, email=%s WHERE id=%s", (dados.nome, dados.email, utilizador["sub"]))
-        conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
+
+@router.put("/me", response_model=AtualizarPerfilOutput)
+def atualizar_perfil(dados: PerfilUpdateInput, utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Actualiza nome e/ou email."""
+    servico.atualizar_perfil(cursor, utilizador["sub"], dados)
     return {"ok": True, "nome": dados.nome}
 
 
-@router.put("/me/password")
-def atualizar_password(dados: PasswordUpdateInput, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT password, email FROM utilizadores WHERE id=%s", (utilizador["sub"],))
-        hash_atual, email = cursor.fetchone()
-        if not verificar_password(dados.password_atual, hash_atual):
-            raise HTTPException(status_code=401, detail="Password atual incorreta")
-        cursor.execute(
-            "UPDATE utilizadores SET password=%s, sessoes_invalidadas_em = now() WHERE id=%s",
-            (encriptar_password(dados.password_nova), utilizador["sub"])
-        )
-        conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
-
+@router.put("/me/password", response_model=PasswordUpdateOutput)
+@limiter.limit("5/minute")
+def atualizar_password(
+    request: Request, dados: PasswordUpdateInput,
+    utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db),
+):
+    """Muda a password e invalida sessões anteriores; devolve um token novo já válido."""
+    email = servico.atualizar_password(cursor, utilizador["sub"], dados)
     novo_token = criar_token({"sub": utilizador["sub"], "email": email})
     return {"ok": True, "token": novo_token}
 
 
-@router.post("/me/sessoes/terminar")
-def terminar_todas_as_sessoes(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("UPDATE utilizadores SET sessoes_invalidadas_em = now() WHERE id=%s", (utilizador["sub"],))
-        conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
+@router.post("/me/sessoes/terminar", response_model=OkResponse)
+def terminar_todas_as_sessoes(utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Invalida todos os tokens emitidos até agora, incluindo o usado neste pedido."""
+    servico.terminar_todas_as_sessoes(cursor, utilizador["sub"])
     return {"ok": True}
 
 
-@router.delete("/me")
-def eliminar_conta_utilizador(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-    try:
-        cursor.execute("DELETE FROM categorias_aprendidas WHERE utilizador_id=%s", (uid,))
-        cursor.execute("DELETE FROM movimentos WHERE utilizador_id=%s", (uid,))
-        cursor.execute("DELETE FROM categorias WHERE utilizador_id=%s", (uid,))
-        cursor.execute("DELETE FROM contas WHERE utilizador_id=%s", (uid,))  # ajustes_saldo caem em CASCADE
-        cursor.execute("DELETE FROM utilizadores WHERE id=%s", (uid,))
-        conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
+@router.delete("/me", response_model=OkResponse)
+def eliminar_conta_utilizador(utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Elimina a conta e todos os dados associados (contas, movimentos, categorias)."""
+    servico.eliminar_conta_utilizador(cursor, utilizador["sub"])
     return {"ok": True}

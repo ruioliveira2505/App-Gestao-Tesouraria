@@ -8,15 +8,16 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.db.database import get_connection, release_connection, release_connection
+from app.db.database import get_connection, release_connection
 from app.main import app
 from scripts.migrar import aplicar_migracoes
+from tests.helpers import dias_atras
 
 
 def _psql(*args):
     ambiente = {**os.environ, "PGPASSWORD": settings.DB_PASSWORD}
     subprocess.run(
-        ["psql", "-h", settings.DB_HOST, "-p", settings.DB_PORT, "-U", settings.DB_USER, *args],
+        ["psql", "-h", settings.DB_HOST, "-p", str(settings.DB_PORT), "-U", settings.DB_USER, *args],
         check=True, env=ambiente, capture_output=True, text=True,
     )
 
@@ -65,9 +66,12 @@ def headers_autenticado(client):
 
 @pytest.fixture
 def conta_id(client, headers_autenticado):
+    # âncora em "ontem" (não "hoje") — assim um movimento datado de hoje (o caso comum
+    # nos testes) é sempre posterior à âncora, como aconteceria numa conta real.
     client.post("/contas", json={
         "nome": "Conta Principal", "banco": "CGD", "tipo": "Conta Corrente",
         "iban": "PT50000000000000000000000", "moeda": "EUR", "saldo": 1000.0,
+        "data": dias_atras(1),
     }, headers=headers_autenticado)
     return client.get("/contas", headers=headers_autenticado).json()[0]["id"]
 
@@ -77,9 +81,6 @@ def categoria_id(client, headers_autenticado):
     categorias = client.get("/categorias", headers=headers_autenticado).json()
     return next(c["id"] for c in categorias if not c["eh_recebimento"])
 
-
-# gerar novo schema.sql semper que altero base de dados de desenvolvimento
-# pg_dump --schema-only --no-owner -d tesouraria > scripts/schema.sql
 
 # correr testes
 # python -m pytest tests/ -v

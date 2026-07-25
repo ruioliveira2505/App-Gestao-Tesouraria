@@ -1,12 +1,8 @@
-from tests.helpers import hoje, dias_atras, id_categoria, criar_movimento, grupo_por_direcao
+from tests.helpers import criar_movimento, dias_atras, grupo_por_direcao, hoje, id_categoria, recuar_ancora
+
 
 def recuar_reconciliacao(client, headers, conta_id, data):
-    ajustes = client.get(f"/contas/{conta_id}/ajustes-saldo", headers=headers).json()
-    ajuste_id = ajustes[0]["id"]
-    r = client.put(f"/ajustes-saldo/{ajuste_id}", json={
-        "data": data, "saldo_real": 1000.0,
-    }, headers=headers)
-    assert r.status_code == 200
+    recuar_ancora(client, headers, conta_id, data)
 
 # ═══════════════════════════════════════════════════════════
 # /stats/mensal
@@ -47,37 +43,33 @@ def test_stats_mensal_filtra_por_periodo(client, headers_autenticado, conta_id):
     assert r[0]["saidas"] == 30.0
 
 
-# ═══════════════════════════════════════════════════════════
-# /stats/categorias
-# ═══════════════════════════════════════════════════════════
-def test_stats_categorias_calcula_percentagens_corretamente(client, headers_autenticado, conta_id):
+def test_stats_mensal_com_excluir_categorias_invalido_falha_com_400(client, headers_autenticado, conta_id):
+    r = client.get("/stats/mensal?excluir_categorias=abc", headers=headers_autenticado)
+    assert r.status_code == 400
+    assert r.json()["detail"]["code"] == "EXCLUIR_CATEGORIAS_INVALIDO"
+
+
+def test_stats_mensal_exclui_categorias_indicadas(client, headers_autenticado, conta_id):
     super_ = id_categoria(client, headers_autenticado, "Alimentação", "Supermercado")
     rest   = id_categoria(client, headers_autenticado, "Alimentação", "Restaurantes e Cafés")
 
     criar_movimento(client, headers_autenticado, conta_id, super_, -75.0)
     criar_movimento(client, headers_autenticado, conta_id, rest, -25.0)
 
-    r = client.get("/stats/categorias", headers=headers_autenticado).json()
-    saidas = {c["categoria"]: c for c in r if not c["eh_recebimento"]}
-
-    assert saidas["Alimentação > Supermercado"]["total"] == 75.0
-    assert saidas["Alimentação > Supermercado"]["percentagem"] == 75.0
-    assert saidas["Alimentação > Restaurantes e Cafés"]["percentagem"] == 25.0
+    r = client.get(f"/stats/mensal?excluir_categorias={super_}", headers=headers_autenticado).json()
+    assert len(r) == 1
+    assert r[0]["saidas"] == 25.0
 
 
-def test_stats_categorias_entradas_e_saidas_tem_bases_de_percentagem_separadas(client, headers_autenticado, conta_id):
+def test_stats_mensal_de_outro_utilizador_nao_aparece(client, headers_autenticado, conta_id):
     salario = id_categoria(client, headers_autenticado, "Trabalho", "Salário")
-    super_  = id_categoria(client, headers_autenticado, "Alimentação", "Supermercado")
+    criar_movimento(client, headers_autenticado, conta_id, salario, 2000.0)
 
-    criar_movimento(client, headers_autenticado, conta_id, salario, 1000.0)
-    criar_movimento(client, headers_autenticado, conta_id, super_, -100.0)
+    client.post("/registro", json={"nome": "Outro", "email": "outro@exemplo.com", "password": "senha123"})
+    r_outro = client.post("/login", json={"email": "outro@exemplo.com", "password": "senha123"})
+    headers_outro = {"Authorization": f"Bearer {r_outro.json()['token']}"}
 
-    r = client.get("/stats/categorias", headers=headers_autenticado).json()
-    entrada = next(c for c in r if c["eh_recebimento"])
-    saida   = next(c for c in r if not c["eh_recebimento"])
-
-    assert entrada["percentagem"] == 100.0
-    assert saida["percentagem"] == 100.0
+    assert client.get("/stats/mensal", headers=headers_outro).json() == []
 
 
 # ═══════════════════════════════════════════════════════════
@@ -110,6 +102,102 @@ def test_stats_grupos_ordenados_por_total_descendente(client, headers_autenticad
     assert entradas[0]["grupo"] == "Trabalho"
 
 
+def test_stats_grupos_exclui_categorias_indicadas(client, headers_autenticado, conta_id):
+    salario = id_categoria(client, headers_autenticado, "Trabalho", "Salário")
+    juros   = id_categoria(client, headers_autenticado, "Investimentos", "Juros")
+
+    criar_movimento(client, headers_autenticado, conta_id, salario, 2000.0)
+    criar_movimento(client, headers_autenticado, conta_id, juros, 50.0)
+
+    r = client.get(f"/stats/grupos?excluir_categorias={salario}", headers=headers_autenticado).json()
+    entradas = [g for g in r if g["eh_recebimento"]]
+    assert len(entradas) == 1
+    assert entradas[0]["grupo"] == "Investimentos"
+
+
+def test_stats_grupos_de_outro_utilizador_nao_aparece(client, headers_autenticado, conta_id):
+    salario = id_categoria(client, headers_autenticado, "Trabalho", "Salário")
+    criar_movimento(client, headers_autenticado, conta_id, salario, 2000.0)
+
+    client.post("/registro", json={"nome": "Outro", "email": "outro@exemplo.com", "password": "senha123"})
+    r_outro = client.post("/login", json={"email": "outro@exemplo.com", "password": "senha123"})
+    headers_outro = {"Authorization": f"Bearer {r_outro.json()['token']}"}
+
+    assert client.get("/stats/grupos", headers=headers_outro).json() == []
+
+
+# ═══════════════════════════════════════════════════════════
+# /stats/mensal-detalhe
+# ═══════════════════════════════════════════════════════════
+def test_mensal_detalhe_sem_parametros_falha(client, headers_autenticado, conta_id):
+    r = client.get("/stats/mensal-detalhe", headers=headers_autenticado)
+    assert r.status_code == 400
+    assert r.json()["detail"]["code"] == "PARAMETRO_EM_FALTA"
+
+
+def test_mensal_detalhe_com_grupo_id_e_categoria_id_falha(client, headers_autenticado, conta_id):
+    salario = id_categoria(client, headers_autenticado, "Trabalho", "Salário")
+    trabalho = grupo_por_direcao(client, headers_autenticado, "Trabalho", True)
+
+    r = client.get(f"/stats/mensal-detalhe?grupo_id={trabalho['id']}&categoria_id={salario}", headers=headers_autenticado)
+    assert r.status_code == 400
+    assert r.json()["detail"]["code"] == "PARAMETROS_EXCLUSIVOS"
+
+
+def test_mensal_detalhe_por_categoria_devolve_lista_mes_total(client, headers_autenticado, conta_id):
+    salario = id_categoria(client, headers_autenticado, "Trabalho", "Salário")
+    criar_movimento(client, headers_autenticado, conta_id, salario, 2000.0)
+
+    r = client.get(f"/stats/mensal-detalhe?categoria_id={salario}", headers=headers_autenticado)
+    assert r.status_code == 200
+    dados = r.json()
+    assert isinstance(dados, list)
+    assert dados[0]["total"] == 2000.0
+
+
+def test_mensal_detalhe_por_grupo_devolve_objeto_meses_e_categorias(client, headers_autenticado, conta_id):
+    super_ = id_categoria(client, headers_autenticado, "Alimentação", "Supermercado")
+    rest   = id_categoria(client, headers_autenticado, "Alimentação", "Restaurantes e Cafés")
+    alimentacao = grupo_por_direcao(client, headers_autenticado, "Alimentação", False)
+
+    criar_movimento(client, headers_autenticado, conta_id, super_, -60.0)
+    criar_movimento(client, headers_autenticado, conta_id, rest, -40.0)
+
+    r = client.get(f"/stats/mensal-detalhe?grupo_id={alimentacao['id']}", headers=headers_autenticado)
+    assert r.status_code == 200
+    dados = r.json()
+    assert "meses" in dados and "categorias" in dados
+    assert set(dados["categorias"]) == {"Supermercado", "Restaurantes e Cafés"}
+
+
+def test_mensal_detalhe_por_grupo_exclui_categorias_indicadas(client, headers_autenticado, conta_id):
+    super_ = id_categoria(client, headers_autenticado, "Alimentação", "Supermercado")
+    rest   = id_categoria(client, headers_autenticado, "Alimentação", "Restaurantes e Cafés")
+    alimentacao = grupo_por_direcao(client, headers_autenticado, "Alimentação", False)
+
+    criar_movimento(client, headers_autenticado, conta_id, super_, -60.0)
+    criar_movimento(client, headers_autenticado, conta_id, rest, -40.0)
+
+    r = client.get(
+        f"/stats/mensal-detalhe?grupo_id={alimentacao['id']}&excluir_categorias={rest}",
+        headers=headers_autenticado,
+    )
+    assert r.status_code == 200
+    assert r.json()["categorias"] == ["Supermercado"]
+
+
+def test_mensal_detalhe_categoria_inexistente_falha(client, headers_autenticado, conta_id):
+    r = client.get("/stats/mensal-detalhe?categoria_id=999999", headers=headers_autenticado)
+    assert r.status_code == 404
+    assert r.json()["detail"]["code"] == "CATEGORIA_NAO_ENCONTRADA"
+
+
+def test_mensal_detalhe_grupo_inexistente_falha(client, headers_autenticado, conta_id):
+    r = client.get("/stats/mensal-detalhe?grupo_id=999999", headers=headers_autenticado)
+    assert r.status_code == 404
+    assert r.json()["detail"]["code"] == "GRUPO_NAO_ENCONTRADO"
+
+
 # ═══════════════════════════════════════════════════════════
 # /stats/saldo-diario
 # ═══════════════════════════════════════════════════════════
@@ -137,12 +225,25 @@ def test_saldo_diario_filtra_por_conta(client, headers_autenticado, conta_id):
     client.post("/contas", json={
         "nome": "Conta B", "banco": "BPI", "tipo": "corrente",
         "iban": "PT5022222222222222222222222", "moeda": "EUR", "saldo": 500.0,
+        "data": hoje(),
     }, headers=headers_autenticado)
     contas = client.get("/contas", headers=headers_autenticado).json()
     conta_b_id = next(c["id"] for c in contas if c["nome"] == "Conta B")
 
     r = client.get(f"/stats/saldo-diario?conta_id={conta_b_id}", headers=headers_autenticado).json()
     assert r[-1]["saldo"] == 500.0
+
+
+def test_saldo_diario_de_outro_utilizador_sem_contas_devolve_vazio(client, headers_autenticado, conta_id):
+    """Confirma que a subquery de movimentos (que não filtra por utilizador_id
+    directamente — só via conta_id, que já vem de contas_filtradas) não deixa passar saldo
+    de outro utilizador: sem contas próprias, um utilizador não vê nada, mesmo que o
+    primeiro utilizador já tenha saldo e movimentos."""
+    client.post("/registro", json={"nome": "Outro", "email": "outro@exemplo.com", "password": "senha123"})
+    r_outro = client.post("/login", json={"email": "outro@exemplo.com", "password": "senha123"})
+    headers_outro = {"Authorization": f"Bearer {r_outro.json()['token']}"}
+
+    assert client.get("/stats/saldo-diario", headers=headers_outro).json() == []
 
 
 # ═══════════════════════════════════════════════════════════
@@ -219,6 +320,7 @@ def test_recorrentes_respeita_filtro_de_conta(client, headers_autenticado, conta
     client.post("/contas", json={
         "nome": "Conta B", "banco": "BPI", "tipo": "corrente",
         "iban": "PT5022222222222222222222222", "moeda": "EUR", "saldo": 500.0,
+        "data": hoje(),
     }, headers=headers_autenticado)
     conta_b_id = next(c["id"] for c in client.get("/contas", headers=headers_autenticado).json() if c["nome"] == "Conta B")
     recuar_reconciliacao(client, headers_autenticado, conta_b_id, dias_atras(35))

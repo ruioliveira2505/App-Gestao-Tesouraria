@@ -1,0 +1,16 @@
+.venv
+.git
+.github
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+tests/
+.env
+apontamentos
+analise-tesouraria.md
+analise-tesouraria-historico.md
+CLAUDE.md
+build
+*.egg-info

@@ -1,14 +1,30 @@
+"""Ferramenta de desenvolvimento — NÃO é um importador de extractos bancários a sério.
+
+Semeia `scripts/dados_mock.json` (dados inventados) para o utilizador id=1, passando cada
+movimento pelo pipeline real de categorização (cache → LLM → fallback) só para ter dados
+de teste com categorias já atribuídas, parecidos com o que aconteceria com uma importação
+real. Não há nenhum endpoint HTTP equivalente — a app não tem hoje uma funcionalidade de
+importação de extractos (ver analise-tesouraria-historico.md, secção "Higiene do repositório").
+"""
+
 import json
 from datetime import date, timedelta
+from pathlib import Path
+
+from psycopg2.extensions import connection as PgConnection
+from psycopg2.extensions import cursor as PgCursor
 
 from app.db.database import get_connection, release_connection
 from app.services.categorizacao import categorizar
 
+PASTA_RAIZ = Path(__file__).resolve().parent.parent
 
-def importar_contas(cursor, contas, movimentos):
+
+def importar_contas(cursor: PgCursor, contas: list[dict], movimentos: list[dict]) -> None:
     print("A inserir contas...")
 
-    # data mais antiga de movimentos, por conta, para calcular a reconciliação inicial
+    # data mais antiga de movimentos, por conta, para calcular a âncora (data_ancora fica
+    # sempre um dia antes do movimento mais antigo dessa conta)
     data_mais_antiga_por_conta = {}
     for m in movimentos:
         conta_id = m["conta_id"]
@@ -16,12 +32,21 @@ def importar_contas(cursor, contas, movimentos):
             data_mais_antiga_por_conta[conta_id] = m["data"]
 
     for conta in contas:
+        primeiro_movimento = data_mais_antiga_por_conta.get(conta["id"])
+        if primeiro_movimento:
+            ano, mes, dia = map(int, primeiro_movimento.split("-"))
+            data_ancora = (date(ano, mes, dia) - timedelta(days=1)).isoformat()
+        else:
+            data_ancora = date.today().isoformat()
+
+        # data_ancora/saldo_ancora são a âncora da conta — atributo próprio de `contas`
+        # desde a migração 0013, não uma linha em `ajustes_saldo` (ver ARCHITECTURE.md).
         cursor.execute(
             """
             INSERT INTO contas (
-                id, nome, banco, iban, moeda, saldo, tipo, utilizador_id
+                id, nome, banco, iban, moeda, tipo, utilizador_id, data_ancora, saldo_ancora
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
             """,
             (
@@ -30,9 +55,10 @@ def importar_contas(cursor, contas, movimentos):
                 conta["banco"],
                 conta["iban"],
                 conta["moeda"],
-                conta["saldo"],
                 conta.get("tipo", "corrente"),
                 1,
+                data_ancora,
+                conta["saldo"],
             ),
         )
 
@@ -41,38 +67,11 @@ def importar_contas(cursor, contas, movimentos):
             f"{conta['banco']} — "
             f"{conta['iban']}"
         )
-
-        # A reconciliação inicial fica um dia antes do movimento mais antigo desta conta
-        # (se não houver movimentos para esta conta, usa-se hoje como fallback)
-        primeiro_movimento = data_mais_antiga_por_conta.get(conta["id"])
-        if primeiro_movimento:
-            ano, mes, dia = map(int, primeiro_movimento.split("-"))
-            data_reconciliacao = (date(ano, mes, dia) - timedelta(days=1)).isoformat()
-        else:
-            data_reconciliacao = date.today().isoformat()
-
-        # Apenas cria a reconciliação inicial quando a conta é inserida
         if cursor.rowcount == 1:
-            cursor.execute(
-                """
-                INSERT INTO ajustes_saldo (
-                    conta_id,
-                    data,
-                    saldo_real
-                )
-                VALUES (%s, %s, %s)
-                ON CONFLICT (conta_id, data) DO NOTHING
-                """,
-                (
-                    conta["id"],
-                    data_reconciliacao,
-                    conta["saldo"],
-                ),
-            )
-            print(f"    → reconciliação inicial em {data_reconciliacao}")
+            print(f"    → âncora em {data_ancora}")
 
 
-def importar_movimentos(cursor, conn, movimentos):
+def importar_movimentos(cursor: PgCursor, conn: PgConnection, movimentos: list[dict]) -> None:
     print("\nA inserir movimentos...")
 
     for movimento in movimentos:
@@ -117,8 +116,8 @@ def importar_movimentos(cursor, conn, movimentos):
         )
 
 
-def main():
-    with open("scripts/dados_mock.json", "r", encoding="utf-8") as ficheiro:
+def main() -> None:
+    with open(PASTA_RAIZ / "scripts" / "dados_mock.json", encoding="utf-8") as ficheiro:
         dados = json.load(ficheiro)
 
     conn = get_connection()
@@ -142,6 +141,6 @@ if __name__ == "__main__":
     main()
 
 
-# antes de implementar este script deve haver 1 user registado
-# correr para importar os dados_mock para base de dados (user_id 1):
-# python -m scripts.importar
+# antes de correr este script deve haver 1 user registado
+# correr para semear os dados_mock na base de dados de desenvolvimento (user_id 1):
+# python -m scripts.seed_dev

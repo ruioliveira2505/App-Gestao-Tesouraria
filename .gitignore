@@ -1,8 +1,15 @@
 # Documentos Suporte
 apontamentos
-registo-melhorias-tesouraria
+analise-tesouraria.md
+analise-tesouraria-historico.md
+CLAUDE.md
 
 .venv
-.env 
-__pycache__/
+.env
 .pytest_cache
+.ruff_cache
+.coverage
+__pycache__/
+*.egg-info/
+build/
+dist/

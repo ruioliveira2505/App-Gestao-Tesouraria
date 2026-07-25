@@ -1,240 +1,79 @@
-import uuid
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, HTTPException
+"""Movimentos (transacções) — CRUD e o fluxo de confirmação da categorização automática.
 
-from app.db.database import get_connection, release_connection, release_connection
+As regras de negócio vivem em app.services.movimentos — este router só trata da ligação
+à base de dados e da tradução HTTP <-> serviço.
+"""
+
+from fastapi import APIRouter, Depends
+from psycopg2.extras import RealDictCursor
+
 from app.core.deps import utilizador_atual
-from app.services.reconciliacoes import reconciliacao_mais_antiga_data
-from app.services.categorizacao import guardar_em_cache
-from app.schemas.movimentos import MovimentoInput
+from app.db.database import get_db
+from app.schemas.comum import OkResponse
+from app.schemas.movimentos import ConfirmarTodosOutput, ContagemPendentesOutput, MovimentoInput, MovimentoOutput
+from app.services import movimentos as servico
 
-import logging
-
-logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(tags=["movimentos"])
 
 
-def fmt_data_pt(valor):
-    if valor is None:
-        return valor
-    if isinstance(valor, str):
-        valor = date.fromisoformat(valor)
-    return valor.strftime("%d-%m-%Y")
-
-
-def _validar_data_movimento(cursor, conta_id, data):
-    rec = reconciliacao_mais_antiga_data(cursor, conta_id)
-    if rec and data < rec:
-        inicio_movimentos = date.fromisoformat(rec) + timedelta(days=1)
-        raise HTTPException(
-            status_code=400,
-            detail=f"Não é possível registar um movimento antes de {fmt_data_pt(inicio_movimentos)}, a Data de Início de Movimentos desta conta."
-        )
-
-
-def _validar_categoria_direcao(cursor, categoria_id, valor, uid):
-    cursor.execute("SELECT eh_recebimento FROM categorias WHERE id=%s AND utilizador_id=%s", (categoria_id, uid))
-    row = cursor.fetchone()
-    if not row:
-        raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    if (valor > 0) != row[0]:
-        direcao = "Entrada" if valor > 0 else "Saída"
-        raise HTTPException(status_code=400, detail=f"Não é possível guardar este movimento: precisa de uma categoria de {direcao}.")
-
-
-def _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, eh_recebimento, confirmado):
-    try:
-        guardar_em_cache(conn, descricao, categoria_id, uid, eh_recebimento, confirmado=confirmado)
-    except Exception:
-        logger.exception("Falha ao gravar cache de categorização (não crítico — movimento já foi guardado)")
-
-
-def _lista_sql(coluna, valores_str):
-    if not valores_str:
-        return "", []
-    valores = [v for v in valores_str.split(',') if v.strip()]
-    if not valores:
-        return "", []
-    placeholders = ','.join(['%s'] * len(valores))
-    return f"AND {coluna} IN ({placeholders})", valores
-
-
-@router.get("/movimentos")
+@router.get("/movimentos", response_model=list[MovimentoOutput])
 def listar_movimentos(
     utilizador: dict = Depends(utilizador_atual),
-    conta_id: str = None,
-    categoria_id: str = None,
-    direcao: str = None,
-    data_de: str = None,
-    data_ate: str = None,
-    precisa_confirmacao: bool = None,
+    cursor: RealDictCursor = Depends(get_db),
+    conta_id: str | None = None,
+    categoria_id: str | None = None,
+    direcao: str | None = None,
+    data_de: str | None = None,
+    data_ate: str | None = None,
+    precisa_confirmacao: bool | None = None,
+    limit: int | None = None,
+    offset: int = 0,
 ):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-
-    conta_cond, conta_vals = _lista_sql("m.conta_id", conta_id)
-    categoria_cond, categoria_vals = _lista_sql("m.categoria_id", categoria_id)
-
-    filtro_direcao = ""
-    if direcao == "in":
-        filtro_direcao = "AND m.valor > 0"
-    elif direcao == "out":
-        filtro_direcao = "AND m.valor < 0"
-
-    filtro_confirmacao = ""
-    if precisa_confirmacao is True:
-        filtro_confirmacao = "AND m.origem_cat IN ('llm', 'sem_match')"
-    elif precisa_confirmacao is False:
-        filtro_confirmacao = "AND m.origem_cat NOT IN ('llm', 'sem_match')"
-
-    try:
-        cursor.execute("""
-            SELECT m.id, m.conta_id, m.data, m.descricao, m.valor,
-                   m.categoria_id, c.nome, g.nome, m.origem_cat, c.protegida
-            FROM movimentos m
-            JOIN categorias c ON m.categoria_id = c.id
-            JOIN categorias g ON c.parent_id = g.id
-            WHERE m.utilizador_id = %s
-              AND (%s IS NULL OR m.data >= %s)
-              AND (%s IS NULL OR m.data <= %s)
-        """ + conta_cond + categoria_cond + filtro_direcao + filtro_confirmacao + """
-            ORDER BY m.data DESC, m.criado_em DESC
-        """, [uid, data_de, data_de, data_ate, data_ate] + conta_vals + categoria_vals)
-        rows = cursor.fetchall()
-    finally:
-        cursor.close()
-        release_connection(conn)
-
-    return [
-        {
-            "id": r[0], "conta_id": r[1], "data": str(r[2]), "descricao": r[3], "valor": float(r[4]),
-            "categoria_id": r[5], "categoria": r[6], "grupo": r[7], "origem_cat": r[8],
-            "confirmado": r[8] in ("manual", "cache"),
-            "sem_categoria": r[9],
-        }
-        for r in rows
-    ]
+    """Lista movimentos com filtros; limit/offset são opcionais (sem eles devolve tudo)."""
+    return servico.listar_movimentos(
+        cursor, utilizador["sub"], conta_id, categoria_id, direcao,
+        data_de, data_ate, precisa_confirmacao, limit, offset,
+    )
 
 
-@router.get("/movimentos/pendentes/contagem")
-def contar_movimentos_pendentes(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            SELECT COUNT(*) FROM movimentos
-            WHERE utilizador_id = %s AND origem_cat IN ('llm', 'sem_match')
-        """, (utilizador["sub"],))
-        contagem = cursor.fetchone()[0]
-    finally:
-        cursor.close()
-        release_connection(conn)
-    return {"contagem": contagem}
+@router.get("/movimentos/pendentes/contagem", response_model=ContagemPendentesOutput)
+def contar_movimentos_pendentes(utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Quantos movimentos têm categorização automática por confirmar — banner de pendentes."""
+    return servico.contar_movimentos_pendentes(cursor, utilizador["sub"])
 
 
-@router.post("/movimentos")
-def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-    try:
-        _validar_categoria_direcao(cursor, dados.categoria_id, dados.valor, uid)
-        _validar_data_movimento(cursor, dados.conta_id, dados.data)
-        cursor.execute("""
-            INSERT INTO movimentos (id, conta_id, data, descricao, valor, categoria_id, origem_cat, utilizador_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (str(uuid.uuid4()), dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, "manual", uid))
-        conn.commit()
-        _guardar_em_cache_seguro(conn, dados.descricao, dados.categoria_id, uid, dados.valor > 0, confirmado=True)
-    finally:
-        cursor.close()
-        release_connection(conn)
+@router.post("/movimentos", response_model=OkResponse)
+def criar_movimento(dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Cria um movimento manual (origem_cat='manual', já confirmado por definição)."""
+    servico.criar_movimento(cursor, cursor.connection, utilizador["sub"], dados)
     return {"ok": True}
 
 
-@router.put("/movimentos/{movimento_id}")
-def editar_movimento(movimento_id: str, dados: MovimentoInput, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-    try:
-        _validar_categoria_direcao(cursor, dados.categoria_id, dados.valor, uid)
-        _validar_data_movimento(cursor, dados.conta_id, dados.data)
-        cursor.execute("""
-            UPDATE movimentos
-            SET conta_id=%s, data=%s, descricao=%s, valor=%s, categoria_id=%s, origem_cat='manual'
-            WHERE id=%s AND utilizador_id=%s
-        """, (dados.conta_id, dados.data, dados.descricao, dados.valor, dados.categoria_id, movimento_id, uid))
-        conn.commit()
-        _guardar_em_cache_seguro(conn, dados.descricao, dados.categoria_id, uid, dados.valor > 0, confirmado=True)
-    finally:
-        cursor.close()
-        release_connection(conn)
+@router.put("/movimentos/{movimento_id}", response_model=OkResponse)
+def editar_movimento(
+    movimento_id: str, dados: MovimentoInput,
+    utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db),
+):
+    """Edita um movimento; marca-o como confirmado e alimenta a cache de categorização."""
+    servico.editar_movimento(cursor, cursor.connection, utilizador["sub"], movimento_id, dados)
     return {"ok": True}
 
 
-@router.delete("/movimentos/{movimento_id}")
-def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "DELETE FROM movimentos WHERE id = %s AND utilizador_id = %s",
-            (movimento_id, utilizador["sub"])
-        )
-        conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
+@router.delete("/movimentos/{movimento_id}", response_model=OkResponse)
+def eliminar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Elimina o movimento; não mexe na cache de categorização."""
+    servico.eliminar_movimento(cursor, utilizador["sub"], movimento_id)
     return {"ok": True}
 
 
-@router.post("/movimentos/{movimento_id}/confirmar")
-def confirmar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-    try:
-        cursor.execute(
-            "SELECT descricao, categoria_id, valor FROM movimentos WHERE id=%s AND utilizador_id=%s",
-            (movimento_id, uid)
-        )
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Movimento não encontrado")
-        descricao, categoria_id, valor = row
-
-        cursor.execute("UPDATE movimentos SET origem_cat='manual' WHERE id=%s", (movimento_id,))
-        conn.commit()
-        _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, valor > 0, confirmado=True)
-    finally:
-        cursor.close()
-        release_connection(conn)
+@router.post("/movimentos/{movimento_id}/confirmar", response_model=OkResponse)
+def confirmar_movimento(movimento_id: str, utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Aceita a categoria sugerida (llm/sem_match → manual) e reforça a cache."""
+    servico.confirmar_movimento(cursor, cursor.connection, utilizador["sub"], movimento_id)
     return {"ok": True}
 
 
-@router.post("/movimentos/confirmar-todos")
-def confirmar_todos_os_pendentes(utilizador: dict = Depends(utilizador_atual)):
-    conn = get_connection()
-    cursor = conn.cursor()
-    uid = utilizador["sub"]
-    try:
-        cursor.execute("""
-            SELECT DISTINCT descricao, categoria_id, valor FROM movimentos
-            WHERE utilizador_id=%s AND origem_cat IN ('llm', 'sem_match')
-        """, (uid,))
-        pendentes = cursor.fetchall()
-
-        cursor.execute("""
-            UPDATE movimentos SET origem_cat='manual'
-            WHERE utilizador_id=%s AND origem_cat IN ('llm', 'sem_match')
-        """, (uid,))
-        conn.commit()
-
-        for descricao, categoria_id, valor in pendentes:
-            _guardar_em_cache_seguro(conn, descricao, categoria_id, uid, valor > 0, confirmado=True)
-    finally:
-        cursor.close()
-        release_connection(conn)
-    return {"ok": True, "confirmados": len(pendentes)}
+@router.post("/movimentos/confirmar-todos", response_model=ConfirmarTodosOutput)
+def confirmar_todos_os_pendentes(utilizador: dict = Depends(utilizador_atual), cursor: RealDictCursor = Depends(get_db)):
+    """Confirma em massa todos os movimentos pendentes do utilizador."""
+    return servico.confirmar_todos_os_pendentes(cursor, cursor.connection, utilizador["sub"])

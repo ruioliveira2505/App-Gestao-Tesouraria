@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?define DB_PASSWORD no .env}
+      POSTGRES_DB: tesouraria
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: tesouraria
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:?define DB_PASSWORD no .env}
+      SECRET_KEY: ${SECRET_KEY:?define SECRET_KEY no .env}
+      ALGORITMO_JWT: ${ALGORITMO_JWT:-HS256}
+      TOKEN_DIAS: ${TOKEN_DIAS:-30}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-}
+      EMAIL_APP_PASSWORD: ${EMAIL_APP_PASSWORD:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      BASE_URL: ${BASE_URL:-http://localhost:8000}
+    ports:
+      - "8000:8000"
+
+volumes:
+  db_data:

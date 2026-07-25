@@ -1,0 +1,85 @@
+[project]
+name = "tesouraria"
+version = "1.0.0"
+description = "App pessoal de gestão de finanças — backend FastAPI + PostgreSQL, sem ORM."
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.137",
+    "uvicorn>=0.49",
+    "psycopg2-binary>=2.9",
+    "pydantic>=2.13",
+    "pydantic-settings>=2.14",
+    "email-validator>=2.3",
+    "PyJWT>=2.13",
+    "bcrypt>=5.0",
+    "requests>=2.34",
+    "slowapi>=0.1.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.1",
+    "pytest-cov>=7.0",
+    "httpx>=0.28",
+    "ruff>=0.15",
+    "playwright>=1.61",
+    "pytest-playwright>=0.7",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+# Não é um pacote a distribuir — app/scripts/tests correm directamente a partir da raiz
+# do repositório (uvicorn app.main:app, python -m scripts.migrar, pytest). Este ficheiro
+# serve só para declarar dependências e configuração de ferramentas num sítio só; "pip
+# install ." resolve as dependências sem tentar empacotar nada.
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+markers = [
+    # testes de browser a sério (Playwright) — mais lentos, correm por omissão junto com
+    # o resto da suite, mas dá para isolar com "pytest -m e2e" / "pytest -m 'not e2e'"
+    # ao iterar rápido em código que não mexe no frontend.
+    "e2e: testes end-to-end num browser real (tests/e2e/)",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 130
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes (imports não usados, variáveis não usadas, etc.)
+    "I",   # isort (ordem de imports)
+    "B",   # bugbear (padrões que costumam ser bugs)
+    "UP",  # pyupgrade (sintaxe moderna)
+    "S",   # bandit (más práticas de segurança — relevante, a app trata de auth/dinheiro)
+    "A",   # builtins (parâmetros/variáveis que sombreiam nomes do Python, ex. hash/id/type)
+    "RUF", # regras específicas do próprio Ruff
+]
+ignore = [
+    "E501",    # linha longa — line-length acima já cobre o essencial, não vale a pena ser rígido aqui
+    "S101",    # assert — usado à vontade nos testes (é o próprio pytest a pedir isso)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# imports por efeito lateral, asserts, passwords de teste hardcoded, subprocess de teste
+# (psql, chamado com argumentos fixos vindos do .env local, nunca de input do pedido) e
+# nomes de tabela vindos de uma lista Python fixa dentro do próprio teste (não de input).
+"tests/*" = ["F401", "S101", "S105", "S106", "S603", "S607", "S608"]
+"scripts/*" = ["S603", "S607"]  # subprocess com caminho de binário resolvido pelo PATH — scripts locais de dev, não input externo
+# S608 (bandit): construção de SQL com f-string/concatenação — revisto à mão, seguro nos
+# dois casos. `_lista_sql`/`_excluir_sql` só recebem nomes de coluna como literais fixos
+# escolhidos pelo código chamador (nunca do pedido HTTP); os valores continuam sempre
+# parametrizados via %s. O bandit não sabe distinguir isto de uma injecção a sério, e o
+# padrão de string multi-linha usado aqui não dá para anotar com `# noqa` linha a linha
+# sem partir a própria string SQL — daí o ignore ficar ao nível do ficheiro.
+"app/services/movimentos.py" = ["S608"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Depends(...)/Query(...) como default de parâmetro é o padrão do FastAPI, não um bug —
+# sem isto o B008 assinalava as ~37 rotas que usam Depends() correctamente.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body"]

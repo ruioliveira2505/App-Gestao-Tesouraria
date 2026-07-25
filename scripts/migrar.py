@@ -1,18 +1,22 @@
 from pathlib import Path
+
 import psycopg2
+from psycopg2.extensions import connection as PgConnection
+from psycopg2.extensions import cursor as PgCursor
+
 from app.core.config import settings
 
 PASTA_MIGRACOES = Path(__file__).resolve().parent / "migrations"
 
 
-def obter_conexao():
+def obter_conexao() -> PgConnection:
     return psycopg2.connect(
         host=settings.DB_HOST, port=settings.DB_PORT, dbname=settings.DB_NAME,
         user=settings.DB_USER, password=settings.DB_PASSWORD,
     )
 
 
-def garantir_tabela_controlo(cursor):
+def garantir_tabela_controlo(cursor: PgCursor) -> None:
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS schema_migracoes (
             versao INTEGER PRIMARY KEY,
@@ -22,12 +26,12 @@ def garantir_tabela_controlo(cursor):
     """)
 
 
-def listar_migracoes_disponiveis():
+def listar_migracoes_disponiveis() -> list[tuple[int, str, Path]]:
     ficheiros = sorted(PASTA_MIGRACOES.glob("*.sql"))
     return [(int(f.name.split("_")[0]), f.name, f) for f in ficheiros]
 
 
-def aplicar_migracoes():
+def aplicar_migracoes() -> None:
     conn = obter_conexao()
     conn.autocommit = False
     cursor = conn.cursor()

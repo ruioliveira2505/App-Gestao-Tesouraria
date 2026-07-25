@@ -1,86 +1,67 @@
+"""Registo, login e recuperação de password.
+
+Tokens são JWT (ver app.core.security); a recuperação de password usa um token JWT à
+parte, marcado com "tipo": "reset" e um jti de uso único guardado em
+utilizadores.reset_token_jti.
+
+As regras de negócio vivem em app.services.auth — este router trata da ligação à base de
+dados e das partes que dependem de infra HTTP (rate limiting, emails em background).
+"""
+
 from datetime import timedelta
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from psycopg2.extras import RealDictCursor
 
 from app.core.config import settings
 from app.core.limiter import limiter
-from app.core.security import encriptar_password, verificar_password, criar_token, verificar_token
-from app.db.database import get_connection, release_connection, release_connection
-from app.schemas.auth import RegistoInput, LoginInput, EsqueciPasswordInput, RedefinirPasswordInput
-from app.services.categorias_seed import seed_categorias_padrao
+from app.core.security import criar_token
+from app.db.database import get_db
+from app.schemas.auth import (
+    EsqueciPasswordInput,
+    EsqueciPasswordOutput,
+    LoginInput,
+    RedefinirPasswordInput,
+    RegistoInput,
+    TokenOutput,
+)
+from app.schemas.comum import OkResponse
+from app.services import auth as servico
 from app.services.email import enviar_email
-import uuid
 
-router = APIRouter()
+router = APIRouter(tags=["autenticação"])
 
 
-@router.post("/registro")
+@router.post("/registro", response_model=TokenOutput)
 @limiter.limit("5/minute")
-def registar(request: Request, dados: RegistoInput):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
-        if cursor.fetchone():
-            raise HTTPException(status_code=400, detail="Email já registado")
-
-        hash_pw = encriptar_password(dados.password)
-        cursor.execute(
-            "INSERT INTO utilizadores (nome, email, password) VALUES (%s, %s, %s) RETURNING id",
-            (dados.nome, dados.email, hash_pw)
-        )
-        utilizador_id = cursor.fetchone()[0]
-        conn.commit()
-        seed_categorias_padrao(conn, utilizador_id)
-    finally:
-        cursor.close()
-        release_connection(conn)
-
+def registar(request: Request, dados: RegistoInput, cursor: RealDictCursor = Depends(get_db)):
+    """Cria a conta, semeia a árvore de categorias por omissão, devolve um token de sessão."""
+    utilizador_id = servico.criar_utilizador(cursor, cursor.connection, dados)
     token = criar_token({"sub": str(utilizador_id), "email": dados.email})
     return {"token": token, "nome": dados.nome}
 
 
-@router.post("/login")
+@router.post("/login", response_model=TokenOutput)
 @limiter.limit("5/minute")
-def login(request: Request, dados: LoginInput):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "SELECT id, nome, password FROM utilizadores WHERE email = %s",
-            (dados.email,)
-        )
-        row = cursor.fetchone()
-    finally:
-        cursor.close()
-        release_connection(conn)
-
-    if not row or not verificar_password(dados.password, row[2]):
-        raise HTTPException(status_code=401, detail="Email ou password incorretos")
-
-    token = criar_token({"sub": str(row[0]), "email": dados.email})
-    return {"token": token, "nome": row[1]}
+def login(request: Request, dados: LoginInput, cursor: RealDictCursor = Depends(get_db)):
+    """Autentica por email+password e devolve um token de sessão novo."""
+    row = servico.autenticar(cursor, dados.email, dados.password)
+    token = criar_token({"sub": str(row["id"]), "email": dados.email})
+    return {"token": token, "nome": row["nome"]}
 
 
-@router.post("/esqueci-password")
+@router.post("/esqueci-password", response_model=EsqueciPasswordOutput)
 @limiter.limit("3/hour")
-def esqueci_password(request: Request, dados: EsqueciPasswordInput, background_tasks: BackgroundTasks):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT id FROM utilizadores WHERE email = %s", (dados.email,))
-        row = cursor.fetchone()
-        jti = None
-        if row:
-            jti = str(uuid.uuid4())
-            cursor.execute("UPDATE utilizadores SET reset_token_jti = %s WHERE id = %s", (jti, row[0]))
-            conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
+def esqueci_password(
+    request: Request, dados: EsqueciPasswordInput, background_tasks: BackgroundTasks,
+    cursor: RealDictCursor = Depends(get_db),
+):
+    """Envia um link de reset por email — resposta idêntica exista ou não o email, de
+    propósito, para não revelar quais emails estão registados."""
+    resultado = servico.iniciar_reset_password(cursor, cursor.connection, dados.email)
 
-    if row:
-        token = criar_token({"sub": str(row[0]), "tipo": "reset", "jti": jti}, timedelta(hours=1))
+    if resultado:
+        token = criar_token({"sub": str(resultado["id"]), "tipo": "reset", "jti": resultado["jti"]}, timedelta(hours=1))
         link = f"{settings.BASE_URL}/static/index.html?token={token}"
         background_tasks.add_task(
             enviar_email, dados.email, "Recuperar password — Tesouraria",
@@ -89,26 +70,9 @@ def esqueci_password(request: Request, dados: EsqueciPasswordInput, background_t
     return {"ok": True, "mensagem": "Se o email existir, enviámos instruções."}
 
 
-@router.post("/redefinir-password")
-def redefinir_password(dados: RedefinirPasswordInput):
-    payload = verificar_token(dados.token)
-    if not payload or payload.get("tipo") != "reset":
-        raise HTTPException(status_code=400, detail="Link inválido ou expirado")
-
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT reset_token_jti FROM utilizadores WHERE id = %s", (payload["sub"],))
-        row = cursor.fetchone()
-        if not row or row[0] is None or row[0] != payload.get("jti"):
-            raise HTTPException(status_code=400, detail="Link inválido ou já foi utilizado")
-
-        cursor.execute(
-            "UPDATE utilizadores SET password = %s, reset_token_jti = NULL, sessoes_invalidadas_em = now() WHERE id = %s",
-            (encriptar_password(dados.password_nova), payload["sub"])
-        )
-        conn.commit()
-    finally:
-        cursor.close()
-        release_connection(conn)
+@router.post("/redefinir-password", response_model=OkResponse)
+@limiter.limit("5/minute")
+def redefinir_password(request: Request, dados: RedefinirPasswordInput, cursor: RealDictCursor = Depends(get_db)):
+    """Define a password nova a partir do token de reset (uso único, expira em 1 hora)."""
+    servico.redefinir_password(cursor, cursor.connection, dados.token, dados.password_nova)
     return {"ok": True}

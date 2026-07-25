@@ -1,10 +1,21 @@
+"""Categorização automática de movimentos — cache aprendida primeiro, depois LLM (API da
+Groq), com fallback para a categoria "Outros" protegida da direcção certa.
+
+`categorizar()` é o ponto de entrada usado pelos serviços de movimentos (ver
+services/movimentos.py::_guardar_em_cache_seguro) e por scripts/seed_dev.py; devolve sempre
+um (categoria_id, origem) — origem é 'cache' | 'llm' | 'sem_match' (nunca 'manual', que só
+o utilizador escolhe directamente). Nenhuma função aqui depende do FastAPI.
+"""
+
 import logging
 import re
 
 import requests
+from psycopg2.extensions import connection as PgConnection
+from psycopg2.extras import RealDictCursor
 
 from app.core.config import settings
-from app.db.database import get_connection, release_connection, release_connection
+from app.db.database import get_connection, release_connection
 
 logger = logging.getLogger(__name__)
 
@@ -14,31 +25,34 @@ GROQ_MODEL   = settings.GROQ_MODEL
 
 # ─── BD helpers ──────────────────────────────────────────────────────────────
 
-def resolver_categoria_fallback(conn, eh_recebimento, utilizador_id):
+def resolver_categoria_fallback(conn: PgConnection, eh_recebimento: bool, utilizador_id: str) -> int | None:
     # Usa 'protegida' + direção — imune a renomeações na árvore de categorias.
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT id FROM categorias
         WHERE protegida = true AND eh_recebimento = %s AND utilizador_id = %s
     """, (eh_recebimento, utilizador_id))
     row = cursor.fetchone()
     cursor.close()
-    return row[0] if row else None
+    return row["id"] if row else None
 
 
-def buscar_em_cache(conn, descricao, utilizador_id, eh_recebimento):
-    cursor = conn.cursor()
+def buscar_em_cache(conn: PgConnection, descricao: str, utilizador_id: str, eh_recebimento: bool) -> tuple[int, bool] | None:
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT categoria_id, confirmado FROM categorias_aprendidas
         WHERE descricao = %s AND utilizador_id = %s AND eh_recebimento = %s
     """, (descricao, utilizador_id, eh_recebimento))
     row = cursor.fetchone()
     cursor.close()
-    return row if row else None
+    return (row["categoria_id"], row["confirmado"]) if row else None
 
 
-def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, eh_recebimento, confirmado=False):
-    cursor = conn.cursor()
+def guardar_em_cache(
+    conn: PgConnection, descricao: str, categoria_id: int, utilizador_id: str,
+    eh_recebimento: bool, confirmado: bool = False,
+) -> None:
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         INSERT INTO categorias_aprendidas (descricao, categoria_id, utilizador_id, eh_recebimento, confirmado)
         VALUES (%s, %s, %s, %s, %s)
@@ -49,8 +63,9 @@ def guardar_em_cache(conn, descricao, categoria_id, utilizador_id, eh_recebiment
     cursor.close()
 
 
-def listar_categorias_planas(conn, utilizador_id, valor):
-    cursor = conn.cursor()
+def listar_categorias_planas(conn: PgConnection, utilizador_id: str, valor: float) -> list[tuple[int, str]]:
+    """Devolve uma lista de tuplos (id, caminho) — escolher_por_llm depende deste formato."""
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         WITH RECURSIVE arvore AS (
             SELECT id, parent_id, nome AS caminho, eh_recebimento
@@ -72,12 +87,12 @@ def listar_categorias_planas(conn, utilizador_id, valor):
     """, (utilizador_id, valor > 0))
     rows = cursor.fetchall()
     cursor.close()
-    return rows
+    return [(r["id"], r["caminho"]) for r in rows]
 
 
 # ─── LLM ─────────────────────────────────────────────────────────────────────
 
-def escolher_por_llm(descricao, valor, opcoes, contexto=""):
+def escolher_por_llm(descricao: str, valor: float, opcoes: list[tuple[int, str]], contexto: str = "") -> int | None:
     # Devolve o id escolhido, ou None se o LLM recusar ('0'), falhar ou resposta ilegível.
     direcao = "um recebimento (dinheiro a entrar)" if valor > 0 else "um pagamento (dinheiro a saír)"
     lista_texto = "\n".join(f"{i+1}. {nome}" for i, (_, nome) in enumerate(opcoes))
@@ -122,7 +137,7 @@ def escolher_por_llm(descricao, valor, opcoes, contexto=""):
         return None
 
 
-def categorizar_por_llm(descricao, valor, conn, utilizador_id):
+def categorizar_por_llm(descricao: str, valor: float, conn: PgConnection, utilizador_id: str) -> int | None:
     categorias_disponiveis = listar_categorias_planas(conn, utilizador_id, valor)
     if not categorias_disponiveis:
         return None
@@ -132,7 +147,7 @@ def categorizar_por_llm(descricao, valor, conn, utilizador_id):
 # ─── Orquestração ─────────────────────────────────────────────────────────────
 # origem possível: 'manual' | 'cache' | 'llm' | 'sem_match'
 
-def categorizar(descricao, valor, utilizador_id, conn=None):
+def categorizar(descricao: str, valor: float, utilizador_id: str, conn: PgConnection | None = None) -> tuple[int | None, str]:
     proprio_conn = conn is None
     if proprio_conn:
         conn = get_connection()

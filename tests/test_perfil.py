@@ -1,4 +1,4 @@
-from app.db.database import get_connection, release_connection, release_connection, release_connection, release_connection, release_connection, release_connection
+from app.db.database import get_connection, release_connection
 from tests.helpers import hoje
 
 
@@ -211,3 +211,8 @@ def test_terminar_sessoes_e_isolado_por_utilizador(client, headers_autenticado):
 def test_terminar_sessoes_sem_token_falha(client):
     r = client.post("/me/sessoes/terminar")
     assert r.status_code == 401
+
+
+def test_atualizar_perfil_com_nome_vazio_falha(client, headers_autenticado):
+    r = client.put("/me", json={"nome": "", "email": "ana@exemplo.com"}, headers=headers_autenticado)
+    assert r.status_code == 422

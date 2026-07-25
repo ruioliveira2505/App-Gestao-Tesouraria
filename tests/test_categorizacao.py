@@ -1,6 +1,7 @@
-from app.services import categorizacao
 import requests
-from app.db.database import get_connection, release_connection, release_connection
+
+from app.db.database import get_connection, release_connection
+from app.services import categorizacao
 from tests.helpers import id_categoria
 
 
@@ -269,7 +270,7 @@ def test_categorizar_com_categorias_quase_todas_eliminadas_ainda_resolve(client,
 
     monkeypatch.setattr(categorizacao, "escolher_por_llm", lambda descricao, valor, opcoes, contexto="": opcoes[0][0])
 
-    categoria_id, origem = categorizacao.categorizar("QUALQUER DESCRICAO", -10.0, uid)
+    categoria_id, _origem = categorizacao.categorizar("QUALQUER DESCRICAO", -10.0, uid)
 
     conn = get_connection()
     cursor = conn.cursor()
